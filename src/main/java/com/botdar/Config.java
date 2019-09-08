@@ -34,6 +34,7 @@ public class Config {
     public static final String TOKEN = "token";
     public static final String RADARR_URL = "radarr-url";
     public static final String RADARR_TOKEN = "radarr-token";
+    public static final String RADARR_PATH = "radarr-path";
     public static final String SONARR_URL = "sonarr-url";
     public static final String LIDARR_URL = "lidar-url";
     public static final String JACKETT_URL = "jackett-url";

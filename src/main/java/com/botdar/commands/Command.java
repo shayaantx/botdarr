@@ -1,13 +1,19 @@
-package com.botdar;
+package com.botdar.commands;
+
+import com.botdar.discord.EmbedHelper;
+import com.botdar.radarr.RadarrApi;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+
+import java.util.List;
 
 public enum Command {
-  ADD_MOVIE("movie add", "Adds a movie") {
+  ADD_MOVIE("movie add", "Adds a movie using just search text (i.e., movie add Angus)") {
     @Override
     public CommandResponse execute(String command) {
-      return null;
+      return new CommandResponse(new RadarrApi().add(command));
     }
   },
-  FIND_MOVIE("movie find", "Finds a movie using radarr") {
+  FIND_MOVIE("movie find", "Finds a movie using radarr (i.e., movie find John Wick)") {
     @Override
     public CommandResponse execute(String command) {
       return new CommandResponse(new RadarrApi().lookup(command));
@@ -16,7 +22,11 @@ public enum Command {
   MOVIE_DOWNLOADS("movie downloads", "Shows all the active movies downloading in radarr") {
     @Override
     public CommandResponse execute(String command) {
-      return new CommandResponse(new RadarrApi().downloads());
+      List<MessageEmbed> embedList = new RadarrApi().downloads();
+      if (embedList == null || embedList.size() == 0) {
+        return new CommandResponse(EmbedHelper.createInfoMessage("No downloads currently"));
+      }
+      return new CommandResponse(embedList);
     }
   },
   HELP("help", "") {
