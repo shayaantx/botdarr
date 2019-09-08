@@ -4,6 +4,8 @@ import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 
+import java.util.List;
+
 public class CommandResponse {
   public CommandResponse(String response) {
     this.response = response;
@@ -13,16 +15,23 @@ public class CommandResponse {
     this.htmlResponse = htmlResponse;
   }
 
+  public CommandResponse(List<MessageEmbed> htmlResponses) {
+    this.htmlResponses = htmlResponses;
+  }
+
   public void send(MessageChannel messageChannel) {
-    final MessageAction messageAction;
     if (response != null) {
-      messageAction = messageChannel.sendMessage(response);
-    } else {
-      messageAction = messageChannel.sendMessage(htmlResponse);
+      messageChannel.sendMessage(response).queue();
+    } else if (htmlResponses != null) {
+      for (MessageEmbed messageEmbed : htmlResponses) {
+        messageChannel.sendMessage(messageEmbed).queue();
+      }
+    } else{
+      messageChannel.sendMessage(htmlResponse).queue();
     }
-    messageAction.queue();
   }
 
   private String response;
   private MessageEmbed htmlResponse;
+  private List<MessageEmbed> htmlResponses;
 }
