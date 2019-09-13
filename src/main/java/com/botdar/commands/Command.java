@@ -2,21 +2,37 @@ package com.botdar.commands;
 
 import com.botdar.discord.EmbedHelper;
 import com.botdar.radarr.RadarrApi;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.util.List;
 
 public enum Command {
-  ADD_MOVIE("movie add", "Adds a movie using just search text (i.e., movie add Angus)") {
+  ADD_MOVIE("movie add", "Adds a movie using search text and tmdb id (i.e., movie add John Wick 484737), get tmdb ids using find") {
     @Override
     public CommandResponse execute(String command) {
-      return new CommandResponse(new RadarrApi().add(command));
+      int lastSpace = command.lastIndexOf(" ");
+      String searchText = command.substring(0, lastSpace);
+      String id = command.substring(lastSpace + 1, command.length());
+      return new CommandResponse(new RadarrApi().add2(searchText, id));
     }
   },
-  FIND_MOVIE("movie find", "Finds a movie using radarr (i.e., movie find John Wick)") {
+  PROFILES("movie profiles", "Displays all the profiles available to search for movies under (i.e., movie add ANY)") {
     @Override
     public CommandResponse execute(String command) {
-      return new CommandResponse(new RadarrApi().lookup(command));
+      return new CommandResponse(new RadarrApi().getProfiles());
+    }
+  },
+  FIND_NEW_MOVIE("movie find new", "Finds a new movie using radarr (i.e., movie find John Wick)") {
+    @Override
+    public CommandResponse execute(String command) {
+      return new CommandResponse(new RadarrApi().lookup(command, true));
+    }
+  },
+  FIND_EXISTING_MOVIE("movie find existing", "Finds an existing movie using radarr (i.e., movie find Princess Fudgecake") {
+    @Override
+    public CommandResponse execute(String command) {
+      return new CommandResponse(new RadarrApi().lookup(command, false));
     }
   },
   MOVIE_DOWNLOADS("movie downloads", "Shows all the active movies downloading in radarr") {
@@ -32,42 +48,17 @@ public enum Command {
   HELP("help", "") {
     @Override
     public CommandResponse execute(String command) {
-      StringBuilder stringBuilder = new StringBuilder();
-      //needs to be in a code block, otherwise the spacing won't work correctly
-      stringBuilder.append("```**Commands**\n");
+      EmbedBuilder embedBuilder = new EmbedBuilder();
+      embedBuilder.setTitle("Commands");
       int maxCommandTextLength = 0;
       for (Command com : Command.values()) {
         if (com == HELP) {
           continue;
         }
-        //figure out the max command identifier length so our help message is aligned
-        if (maxCommandTextLength == 0 || maxCommandTextLength < com.commandText.length()) {
-          maxCommandTextLength = com.commandText.length();
-        }
+        embedBuilder.addField(com.commandText, com.description, false);
       }
-
-      for (Command com : Command.values()) {
-        if (com == HELP) {
-          continue;
-        }
-        //apply the additional padding if necessary
-        stringBuilder.append(com.commandText + getAdditionalPadding(com.commandText.length(), maxCommandTextLength) + HELP_COMMAND_PADDING + com.description + "\n");
-      }
-      stringBuilder.append("```");
-      return new CommandResponse(stringBuilder.toString());
+      return new CommandResponse(embedBuilder.build());
     }
-
-    private String getAdditionalPadding(int commandTextLength, int max) {
-      String additionalPadding = "";
-      if (commandTextLength < max) {
-        for (int i = 0; i < max - commandTextLength; i++) {
-          additionalPadding += " ";
-        }
-      }
-      return additionalPadding;
-    }
-
-    private static final String HELP_COMMAND_PADDING = "                  ";
   };
 
   private Command(String commandText, String description) {

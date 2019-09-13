@@ -6,7 +6,8 @@ import java.util.List;
 
 public interface Api {
   String getApiUrl(String path);
-  List<MessageEmbed> lookup(String search);
+  List<MessageEmbed> lookup(String search, boolean findNew);
   List<MessageEmbed> downloads();
-  MessageEmbed add(String command);
+  MessageEmbed add2(String searchText, String id);
+  List<MessageEmbed> getProfiles();
 }

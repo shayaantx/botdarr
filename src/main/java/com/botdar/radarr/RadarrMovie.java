@@ -43,11 +43,11 @@ public class RadarrMovie {
     this.remotePoster = remotePoster;
   }
 
-  public int getTmdbId() {
+  public long getTmdbId() {
     return tmdbId;
   }
 
-  public void setTmdbId(int tmdbId) {
+  public void setTmdbId(long tmdbId) {
     this.tmdbId = tmdbId;
   }
 
@@ -75,12 +75,28 @@ public class RadarrMovie {
     this.monitored = monitored;
   }
 
-  public boolean isSearchForMovie() {
-    return searchForMovie;
+  public RadarrOptions getAddOptions() {
+    return addOptions;
   }
 
-  public void setSearchForMovie(boolean searchForMovie) {
-    this.searchForMovie = searchForMovie;
+  public void setAddOptions(RadarrOptions addOptions) {
+    this.addOptions = addOptions;
+  }
+
+  public boolean isHasFile() {
+    return hasFile;
+  }
+
+  public void setHasFile(boolean hasFile) {
+    this.hasFile = hasFile;
+  }
+
+  public boolean isDownloaded() {
+    return downloaded;
+  }
+
+  public void setDownloaded(boolean downloaded) {
+    this.downloaded = downloaded;
   }
 
   private String title;
@@ -88,9 +104,11 @@ public class RadarrMovie {
   private String titleSlug;
   private List<RadarrImage> images;
   private String remotePoster;
-  private int tmdbId;
+  private long tmdbId;
   private int year;
   private String path;
   private boolean monitored = true;
-  private boolean searchForMovie = true;
+  private boolean hasFile;
+  private boolean downloaded;
+  private RadarrOptions addOptions = new RadarrOptions();
 }
