@@ -4,6 +4,6 @@ node {
 	}
 
 	stage("Package") {
-	  sh 'mvwn package'
+	  sh './mvnw package'
 	}
 }
