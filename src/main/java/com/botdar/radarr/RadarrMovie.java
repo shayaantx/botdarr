@@ -11,11 +11,11 @@ public class RadarrMovie {
     this.title = title;
   }
 
-  public int getQualityProfileId() {
+  public long getQualityProfileId() {
     return qualityProfileId;
   }
 
-  public void setQualityProfileId(int qualityProfileId) {
+  public void setQualityProfileId(long qualityProfileId) {
     this.qualityProfileId = qualityProfileId;
   }
 
@@ -108,7 +108,7 @@ public class RadarrMovie {
   }
 
   private String title;
-  private int qualityProfileId;
+  private long qualityProfileId;
   private String titleSlug;
   private List<RadarrImage> images;
   private String remotePoster;

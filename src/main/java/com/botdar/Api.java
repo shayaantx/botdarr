@@ -16,4 +16,5 @@ public interface Api {
   List<MessageEmbed> cancelDownload(long id);
   void sendNotifications(JDA jda);
   void cacheData(JDA jda);
+  String getApiToken();
 }

@@ -15,32 +15,32 @@ public enum Command {
       int lastSpace = command.lastIndexOf(" ");
       String searchText = command.substring(0, lastSpace);
       String id = command.substring(lastSpace + 1, command.length());
-      return new CommandResponse(RadarrApi.get().add(searchText, id));
+      return new CommandResponse(RADARR_API.add(searchText, id));
     }
   },
   ADD_TITLE_MOVIE("movie title add", "Adds a movie with just a title. Since many movies can have same title or very similar titles, the trakt" +
     " search can return multiple movies, if we detect multiple new films, we will return those films, otherwise we will add the single film.") {
     @Override
     public CommandResponse execute(String command) {
-      return new CommandResponse(RadarrApi.get().addTitle(command));
+      return new CommandResponse(RADARR_API.addTitle(command));
     }
   },
   PROFILES("movie profiles", "Displays all the profiles available to search for movies under (i.e., movie add ANY)") {
     @Override
     public CommandResponse execute(String command) {
-      return new CommandResponse(RadarrApi.get().getProfiles());
+      return new CommandResponse(RADARR_API.getProfiles());
     }
   },
   FIND_NEW_MOVIE("movie find new", "Finds a new movie using radarr (i.e., movie find John Wick)") {
     @Override
     public CommandResponse execute(String command) {
-      return new CommandResponse(RadarrApi.get().lookup(command, true));
+      return new CommandResponse(RADARR_API.lookup(command, true));
     }
   },
   FIND_EXISTING_MOVIE("movie find existing", "Finds an existing movie using radarr (i.e., movie find Princess Fudgecake") {
     @Override
     public CommandResponse execute(String command) {
-      return new CommandResponse(RadarrApi.get().lookup(command, false));
+      return new CommandResponse(RADARR_API.lookup(command, false));
     }
   },
   FIND_MOVIE_DOWNLOADS("movie find downloads", "Lists all the available torrents for a movie (i.e., movie find downloads TITLE OF MOVIE). " +
@@ -54,7 +54,7 @@ public enum Command {
   MOVIE_DOWNLOADS("movie downloads", "Shows all the active movies downloading in radarr") {
     @Override
     public CommandResponse execute(String command) {
-      List<MessageEmbed> embedList = RadarrApi.get().downloads();
+      List<MessageEmbed> embedList = RADARR_API.downloads();
       if (embedList == null || embedList.size() == 0) {
         return new CommandResponse(EmbedHelper.createInfoMessage("No downloads currently"));
       }
@@ -66,7 +66,7 @@ public enum Command {
     public CommandResponse execute(String command) {
       try {
         Long id = Long.valueOf(command);
-        return new CommandResponse(RadarrApi.get().cancelDownload(id));
+        return new CommandResponse(RADARR_API.cancelDownload(id));
       } catch (NumberFormatException e) {
         return new CommandResponse(EmbedHelper.createErrorMessage("Require an id value to cancel a download, e=" + e.getMessage()));
       }
@@ -100,4 +100,5 @@ public enum Command {
 
   private final String description;
   private final String commandText;
+  private static final RadarrApi RADARR_API = RadarrApi.get();
 }

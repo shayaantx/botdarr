@@ -16,6 +16,7 @@ import java.util.List;
 
 public class BotdarApplication {
 	public static void main(String[] args) throws Exception {
+	  //TODO: add validation to make sure all properties are set
     JDA jda = new JDABuilder(Config.getProperty(Config.Constants.TOKEN)).addEventListeners(new ListenerAdapter() {
       @Override
       public void onReady(@Nonnull ReadyEvent event) {

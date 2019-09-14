@@ -40,6 +40,12 @@ public class Scheduler {
   }
 
   public void initCaching(List<Api> apis, JDA jda) {
+    //cache initially
+    for (Api api : apis) {
+      api.cacheData(jda);
+    }
+
+    //then cache on a schedule
     if (cacheFuture == null) {
       cacheFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(new Runnable() {
         @Override

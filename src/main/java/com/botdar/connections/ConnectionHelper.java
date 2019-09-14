@@ -28,8 +28,7 @@ public class ConnectionHelper {
   public static <T> List<T> makeGetRequest(Api api, String path, String params, ResponseHandler<T> responseHandler) {
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpGet get = new HttpGet(api.getApiUrl(path) + params);
-      //TODO: need to set this token elsewhere
-      get.setHeader("X-Api-Key", Config.getProperty(Config.Constants.RADARR_TOKEN));
+      get.setHeader("X-Api-Key", Config.getProperty(api.getApiToken()));
       try (CloseableHttpResponse response = client.execute(get)) {
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == 200) {
@@ -52,8 +51,7 @@ public class ConnectionHelper {
   public static <T> List<T> makeDeleteRequest(Api api, String path, String params, ResponseHandler<T> responseHandler) {
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpDelete delete = new HttpDelete(api.getApiUrl(path) + params);
-      //TODO: need to set this token elsewhere
-      delete.setHeader("X-Api-Key", Config.getProperty(Config.Constants.RADARR_TOKEN));
+      delete.setHeader("X-Api-Key", Config.getProperty(api.getApiToken()));
       try (CloseableHttpResponse response = client.execute(delete)) {
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == 200) {

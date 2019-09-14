@@ -152,33 +152,30 @@ public class RadarrApi implements Api {
 
   @Override
   public List<MessageEmbed> getProfiles() {
-    return ConnectionHelper.makeGetRequest(this, "profile", new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
-      @Override
-      public List<MessageEmbed> onSuccess(String response) {
-        List<MessageEmbed> profileMessages = new ArrayList<>();
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        for (int i = 0; i < json.size(); i++) {
-          RadarrProfile radarrProfile = new Gson().fromJson(json.get(i), RadarrProfile.class);
-          EmbedBuilder embedBuilder = new EmbedBuilder();
-          embedBuilder.setTitle("Profile");
-          embedBuilder.addField("Name", radarrProfile.getName(), false);
-          embedBuilder.addField("Cutoff", radarrProfile.getCutoff().getName(), false);
-          embedBuilder.addBlankField(false);
-          for (int k = 0; k < radarrProfile.getItems().size(); k++) {
-            RadarrProfileQualityItem radarrProfileQualityItem = radarrProfile.getItems().get(k);
-            if (radarrProfileQualityItem.isAllowed()) {
-              embedBuilder.addField(
-                "Quality",
-                "name=" + radarrProfileQualityItem.getQuality().getName() + ", resolution=" + radarrProfileQualityItem.getQuality().getResolution(),
-                true);
-            }
-          }
-          profileMessages.add(embedBuilder.build());
+    Collection<RadarrProfile> profiles = existingProfiles.values();
+    if (profiles == null || profiles.isEmpty()) {
+      return Arrays.asList(EmbedHelper.createErrorMessage("Found 0 profiles, please setup Radarr with at least one profile"));
+    }
+
+    List<MessageEmbed> profileMessages = new ArrayList<>();
+    for (RadarrProfile radarrProfile : profiles) {
+      EmbedBuilder embedBuilder = new EmbedBuilder();
+      embedBuilder.setTitle("Profile");
+      embedBuilder.addField("Name", radarrProfile.getName(), false);
+      embedBuilder.addField("Cutoff", radarrProfile.getCutoff().getName(), false);
+      embedBuilder.addBlankField(false);
+      for (int k = 0; k < radarrProfile.getItems().size(); k++) {
+        RadarrProfileQualityItem radarrProfileQualityItem = radarrProfile.getItems().get(k);
+        if (radarrProfileQualityItem.isAllowed()) {
+          embedBuilder.addField(
+            "Quality",
+            "name=" + radarrProfileQualityItem.getQuality().getName() + ", resolution=" + radarrProfileQualityItem.getQuality().getResolution(),
+            true);
         }
-        return profileMessages;
       }
-    });
+      profileMessages.add(embedBuilder.build());
+    }
+    return profileMessages;
   }
 
   @Override
@@ -258,7 +255,16 @@ public class RadarrApi implements Api {
         return null;
       }
     });
-    //TODO: cacheData profiles into set
+
+    List<RadarrProfile> radarrProfiles = getRadarrProfiles();
+    for (RadarrProfile radarrProfile : radarrProfiles) {
+      existingProfiles.put(radarrProfile.getName(), radarrProfile);
+    }
+  }
+
+  @Override
+  public String getApiToken() {
+    return Config.Constants.RADARR_TOKEN;
   }
 
   private MessageEmbed addMovie(RadarrMovie radarrMovie) {
@@ -267,8 +273,12 @@ public class RadarrApi implements Api {
     //make sure the movie is monitored
     radarrMovie.setMonitored(true);
 
-    //TODO: 1 = any on my radarr, but it could be any id, need a property for this
-    radarrMovie.setQualityProfileId(1);
+    String radarrProfileName = Config.getProperty(Config.Constants.RADARR_DEFAULT_PROFILE);
+    RadarrProfile radarrProfile = existingProfiles.get(radarrProfileName);
+    if (radarrProfile == null) {
+      return EmbedHelper.createErrorMessage("Could not find radarr profile for default " + radarrProfileName);
+    }
+    radarrMovie.setQualityProfileId(radarrProfile.getId());
 
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl("movie"));
@@ -305,6 +315,23 @@ public class RadarrApi implements Api {
     });
   }
 
+  private List<RadarrProfile> getRadarrProfiles() {
+    return ConnectionHelper.makeGetRequest(this, "profile", new ConnectionHelper.SimpleEntityResponseHandler<RadarrProfile>() {
+      @Override
+      public List<RadarrProfile> onSuccess(String response) {
+        List<RadarrProfile> radarrProfiles = new ArrayList<>();
+        JsonParser parser = new JsonParser();
+        JsonArray json = parser.parse(response).getAsJsonArray();
+        for (int i = 0; i < json.size(); i++) {
+          RadarrProfile radarrProfile = new Gson().fromJson(json.get(i), RadarrProfile.class);
+          radarrProfiles.add(radarrProfile);
+        }
+        return radarrProfiles;
+      }
+    });
+  }
+
+  private Map<String, RadarrProfile> existingProfiles = new ConcurrentHashMap<>();
   private Map<String, Long> existingMovieTitlesToIds = new ConcurrentHashMap<>();
   private Map<Long, RadarrMovie> existingTmdbIdsToMovies = new ConcurrentHashMap<>();
   private static volatile RadarrApi instance;

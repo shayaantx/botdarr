@@ -27,7 +27,16 @@ public class RadarrProfile {
     this.items = items;
   }
 
+  public long getId() {
+    return id;
+  }
+
+  public void setId(long id) {
+    this.id = id;
+  }
+
   private String name;
   private RadarrProfileCutoff cutoff;
   private List<RadarrProfileQualityItem> items;
+  private long id;
 }
