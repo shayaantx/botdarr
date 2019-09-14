@@ -31,11 +31,11 @@ node {
 		}
 		
 		stage("Archive") {
-			archive 'target/botdar-release.jar'
+			archiveArtifacts 'target/botdar-release.jar'
 		}
 	}
 	
-    stage("Cleanup") {
-        deleteDir();
-    }
+  stage("Cleanup") {
+      deleteDir();
+  }
 }
