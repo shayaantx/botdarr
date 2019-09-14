@@ -2,6 +2,7 @@ package com.botdar.scheduling;
 
 import com.botdar.Api;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -21,7 +22,7 @@ public class Scheduler {
   }
 
 
-  public void initNotifications(List<Api> apis, JDA jda) {
+  public void initApiNotifications(List<Api> apis, JDA jda) {
     if (notificationFuture == null) {
       notificationFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(new Runnable() {
         @Override
@@ -30,6 +31,8 @@ public class Scheduler {
             for (Api api : apis) {
               api.sendNotifications(jda);
             }
+          } catch (InsufficientPermissionException e) {
+            //TODO: debug log this
           } catch (Throwable e) {
             //TODO: log elsewhere
             e.printStackTrace();
@@ -39,7 +42,7 @@ public class Scheduler {
     }
   }
 
-  public void initCaching(List<Api> apis, JDA jda) {
+  public void initApiCaching(List<Api> apis, JDA jda) {
     //cache initially
     for (Api api : apis) {
       api.cacheData(jda);

@@ -14,7 +14,7 @@ public enum Command {
     public CommandResponse execute(String command) {
       int lastSpace = command.lastIndexOf(" ");
       String searchText = command.substring(0, lastSpace);
-      String id = command.substring(lastSpace + 1, command.length());
+      String id = command.substring(lastSpace + 1);
       return new CommandResponse(RADARR_API.add(searchText, id));
     }
   },
@@ -37,18 +37,25 @@ public enum Command {
       return new CommandResponse(RADARR_API.lookup(command, true));
     }
   },
-  FIND_EXISTING_MOVIE("movie find existing", "Finds an existing movie using radarr (i.e., movie find Princess Fudgecake") {
+  FIND_EXISTING_MOVIE("movie find existing", "Finds an existing movie using radarr (i.e., movie find Princess Fudgecake)") {
     @Override
     public CommandResponse execute(String command) {
       return new CommandResponse(RADARR_API.lookup(command, false));
     }
   },
-  FIND_MOVIE_DOWNLOADS("movie find downloads", "Lists all the available torrents for a movie (i.e., movie find downloads TITLE OF MOVIE). " +
+  FIND_MOVIE_DOWNLOADS("movie find downloads", "Lists all the available (not rejected) torrents for a movie (i.e., movie find downloads TITLE OF MOVIE). " +
     "You can get the title by using \"movie find existing\". This can be a SLOW operation depending on the number of indexers configured" +
-    " in your Radarr settings and particularly how fast each indexer is.") {
+    " in your Radarr settings and particularly how fast each indexer is. Also these are torrents that have not been marked as rejected based" +
+    " on whatever quality/profile settings are configured in Radarr") {
     @Override
     public CommandResponse execute(String command) {
-      return new CommandResponse(RadarrApi.get().lookupTorrents(command));
+      return new CommandResponse(RadarrApi.get().lookupTorrents(command, false));
+    }
+  },
+  FIND_MOVIE_ALL_DOWNLOADS("movie find all downloads", "List all the available torrents for a movie whether they are rejected by radarr or not") {
+    @Override
+    public CommandResponse execute(String command) {
+      return new CommandResponse(RadarrApi.get().lookupTorrents(command, true));
     }
   },
   MOVIE_DOWNLOADS("movie downloads", "Shows all the active movies downloading in radarr") {

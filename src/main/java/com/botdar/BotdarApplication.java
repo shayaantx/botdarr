@@ -23,8 +23,8 @@ public class BotdarApplication {
         JDA readyEventJda = event.getJDA();
         List<Api> apis = Arrays.asList(RadarrApi.get());
         Scheduler scheduler = Scheduler.getScheduler();
-        scheduler.initNotifications(apis, readyEventJda);
-        scheduler.initCaching(apis, readyEventJda);
+        scheduler.initApiNotifications(apis, readyEventJda);
+        scheduler.initApiCaching(apis, readyEventJda);
         super.onReady(event);
       }
 

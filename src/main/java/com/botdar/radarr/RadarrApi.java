@@ -179,7 +179,7 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public List<MessageEmbed> lookupTorrents(String command) {
+  public List<MessageEmbed> lookupTorrents(String command, boolean showRejected) {
     Long id = existingMovieTitlesToIds.get(command.toLowerCase());
     if (id == null) {
       return Arrays.asList(EmbedHelper.createErrorMessage("Could not find id for " + command));
@@ -196,7 +196,7 @@ public class RadarrApi implements Api {
         List<MessageEmbed> messageEmbeds = new ArrayList<>();
         for (int i = 0; i < json.size(); i++) {
           RadarrTorrent radarrTorrent = new Gson().fromJson(json.get(i), RadarrTorrent.class);
-          if (radarrTorrent.isRejected()) {
+          if (!showRejected && radarrTorrent.isRejected()) {
             //dont show rejected torrents
             continue;
           }
