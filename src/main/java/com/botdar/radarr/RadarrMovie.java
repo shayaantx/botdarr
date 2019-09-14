@@ -99,6 +99,14 @@ public class RadarrMovie {
     this.downloaded = downloaded;
   }
 
+  public long getId() {
+    return id;
+  }
+
+  public void setId(long id) {
+    this.id = id;
+  }
+
   private String title;
   private int qualityProfileId;
   private String titleSlug;
@@ -111,4 +119,5 @@ public class RadarrMovie {
   private boolean hasFile;
   private boolean downloaded;
   private RadarrOptions addOptions = new RadarrOptions();
+  private long id;
 }

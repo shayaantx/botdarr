@@ -8,13 +8,21 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import java.util.List;
 
 public enum Command {
-  ADD_MOVIE("movie add", "Adds a movie using search text and tmdb id (i.e., movie add John Wick 484737), get tmdb ids using find") {
+  ADD_MOVIE("movie add", "Adds a movie using search text and tmdb id (i.e., movie add John Wick 484737). The easiest" +
+    " way to use this command is to use \"movie find new TITLE\", then the results will contain the movie add command for you") {
     @Override
     public CommandResponse execute(String command) {
       int lastSpace = command.lastIndexOf(" ");
       String searchText = command.substring(0, lastSpace);
       String id = command.substring(lastSpace + 1, command.length());
-      return new CommandResponse(new RadarrApi().add2(searchText, id));
+      return new CommandResponse(new RadarrApi().add(searchText, id));
+    }
+  },
+  ADD_TITLE_MOVIE("movie title add", "Adds a movie with just a title. Since many movies can have same title or very similar titles, the trakt" +
+    " search can return multiple movies, if we detect multiple new films, we will return those films, otherwise we will add the single film.") {
+    @Override
+    public CommandResponse execute(String command) {
+      return new CommandResponse(new RadarrApi().addTitle(command));
     }
   },
   PROFILES("movie profiles", "Displays all the profiles available to search for movies under (i.e., movie add ANY)") {
@@ -35,6 +43,14 @@ public enum Command {
       return new CommandResponse(new RadarrApi().lookup(command, false));
     }
   },
+  FIND_MOVIE_DOWNLOADS("movie find downloads", "Lists all the available torrents for a movie (i.e., movie find downloads TITLE OF MOVIE). " +
+    "You can get the title by using \"movie find existing\". This can be a SLOW operation depending on the number of indexers configured" +
+    " in your Radarr settings and particularly how fast each indexer is.") {
+    @Override
+    public CommandResponse execute(String command) {
+      return new CommandResponse(new RadarrApi().lookupTorrents(command));
+    }
+  },
   MOVIE_DOWNLOADS("movie downloads", "Shows all the active movies downloading in radarr") {
     @Override
     public CommandResponse execute(String command) {
@@ -45,12 +61,22 @@ public enum Command {
       return new CommandResponse(embedList);
     }
   },
+  CANCEL_DOWNLOAD("movie cancel download", "Cancels a download") {
+    @Override
+    public CommandResponse execute(String command) {
+      try {
+        Long id = Long.valueOf(command);
+        return new CommandResponse(new RadarrApi().cancelDownload(id));
+      } catch (NumberFormatException e) {
+        return new CommandResponse(EmbedHelper.createErrorMessage("Require an id value to cancel a download, e=" + e.getMessage()));
+      }
+    }
+  },
   HELP("help", "") {
     @Override
     public CommandResponse execute(String command) {
       EmbedBuilder embedBuilder = new EmbedBuilder();
       embedBuilder.setTitle("Commands");
-      int maxCommandTextLength = 0;
       for (Command com : Command.values()) {
         if (com == HELP) {
           continue;
