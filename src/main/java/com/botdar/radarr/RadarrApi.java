@@ -7,7 +7,6 @@ import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -23,18 +22,19 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class RadarrApi implements Api {
-  public RadarrApi() {
-    cacheRadarrInfo();
-    Executors.newScheduledThreadPool(1).schedule(new Runnable() {
-      @Override
-      public void run() {
-        cacheRadarrInfo();
+  private RadarrApi() {}
+
+  public static RadarrApi get() {
+    if (instance == null) {
+      synchronized (RadarrApi .class) {
+        if (instance == null) {
+          instance = new RadarrApi();
+        }
       }
-    }, 1, TimeUnit.MINUTES);
+    }
+    return instance;
   }
 
   @Override
@@ -232,7 +232,7 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public void sendPeriodNotifications(JDA jda) {
+  public void sendNotifications(JDA jda) {
     for (TextChannel textChannel : jda.getTextChannels()) {
       List<MessageEmbed> downloads = downloads();
       if (downloads == null || downloads.size() == 0) {
@@ -241,6 +241,24 @@ public class RadarrApi implements Api {
         new CommandResponse(downloads).send(textChannel);
       }
     }
+  }
+
+  @Override
+  public void cacheData(JDA jda) {
+    ConnectionHelper.makeGetRequest(this, "/movie", new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+      @Override
+      public List<RadarrMovie> onSuccess(String response) throws Exception {
+        JsonParser parser = new JsonParser();
+        JsonArray json = parser.parse(response).getAsJsonArray();
+        for (int i = 0; i < json.size(); i++) {
+          RadarrMovie radarrMovie = new Gson().fromJson(json.get(i), RadarrMovie.class);
+          existingTmdbIdsToMovies.put(radarrMovie.getTmdbId(), radarrMovie);
+          existingMovieTitlesToIds.put(radarrMovie.getTitle().toLowerCase(), radarrMovie.getId());
+        }
+        return null;
+      }
+    });
+    //TODO: cacheData profiles into set
   }
 
   private MessageEmbed addMovie(RadarrMovie radarrMovie) {
@@ -287,23 +305,7 @@ public class RadarrApi implements Api {
     });
   }
 
-  private void cacheRadarrInfo() {
-    ConnectionHelper.makeGetRequest(this, "/movie", new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
-      @Override
-      public List<RadarrMovie> onSuccess(String response) throws Exception {
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        for (int i = 0; i < json.size(); i++) {
-          RadarrMovie radarrMovie = new Gson().fromJson(json.get(i), RadarrMovie.class);
-          existingTmdbIdsToMovies.put(radarrMovie.getTmdbId(), radarrMovie);
-          existingMovieTitlesToIds.put(radarrMovie.getTitle().toLowerCase(), radarrMovie.getId());
-        }
-        return null;
-      }
-    });
-    //TODO: cache profiles into set
-  }
-
   private Map<String, Long> existingMovieTitlesToIds = new ConcurrentHashMap<>();
   private Map<Long, RadarrMovie> existingTmdbIdsToMovies = new ConcurrentHashMap<>();
+  private static volatile RadarrApi instance;
 }

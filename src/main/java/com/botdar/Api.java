@@ -14,5 +14,6 @@ public interface Api {
   List<MessageEmbed> getProfiles();
   List<MessageEmbed> lookupTorrents(String command);
   List<MessageEmbed> cancelDownload(long id);
-  void sendPeriodNotifications(JDA jda);
+  void sendNotifications(JDA jda);
+  void cacheData(JDA jda);
 }
