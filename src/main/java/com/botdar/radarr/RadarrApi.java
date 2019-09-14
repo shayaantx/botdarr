@@ -233,7 +233,7 @@ public class RadarrApi implements Api {
     for (TextChannel textChannel : jda.getTextChannels()) {
       List<MessageEmbed> downloads = downloads();
       if (downloads == null || downloads.size() == 0) {
-        new CommandResponse(EmbedHelper.createInfoMessage("No downloads currently")).send(textChannel);
+        new CommandResponse(EmbedHelper.createInfoMessage("No downloads running currently")).send(textChannel);
       } else {
         new CommandResponse(downloads).send(textChannel);
       }

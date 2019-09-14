@@ -1,10 +1,7 @@
 def dockerFileContents = """
 FROM centos:7
-RUN yum update; yum clean all; yum -y install nano; yum -y install less;
+RUN yum update; yum clean all;
 RUN yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
-RUN yum -y install dos2unix;
-RUN yum -y install net-tools;
-RUN yum -y install openssh;
 RUN yum -y install maven
 RUN adduser jenkins
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
