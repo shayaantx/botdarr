@@ -258,7 +258,7 @@ public class RadarrApi implements Api {
 
     List<RadarrProfile> radarrProfiles = getRadarrProfiles();
     for (RadarrProfile radarrProfile : radarrProfiles) {
-      existingProfiles.put(radarrProfile.getName(), radarrProfile);
+      existingProfiles.put(radarrProfile.getName().toLowerCase(), radarrProfile);
     }
   }
 
@@ -274,7 +274,7 @@ public class RadarrApi implements Api {
     radarrMovie.setMonitored(true);
 
     String radarrProfileName = Config.getProperty(Config.Constants.RADARR_DEFAULT_PROFILE);
-    RadarrProfile radarrProfile = existingProfiles.get(radarrProfileName);
+    RadarrProfile radarrProfile = existingProfiles.get(radarrProfileName.toLowerCase());
     if (radarrProfile == null) {
       return EmbedHelper.createErrorMessage("Could not find radarr profile for default " + radarrProfileName);
     }
