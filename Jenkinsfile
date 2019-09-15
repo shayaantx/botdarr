@@ -7,7 +7,7 @@ RUN adduser jenkins
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
 """;
 
-function getChangelistDescription() {
+def getChangelistDescription() {
   def description = "";
   def changeLogSets = currentBuild.changeSets;
   for (int i = 0; i < changeLogSets.size(); i++) {
