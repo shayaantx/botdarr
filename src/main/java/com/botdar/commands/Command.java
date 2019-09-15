@@ -61,11 +61,7 @@ public enum Command {
   MOVIE_DOWNLOADS("movie downloads", "Shows all the active movies downloading in radarr") {
     @Override
     public CommandResponse execute(String command) {
-      List<MessageEmbed> embedList = RADARR_API.downloads();
-      if (embedList == null || embedList.size() == 0) {
-        return new CommandResponse(EmbedHelper.createInfoMessage("No downloads currently"));
-      }
-      return new CommandResponse(embedList);
+      return new CommandResponse(RADARR_API.downloads());
     }
   },
   CANCEL_DOWNLOAD("movie cancel download", "Cancels a download") {

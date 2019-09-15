@@ -8,5 +8,6 @@ public class RadarrQueueStatusMessages {
   public void setMessages(String[] messages) {
     this.messages = messages;
   }
+
   private String[] messages;
 }

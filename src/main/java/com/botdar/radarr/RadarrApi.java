@@ -7,6 +7,7 @@ import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -79,7 +80,7 @@ public class RadarrApi implements Api {
 
   @Override
   public List<MessageEmbed> downloads() {
-    return ConnectionHelper.makeGetRequest(this, "queue", new ConnectionHelper.SimpleEntityResponseHandler<MessageEmbed>() {
+    return ConnectionHelper.makeGetRequest(this, "queue", new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
       @Override
       public List<MessageEmbed> onSuccess(String response) throws Exception {
         List<MessageEmbed> messageEmbeds = new ArrayList<>();
@@ -88,17 +89,20 @@ public class RadarrApi implements Api {
         for (int i = 0; i < json.size(); i++) {
           RadarrQueue radarrQueue = new Gson().fromJson(json.get(i), RadarrQueue.class);
           EmbedBuilder embedBuilder = new EmbedBuilder();
-          embedBuilder.setTitle(radarrQueue.getTitle());
+          embedBuilder.setTitle(radarrQueue.getRadarrQueueMovie().getTitle());
           embedBuilder.addField("Quality", radarrQueue.getQuality().getQuality().getName(), true);
           embedBuilder.addField("Status", radarrQueue.getStatus(), true);
           embedBuilder.addField("Time Left", radarrQueue.getTimeleft(), true);
-          if (radarrQueue.getStatusMessages().getMessages() != null) {
-            for (String message : radarrQueue.getStatusMessages().getMessages()) {
+          if (radarrQueue.getStatusMessages() != null) {
+            for (String message : radarrQueue.getStatusMessages()) {
               embedBuilder.addField("Download message", message, true);
             }
           }
           embedBuilder.addField("Cancel download command", "movie cancel download " + radarrQueue.getId(), true);
           messageEmbeds.add(embedBuilder.build());
+        }
+        if (messageEmbeds == null || messageEmbeds.size() == 0) {
+          return Arrays.asList(EmbedHelper.createInfoMessage("No downloads currently"));
         }
         return messageEmbeds;
       }
