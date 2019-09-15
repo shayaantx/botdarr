@@ -46,15 +46,17 @@ node {
 
 		stage('Create Release') {
 		  def description = getChangelistDescription();
-		  withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
-        sh label: '', script: '''
-          token=${token}
-          tag=latest-${BUILD_NUMBER}
-          name=latest-${BUILD_NUMBER}
-          description=$(echo ${description} | sed -z \'s/\\n/\\\\n/g\') # Escape line breaks to prevent json parsing problems
-          # Create a release
-          release=$(curl -XPOST -H "Authorization:token $token" --data "{\\"tag_name\\": \\"$tag\\", \\"target_commitish\\": \\"master\\", \\"name\\": \\"$name\\", \\"body\\": \\"$description\\", \\"draft\\": false, \\"prerelease\\": true}" https://api.github.com/repos/shayaantx/botdar/releases)
-        '''
+		  if (env.BRANCH_NAME == "development") {
+        withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
+          sh label: '', script: '''
+            token=${token}
+            tag=latest-${BUILD_NUMBER}
+            name=latest-${BUILD_NUMBER}
+            description=$(echo ${description} | sed -z \'s/\\n/\\\\n/g\') # Escape line breaks to prevent json parsing problems
+            # Create a release
+            release=$(curl -XPOST -H "Authorization:token $token" --data "{\\"tag_name\\": \\"$tag\\", \\"target_commitish\\": \\"master\\", \\"name\\": \\"$name\\", \\"body\\": \\"$description\\", \\"draft\\": false, \\"prerelease\\": true}" https://api.github.com/repos/shayaantx/botdar/releases)
+          '''
+        }
       }
 		}
 
