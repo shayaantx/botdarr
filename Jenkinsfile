@@ -46,6 +46,7 @@ node {
 
 		stage('Create/Upload Release') {
 		  def description = getChangelistDescription();
+		  print "branch name" + env.BRANCH_NAME;
 		  if (env.BRANCH_NAME == "development") {
         withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
           sh label: '', script: '''
