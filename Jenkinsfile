@@ -64,6 +64,7 @@ node {
           tag = getNextVersion('release');
         }
         print "tag=" + tag;
+        sh 'chmod 700 upload-release.sh'
         sh "./upload-release.sh ${token} ${tag} ${description}"
       }
 		}
