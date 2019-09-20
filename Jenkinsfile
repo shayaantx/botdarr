@@ -23,19 +23,16 @@ def getChangelistDescription() {
 def getNextVersion(scope) {
     def latestVersion = sh returnStdout: true, script: 'git describe --tags "$(git rev-list --tags=*.*.* --max-count=1 2> /dev/null)" 2> /dev/null || echo 0.0.0'
     def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() }
-    def nextVersion
+    def nextVersion;
     switch (scope) {
-        case 'major':
-            nextVersion = "${major + 1}.0.0"
-            break
-        case 'minor':
-            nextVersion = "${major}.${minor + 1}.0"
-            break
-        case 'patch':
-            nextVersion = "${major}.${minor}.${patch + 1}"
-            break
+      case 'release':
+          nextVersion = "${major + 1}.0.0"
+          break;
+      case 'development':
+          nextVersion = "${major}.${minor}.${patch + 1}"
+          break;
     }
-    nextVersion
+    return nextVersion;
 }
 
 node {
@@ -65,10 +62,9 @@ node {
 		stage('Create/Upload Release') {
 		  def description = getChangelistDescription();
 		  print "branch name" + env.BRANCH_NAME;
-      def version = getNextVersion();
-		  def tag = "development-" + version;
+		  def tag = "development-" + getNextVersion('development');
 		  if (env.BRANCH_NAME == "master") {
-		    tag = "release-" + version;
+		    tag = getNextVersion('release');
 		  }
       withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
         sh label: '', script: '''
