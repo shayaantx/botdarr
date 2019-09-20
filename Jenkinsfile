@@ -67,7 +67,7 @@ node {
         sh label: '', script: """
           token=${token}
           tag=${tag}
-          name=${tag}
+          name=\${tag}
           description=$(echo ${description} | sed -z \'s/\\n/\\\\n/g\') # Escape line breaks to prevent json parsing problems
           release=$(curl -XPOST -H "Authorization:token $token" --data "{\\"tag_name\\": \\"$tag\\", \\"target_commitish\\": \\"master\\", \\"name\\": \\"$name\\", \\"body\\": \\"$description\\", \\"draft\\": false, \\"prerelease\\": true}" https://api.github.com/repos/shayaantx/botdar/releases)
           id=$(echo "$release" | sed -n -e 's/"id":\\ \\([0-9]\\+\\),/\\1/p' | head -n 1 | sed 's/[[:blank:]]//g')
