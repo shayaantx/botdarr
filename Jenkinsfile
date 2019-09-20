@@ -43,7 +43,7 @@ node {
 	def image = docker.build("botdar-image", "-f ./Dockerfile .");
 	image.inside('-u root') {
 		stage('Build') {
-			sh 'mvn -version'
+			sh 'mvn -version'doe
 			sh 'mvn compile'
 		}
 		
@@ -58,21 +58,23 @@ node {
 		stage('Create/Upload Release') {
 		  def description = getChangelistDescription();
 		  print "branch name=" + env.BRANCH_NAME;
-		  def tag = "development-" + getNextVersion('development');
+		  def tag = "latest";
+		  def name = getNextVersion('development');
 		  if (env.BRANCH_NAME == "master") {
-		    tag = getNextVersion('release');
+		    tag = "stable";
+		    name = getNextVersion('release');
 		  }
 		  print "tag=" + tag;
       withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
-        sh label: '', script: '''
+        sh label: '', script: """
           token=${token}
           tag=${tag}
-          name=${tag}
+          name=${name}
           description=$(echo ${description} | sed -z \'s/\\n/\\\\n/g\') # Escape line breaks to prevent json parsing problems
           release=$(curl -XPOST -H "Authorization:token $token" --data "{\\"tag_name\\": \\"$tag\\", \\"target_commitish\\": \\"master\\", \\"name\\": \\"$name\\", \\"body\\": \\"$description\\", \\"draft\\": false, \\"prerelease\\": true}" https://api.github.com/repos/shayaantx/botdar/releases)
           id=$(echo "$release" | sed -n -e 's/"id":\\ \\([0-9]\\+\\),/\\1/p' | head -n 1 | sed 's/[[:blank:]]//g')
           curl -XPOST -H "Authorization:token $token" -H "Content-Type:application/octet-stream" --data-binary "target/botdar-release.jar" https://uploads.github.com/repos/shayaantx/botdar/releases/$id/assets?name=botdar-release.jar
-        '''
+        """
       }
 		}
 	}
