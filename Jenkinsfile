@@ -43,7 +43,7 @@ node {
 	def image = docker.build("botdar-image", "-f ./Dockerfile .");
 	image.inside('-u root') {
 		stage('Build') {
-			sh 'mvn -version'doe
+			sh 'mvn -version'
 			sh 'mvn compile'
 		}
 		
