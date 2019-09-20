@@ -20,6 +20,24 @@ def getChangelistDescription() {
   return description;
 }
 
+def getNextVersion(scope) {
+    def latestVersion = sh returnStdout: true, script: 'git describe --tags "$(git rev-list --tags=*.*.* --max-count=1 2> /dev/null)" 2> /dev/null || echo 0.0.0'
+    def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() }
+    def nextVersion
+    switch (scope) {
+        case 'major':
+            nextVersion = "${major + 1}.0.0"
+            break
+        case 'minor':
+            nextVersion = "${major}.${minor + 1}.0"
+            break
+        case 'patch':
+            nextVersion = "${major}.${minor}.${patch + 1}"
+            break
+    }
+    nextVersion
+}
+
 node {
 	stage("Checkout") {
 		checkout scm
@@ -47,26 +65,26 @@ node {
 		stage('Create/Upload Release') {
 		  def description = getChangelistDescription();
 		  print "branch name" + env.BRANCH_NAME;
-		  if (env.BRANCH_NAME == "development") {
-        withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
-          sh label: '', script: '''
-            token=${token}
-            tag=latest-${BUILD_NUMBER}
-            name=latest-${BUILD_NUMBER}
-            description=$(echo ${description} | sed -z \'s/\\n/\\\\n/g\') # Escape line breaks to prevent json parsing problems
-            # Create a release
-            release=$(curl -XPOST -H "Authorization:token $token" --data "{\\"tag_name\\": \\"$tag\\", \\"target_commitish\\": \\"master\\", \\"name\\": \\"$name\\", \\"body\\": \\"$description\\", \\"draft\\": false, \\"prerelease\\": true}" https://api.github.com/repos/shayaantx/botdar/releases)
-            # Extract the id of the release from the creation response
-            id=$(echo "$release" | sed -n -e 's/"id":\\ \\([0-9]\\+\\),/\\1/p' | head -n 1 | sed 's/[[:blank:]]//g')
-            # Upload the artifact
-            curl -XPOST -H "Authorization:token $token" -H "Content-Type:application/octet-stream" --data-binary @artifact.zip https://uploads.github.com/repos/shayaantx/botdar/releases/$id/assets?name=target/botdar-release.jar
-          '''
-        }
+      def version = getNextVersion();
+		  def tag = "development-" + version;
+		  if (env.BRANCH_NAME == "master") {
+		    tag = "release-" + version;
+		  }
+      withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
+        sh label: '', script: '''
+          token=${token}
+          tag=${tag}
+          name=${tag}
+          description=$(echo ${description} | sed -z \'s/\\n/\\\\n/g\') # Escape line breaks to prevent json parsing problems
+          release=$(curl -XPOST -H "Authorization:token $token" --data "{\\"tag_name\\": \\"$tag\\", \\"target_commitish\\": \\"master\\", \\"name\\": \\"$name\\", \\"body\\": \\"$description\\", \\"draft\\": false, \\"prerelease\\": true}" https://api.github.com/repos/shayaantx/botdar/releases)
+          id=$(echo "$release" | sed -n -e 's/"id":\\ \\([0-9]\\+\\),/\\1/p' | head -n 1 | sed 's/[[:blank:]]//g')
+          curl -XPOST -H "Authorization:token $token" -H "Content-Type:application/octet-stream" --data-binary "target/botdar-release.jar" https://uploads.github.com/repos/shayaantx/botdar/releases/$id/assets?name=botdar-release.jar
+        '''
       }
 		}
 	}
 	
   stage("Cleanup") {
-      deleteDir();
+    deleteDir();
   }
 }
