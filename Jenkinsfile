@@ -43,7 +43,10 @@ node {
 		fileOperations([fileCreateOperation(fileContent: "${dockerFileContents}", fileName: './Dockerfile')]);
 	}
 
-  sh 'git status';
+  def tag = getNextVersion('development');
+  if (env.BRANCH_NAME == "master") {
+    tag = getNextVersion('release');
+  }
 	def image = docker.build("botdar-image", "-f ./Dockerfile .");
 	image.inside('-u root') {
 		stage('Build') {
@@ -63,10 +66,6 @@ node {
       withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
         def description = getChangelistDescription();
         print "branch name=" + env.BRANCH_NAME;
-        def tag = getNextVersion('development');
-        if (env.BRANCH_NAME == "master") {
-          tag = getNextVersion('release');
-        }
         print "tag=" + tag;
         sh 'chmod 700 upload-release.sh'
         sh "./upload-release.sh ${token} ${tag} ${description}"
