@@ -37,7 +37,8 @@ def getNextVersion(scope) {
 
 node {
 	stage("Checkout") {
-		checkout scm
+		//checkout scm
+		checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'git-user', url: 'https://github.com/shayaantx/botdar.git']]])
 	}
 
 	stage('Prepare docker') {
