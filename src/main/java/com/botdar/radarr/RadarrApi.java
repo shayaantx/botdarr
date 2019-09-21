@@ -116,7 +116,12 @@ public class RadarrApi implements Api {
       if (movies.size() == 0) {
         return Arrays.asList(EmbedHelper.createErrorMessage("No movies found"));
       }
+
       if (movies.size() == 1) {
+        RadarrMovie radarrMovie = movies.get(0);
+        if (existingMovieTitlesToIds.containsKey(radarrMovie.getTitle().toLowerCase())) {
+          return Arrays.asList(EmbedHelper.createErrorMessage("Movie already exists"));
+        }
         return Arrays.asList(addMovie(movies.get(0)));
       }
       List<MessageEmbed> restOfMovies = new ArrayList<>();

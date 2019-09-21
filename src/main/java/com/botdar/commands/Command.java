@@ -3,9 +3,6 @@ package com.botdar.commands;
 import com.botdar.discord.EmbedHelper;
 import com.botdar.radarr.RadarrApi;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-
-import java.util.List;
 
 public enum Command {
   ADD_MOVIE("movie add", "Adds a movie using search text and tmdb id (i.e., movie add John Wick 484737). The easiest" +

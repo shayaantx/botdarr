@@ -16,7 +16,7 @@ Made this discord bot so I could access radarr, sonarr, and lidarr all from a si
 
 ## Discord Bot Installation
 
-TODO:
+https://discordpy.readthedocs.io/en/latest/discord.html
 
 <br/>
 
