@@ -22,6 +22,7 @@ def getChangelistDescription() {
 
 def getNextVersion(scope) {
     sh 'git status';
+    sh 'git describe --tags';
     sh 'chmod 700 get-next-version.sh';
     def latestVersion = sh returnStdout: true, script: './get-next-version.sh';
     print "version=" + latestVersion;
