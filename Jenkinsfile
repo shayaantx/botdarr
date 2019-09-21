@@ -42,7 +42,8 @@ node {
 	stage('Prepare docker') {
 		fileOperations([fileCreateOperation(fileContent: "${dockerFileContents}", fileName: './Dockerfile')]);
 	}
-		
+
+  sh 'git status';
 	def image = docker.build("botdar-image", "-f ./Dockerfile .");
 	image.inside('-u root') {
 		stage('Build') {
