@@ -39,6 +39,10 @@ radarr-path=
 # the default quality profile you want to use (go to Radarr->Settings->Profiles)
 radarr-default-profile=
 ```
+1. Run the jar using java
+```
+nohup java -jar botdar-release.jar &
+```
 <br/>
 
 ## Docker installation
