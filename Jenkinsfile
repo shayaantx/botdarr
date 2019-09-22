@@ -1,11 +1,10 @@
-def dockerFileContents = '''
+def dockerFileContents = """
 FROM centos:7
 RUN yum update; yum clean all;
 RUN yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
 RUN yum -y install maven
 RUN adduser jenkins
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
-ENV PATH=$PATH:$JAVA_HOME/bin
 
 RUN mkdir -p /home/botdar
 
@@ -13,7 +12,7 @@ WORKDIR /home/botdar
 RUN java -version
 
 ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
-''';
+""";
 
 def getChangelistDescription() {
   def description = "";
@@ -60,7 +59,7 @@ node {
     if (env.BRANCH_NAME == "master") {
       tag = getNextVersion('release');
     }
-    def image = docker.build("rudeyoshi/botdar:${tag}", "-f ./Dockerfile .");
+    def image = docker.build("botdar-image", "-f ./Dockerfile .");
     image.inside('-u root') {
       stage('Build') {
         sh 'mvn -version'
@@ -69,7 +68,6 @@ node {
 
       stage("Package") {
         sh 'mvn package'
-        sh 'cp target/botdar-release.jar /home/botdar'
       }
 
       stage("Archive") {
@@ -88,8 +86,24 @@ node {
     }
 
     stage('Upload to dockerhub') {
+      def dockerFileImage = """
+      FROM centos:7
+      RUN yum update; yum clean all; yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
+      ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+      ENV PATH=$PATH:$JAVA_HOME/bin
+
+      RUN mkdir -p /home/botdar
+      ADD target/botdar-release.jar /home/botdar
+
+      WORKDIR /home/botdar
+      RUN java -version
+
+      ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
+      """;
+      fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
+      def uploadImage = docker.build("rudeyoshi/botdar:${tag}", "-f ./DockerfileUpload .");
       withDockerRegistry(credentialsId: 'docker-credentials') {
-        image.push(env.BRANCH_NAME == "master" ? "latest" : "stable");
+        uploadImage.push(env.BRANCH_NAME == "master" ? "latest" : "stable");
       }
     }
 	} finally {
