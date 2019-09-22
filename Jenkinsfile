@@ -21,7 +21,7 @@ def getChangelistDescription() {
 }
 
 def getNextVersion(scope) {
-  def latestVersion = sh returnStdout: true, script: 'git tag | sort -V';
+  def latestVersion = sh returnStdout: true, script: 'git tag | sort -V | tail -1';
   print "version=" + latestVersion;
   def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() };
   print "major=" + major + ",minor=" + minor + ",patch=" + patch;
