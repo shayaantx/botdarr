@@ -21,7 +21,7 @@ def getChangelistDescription() {
 }
 
 def getNextVersion(scope) {
-  def latestVersion = sh returnStdout: true, script: 'git tag | tail -1';
+  def latestVersion = sh returnStdout: true, script: 'git tag | sort -V';
   print "version=" + latestVersion;
   def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() };
   print "major=" + major + ",minor=" + minor + ",patch=" + patch;
@@ -67,36 +67,42 @@ node {
         archiveArtifacts 'target/botdar-release.jar'
       }
 
-      stage('Create/Upload Release') {
-        withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
-          def description = getChangelistDescription();
-          print "branch name=" + env.BRANCH_NAME;
-          print "tag=" + tag;
-          sh 'chmod 700 upload-release.sh'
-          sh "./upload-release.sh ${token} ${tag} ${description}"
+      if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
+        //don't upload for PR's
+        stage('Create/Upload Release') {
+          withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
+            def description = getChangelistDescription();
+            print "branch name=" + env.BRANCH_NAME;
+            print "tag=" + tag;
+            sh 'chmod 700 upload-release.sh'
+            sh "./upload-release.sh ${token} ${tag} ${description}"
+          }
         }
       }
     }
 
-    stage('Upload to dockerhub') {
-      def dockerFileImage = """
-      FROM centos:7
-      RUN yum update; yum clean all; yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
-      ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
-      ENV PATH=$PATH:$JAVA_HOME/bin
+    if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
+      //don't upload for PR's
+      stage('Upload to dockerhub') {
+        def dockerFileImage = """
+        FROM centos:7
+        RUN yum update; yum clean all; yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
+        ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+        ENV PATH=$PATH:$JAVA_HOME/bin
 
-      RUN mkdir -p /home/botdar
-      ADD target/botdar-release.jar /home/botdar
+        RUN mkdir -p /home/botdar
+        ADD target/botdar-release.jar /home/botdar
 
-      WORKDIR /home/botdar
-      RUN java -version
+        WORKDIR /home/botdar
+        RUN java -version
 
-      ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
-      """;
-      fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
-      def uploadImage = docker.build("rudeyoshi/botdar:${tag}", "-f ./DockerfileUpload .");
-      withDockerRegistry(credentialsId: 'docker-credentials') {
-        uploadImage.push(env.BRANCH_NAME == "master" ? "latest" : "stable");
+        ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
+        """;
+        fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
+        def uploadImage = docker.build("rudeyoshi/botdar:${tag}", "-f ./DockerfileUpload .");
+        withDockerRegistry(credentialsId: 'docker-credentials') {
+          uploadImage.push(env.BRANCH_NAME == "master" ? "stable" : "latest");
+        }
       }
     }
 	} finally {
