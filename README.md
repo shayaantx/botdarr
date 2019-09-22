@@ -82,7 +82,7 @@ docker run --name botdar -v /FULL_PATH_TO_PROPS/properties:/home/botdar/config/p
    - The command will look something "movie add John Wick: Chapter 4 603692". This command uses the movie title plus the TMDBID to add the movie
 
 3. movie profiles
-  - and this profile is used when identifying downloads.
+   - and this profile is used when identifying downloads.
    - This command shows you all the profiles available in radarr, it does NOT tell you which is the default profile. The default profile is configured by the bot admin
    - and this profile is used when identifying downloads.
 
