@@ -77,8 +77,17 @@ public enum Command {
     public CommandResponse execute(String command) {
       EmbedBuilder embedBuilder = new EmbedBuilder();
       embedBuilder.setTitle("Commands");
+      embedBuilder.addField("movies help", "Shows all the commands for movies", false);
+      return new CommandResponse(embedBuilder.build());
+    }
+  },
+  HELP_MOVIES("movies help", "") {
+    @Override
+    public CommandResponse execute(String command) {
+      EmbedBuilder embedBuilder = new EmbedBuilder();
+      embedBuilder.setTitle("Commands");
       for (Command com : Command.values()) {
-        if (com == HELP) {
+        if (com == HELP_MOVIES || com == HELP) {
           continue;
         }
         embedBuilder.addField(com.commandText, com.description, false);
