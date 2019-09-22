@@ -94,8 +94,10 @@ public class RadarrApi implements Api {
           embedBuilder.addField("Status", radarrQueue.getStatus(), true);
           embedBuilder.addField("Time Left", radarrQueue.getTimeleft(), true);
           if (radarrQueue.getStatusMessages() != null) {
-            for (String message : radarrQueue.getStatusMessages()) {
-              embedBuilder.addField("Download message", message, true);
+            for (RadarrQueueStatusMessages statusMessage : radarrQueue.getStatusMessages()) {
+              for (String message : statusMessage.getMessages()) {
+                embedBuilder.addField("Download message", message, true);
+              }
             }
           }
           embedBuilder.addField("Cancel download command", "movie cancel download " + radarrQueue.getId(), true);
