@@ -1,4 +1,4 @@
-def dockerFileContents = """
+def dockerFileContents = '''
 FROM centos:7
 RUN yum update; yum clean all;
 RUN yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
@@ -13,7 +13,7 @@ WORKDIR /home/botdar
 RUN java -version
 
 ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
-""";
+''';
 
 def getChangelistDescription() {
   def description = "";
