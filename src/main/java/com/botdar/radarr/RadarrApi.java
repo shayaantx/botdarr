@@ -237,7 +237,7 @@ public class RadarrApi implements Api {
       @Override
       public List<MessageEmbed> onSuccess(String response) throws Exception {
         //TODO: implement
-        return null;
+        return Arrays.asList(EmbedHelper.createErrorMessage("Not implemented yet"));
       }
     });
   }
