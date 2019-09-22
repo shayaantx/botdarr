@@ -22,6 +22,7 @@ def getChangelistDescription() {
 
 def getNextVersion(scope) {
   sh 'chmod 700 get-next-version.sh';
+  sh 'git describe --tags';
   def latestVersion = sh returnStdout: true, script: './get-next-version.sh';
   print "version=" + latestVersion;
   def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() };
