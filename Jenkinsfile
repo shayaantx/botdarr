@@ -5,13 +5,6 @@ RUN yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.
 RUN yum -y install maven
 RUN adduser jenkins
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
-
-RUN mkdir -p /home/botdar
-
-WORKDIR /home/botdar
-RUN java -version
-
-ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
 """;
 
 def getChangelistDescription() {
