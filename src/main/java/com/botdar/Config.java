@@ -1,5 +1,9 @@
 package com.botdar;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
@@ -18,10 +22,15 @@ public class Config {
   }
 
   private Config() {
-    try (InputStream input = new FileInputStream("properties")) {
+    try (InputStream input = new FileInputStream("config/properties")) {
       properties = new Properties();
       properties.load(input);
+      if (Strings.isBlank(properties.getProperty(Constants.TOKEN))) {
+        throw new RuntimeException("Discord token not set");
+      }
+      //TODO: add validation to make sure all properties are set
     } catch (Exception ex) {
+      LOGGER.error("Error loading properties file", ex);
       throw new RuntimeException(ex);
     }
   }
@@ -42,4 +51,5 @@ public class Config {
   }
 
   private final Properties properties;
+  private static final Logger LOGGER = LogManager.getLogger();
 }

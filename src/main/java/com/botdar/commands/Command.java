@@ -5,7 +5,7 @@ import com.botdar.radarr.RadarrApi;
 import net.dv8tion.jda.api.EmbedBuilder;
 
 public enum Command {
-  ADD_MOVIE("movie add", "Adds a movie using search text and tmdb id (i.e., movie add John Wick 484737). The easiest" +
+  ADD_ID_MOVIE("movie id add", "Adds a movie using search text and tmdb id (i.e., movie add John Wick 484737). The easiest" +
     " way to use this command is to use \"movie find new TITLE\", then the results will contain the movie add command for you") {
     @Override
     public CommandResponse execute(String command) {

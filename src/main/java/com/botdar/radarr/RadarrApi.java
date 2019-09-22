@@ -18,6 +18,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -31,6 +33,7 @@ public class RadarrApi implements Api {
     if (instance == null) {
       synchronized (RadarrApi .class) {
         if (instance == null) {
+          LOGGER.info("Radarr api built");
           instance = new RadarrApi();
         }
       }
@@ -73,7 +76,7 @@ public class RadarrApi implements Api {
       }
       return messageEmbeds;
     } catch (Exception e) {
-      //TODO: log to logger
+      LOGGER.error("Error trying to lookup movie", e);
       return Arrays.asList(EmbedHelper.createErrorMessage("Error looking up content, e=" + e.getMessage()));
     }
   }
@@ -156,7 +159,7 @@ public class RadarrApi implements Api {
       }
       return EmbedHelper.createErrorMessage("Could not find movie with search text=" + searchText + " and id=" + id);
     } catch (Exception e) {
-      //TODO: log to logger
+      LOGGER.error("Error trying to add movie", e);
       return EmbedHelper.createErrorMessage("Error adding content, e=" + e.getMessage());
     }
   }
@@ -305,8 +308,7 @@ public class RadarrApi implements Api {
         return EmbedHelper.createSuccessMessage("Movie added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
-      //TODO: print to something other than console log
-      e.printStackTrace();
+      LOGGER.error("Error trying to add movie", e);
       return EmbedHelper.createErrorMessage("Error adding movie, error=" + e.getMessage());
     }
   }
@@ -346,4 +348,5 @@ public class RadarrApi implements Api {
   private Map<String, Long> existingMovieTitlesToIds = new ConcurrentHashMap<>();
   private Map<Long, RadarrMovie> existingTmdbIdsToMovies = new ConcurrentHashMap<>();
   private static volatile RadarrApi instance;
+  private static final Logger LOGGER = LogManager.getLogger();
 }

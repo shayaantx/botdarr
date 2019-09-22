@@ -10,6 +10,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -35,7 +37,7 @@ public class ConnectionHelper {
           try {
             return responseHandler.onSuccess(EntityUtils.toString(response.getEntity()));
           } catch (Exception e) {
-            //TODO: log error to some logger
+            LOGGER.error("Error trying to make get request", e);
             return responseHandler.onException(e);
           }
         } else {
@@ -43,7 +45,7 @@ public class ConnectionHelper {
         }
       }
     } catch (IOException e) {
-      //TODO: log error to some logger
+      LOGGER.error("Error trying to make connection during get request", e);
       return responseHandler.onException(e);
     }
   }
@@ -58,7 +60,7 @@ public class ConnectionHelper {
           try {
             return responseHandler.onSuccess(EntityUtils.toString(response.getEntity()));
           } catch (Exception e) {
-            //TODO: log error to some logger
+            LOGGER.error("Error trying to make delete request", e);
             return responseHandler.onException(e);
           }
         } else {
@@ -66,7 +68,7 @@ public class ConnectionHelper {
         }
       }
     } catch (IOException e) {
-      //TODO: log error to some logger
+      LOGGER.error("Error trying to make connection during delete request", e);
       return responseHandler.onException(e);
     }
   }
@@ -101,4 +103,5 @@ public class ConnectionHelper {
     List<T> onFailure(int statusCode, String reason);
     List<T> onException(Exception e);
   }
+  private static final Logger LOGGER = LogManager.getLogger();
 }
