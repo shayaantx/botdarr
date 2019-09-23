@@ -62,7 +62,7 @@ public class RadarrApi implements Api {
         embedBuilder.setTitle(radarrMovie.getTitle());
         embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
         if (findNew) {
-          embedBuilder.addField("Add movie command", "movie add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+          embedBuilder.addField("Add movie command", "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
         } else {
           embedBuilder.addField("Id", "" + existingMovie.getId(), false);
           embedBuilder.addField("Downloaded", existingMovie.isDownloaded() + "", false);
@@ -135,7 +135,7 @@ public class RadarrApi implements Api {
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.setTitle(radarrMovie.getTitle());
         embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
-        embedBuilder.addField("Add movie command", "movie add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+        embedBuilder.addField("Add movie command", "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
         embedBuilder.setImage(radarrMovie.getRemotePoster());
         restOfMovies.add(embedBuilder.build());
       }
