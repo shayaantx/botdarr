@@ -56,6 +56,24 @@ public class RadarrTorrent {
   public void setLeechers(int leechers) {
     this.leechers = leechers;
   }
+
+  public String getTitle() {
+    return title;
+  }
+
+  public void setTitle(String title) {
+    this.title = title;
+  }
+
+  public String[] getRejections() {
+    return rejections;
+  }
+
+  public void setRejections(String[] rejections) {
+    this.rejections = rejections;
+  }
+
+  private String[] rejections;
   private String guid;
   private RadarrProfileQualityItem quality;
   private String indexer;
@@ -63,4 +81,5 @@ public class RadarrTorrent {
   private String downloadUrl;
   private int seeders;
   private int leechers;
+  private String title;
 }

@@ -132,6 +132,10 @@ public class RadarrApi implements Api {
       List<MessageEmbed> restOfMovies = new ArrayList<>();
       restOfMovies.add(EmbedHelper.createInfoMessage("Too many movies found, please narrow search"));
       for (RadarrMovie radarrMovie : movies) {
+        if (existingMovieTitlesToIds.containsKey(radarrMovie.getTitle().toLowerCase())) {
+          //skip existing movies
+          continue;
+        }
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.setTitle(radarrMovie.getTitle());
         embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
@@ -215,12 +219,19 @@ public class RadarrApi implements Api {
             continue;
           }
           EmbedBuilder embedBuilder = new EmbedBuilder();
-          embedBuilder.addBlankField(false);
+          embedBuilder.addField("Title", radarrTorrent.getTitle(), false);
           embedBuilder.addField("Torrent", radarrTorrent.getGuid(), false);
           embedBuilder.addField("Quality", radarrTorrent.getQuality().getQuality().getName(), true);
           embedBuilder.addField("Indexer", radarrTorrent.getIndexer(), true);
           embedBuilder.addField("Seeders", "" + radarrTorrent.getSeeders(), true);
           embedBuilder.addField("Leechers", "" + radarrTorrent.getLeechers(), true);
+          String[] rejections = radarrTorrent.getRejections();
+          if (rejections != null) {
+            embedBuilder.addBlankField(false);
+            for (String rejection : rejections) {
+              embedBuilder.addField("Rejection Reason", rejection, false);
+            }
+          }
           messageEmbeds.add(embedBuilder.build());
         }
         if (messageEmbeds.isEmpty()) {
