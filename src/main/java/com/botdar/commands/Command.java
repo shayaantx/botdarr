@@ -55,13 +55,19 @@ public enum Command {
       return new CommandResponse(RadarrApi.get().lookupTorrents(command, true));
     }
   },
+  MOVIE_DOWNLOAD("movie hash download", "Force downloads a movie using a hash string, you can only get") {
+    @Override
+    public CommandResponse execute(String command) {
+      return new CommandResponse(RadarrApi.get().forceDownload(command));
+    }
+  },
   MOVIE_DOWNLOADS("movie downloads", "Shows all the active movies downloading in radarr") {
     @Override
     public CommandResponse execute(String command) {
       return new CommandResponse(RADARR_API.downloads());
     }
   },
-  CANCEL_DOWNLOAD("movie cancel download", "Cancels a download") {
+  CANCEL_DOWNLOAD("movie cancel download", "Cancels a download (NOT IMPLEMENTED YET)") {
     @Override
     public CommandResponse execute(String command) {
       try {

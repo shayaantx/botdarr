@@ -5,10 +5,7 @@ import com.botdar.Config;
 import com.botdar.commands.CommandResponse;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -197,49 +194,73 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public List<MessageEmbed> lookupTorrents(String command, boolean showRejected) {
-    Long id = existingMovieTitlesToIds.get(command.toLowerCase());
-    if (id == null) {
-      return Arrays.asList(EmbedHelper.createErrorMessage("Could not find id for " + command));
+  public List<MessageEmbed> forceDownload(String command) {
+    String decodedKey = new String(Base64.getDecoder().decode(command.getBytes()));
+    int lastColonCharacter = decodedKey.lastIndexOf(':');
+    String[] decodedKeyArray =  {decodedKey.substring(0, lastColonCharacter), decodedKey.substring(lastColonCharacter + 1)};
+    if (decodedKeyArray.length != 2) {
+      return Arrays.asList(EmbedHelper.createErrorMessage("Invalid key=" + decodedKey));
     }
-    return ConnectionHelper.makeGetRequest(this, "release", "&movieId=" + id + "&sort_by=releaseWeight&order=asc", new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
-      @Override
-      public List<MessageEmbed> onSuccess(String response) throws Exception {
-        if (response == null || response.isEmpty() || response.equalsIgnoreCase("[]")) {
-          return Arrays.asList(EmbedHelper.createErrorMessage("No downloads available for " + command));
-        }
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
 
-        List<MessageEmbed> messageEmbeds = new ArrayList<>();
-        for (int i = 0; i < json.size(); i++) {
-          RadarrTorrent radarrTorrent = new Gson().fromJson(json.get(i), RadarrTorrent.class);
-          if (!showRejected && radarrTorrent.isRejected()) {
-            //dont show rejected torrents
-            continue;
+    String guid = decodedKeyArray[0];
+    String title = decodedKeyArray[1];
+    List<RadarrTorrent> radarrTorrents = lookupTorrents(title);
+
+    if (radarrTorrents.isEmpty()) {
+      return Arrays.asList(EmbedHelper.createErrorMessage("Found no movies to force download, title=" + title));
+    }
+
+    for (RadarrTorrent radarrTorrent : radarrTorrents) {
+      if (radarrTorrent.getGuid().equalsIgnoreCase(guid)) {
+        return ConnectionHelper.makePostRequest(this, "release", radarrTorrent, new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
+          @Override
+          public List<MessageEmbed> onSuccess(String response) throws Exception {
+            return Arrays.asList(EmbedHelper.createSuccessMessage("Forced the download"));
           }
-          EmbedBuilder embedBuilder = new EmbedBuilder();
-          embedBuilder.addField("Title", radarrTorrent.getTitle(), false);
-          embedBuilder.addField("Torrent", radarrTorrent.getGuid(), false);
-          embedBuilder.addField("Quality", radarrTorrent.getQuality().getQuality().getName(), true);
-          embedBuilder.addField("Indexer", radarrTorrent.getIndexer(), true);
-          embedBuilder.addField("Seeders", "" + radarrTorrent.getSeeders(), true);
-          embedBuilder.addField("Leechers", "" + radarrTorrent.getLeechers(), true);
-          String[] rejections = radarrTorrent.getRejections();
-          if (rejections != null) {
-            embedBuilder.addBlankField(false);
-            for (String rejection : rejections) {
-              embedBuilder.addField("Rejection Reason", rejection, false);
-            }
-          }
-          messageEmbeds.add(embedBuilder.build());
-        }
-        if (messageEmbeds.isEmpty()) {
-          messageEmbeds.add(EmbedHelper.createErrorMessage("No downloads available for " + command));
-        }
-        return messageEmbeds;
+        });
       }
-    });
+    }
+    return Arrays.asList(EmbedHelper.createErrorMessage("Could not force download movie for title=" + title + ", guid=" + guid));
+  }
+
+  @Override
+  public List<MessageEmbed> lookupTorrents(String command, boolean showRejected) {
+    List<RadarrTorrent> radarrTorrents = lookupTorrents(command);
+    if (radarrTorrents.isEmpty()) {
+      return Arrays.asList(EmbedHelper.createErrorMessage("No downloads available for " + command));
+    }
+
+    List<MessageEmbed> messageEmbeds = new ArrayList<>();
+    for (RadarrTorrent radarrTorrent : radarrTorrents) {
+      if (!showRejected && radarrTorrent.isRejected()) {
+        //dont show rejected torrents
+        continue;
+      }
+      EmbedBuilder embedBuilder = new EmbedBuilder();
+      embedBuilder.addField("Title", radarrTorrent.getTitle(), false);
+      embedBuilder.addField("Torrent", radarrTorrent.getGuid(), false);
+      embedBuilder.addField("Quality", radarrTorrent.getQuality().getQuality().getName(), true);
+      embedBuilder.addField("Indexer", radarrTorrent.getIndexer(), true);
+      embedBuilder.addField("Seeders", "" + radarrTorrent.getSeeders(), true);
+      embedBuilder.addField("Leechers", "" + radarrTorrent.getLeechers(), true);
+      String[] rejections = radarrTorrent.getRejections();
+      if (rejections != null) {
+        embedBuilder.addBlankField(false);
+        for (String rejection : rejections) {
+          embedBuilder.addField("Rejection Reason", rejection, false);
+        }
+      }
+      String key = radarrTorrent.getGuid() + ":" + radarrTorrent.getMovieTitle();
+      byte[] encodedBytes = Base64.getEncoder().encode(key.getBytes());
+      embedBuilder.addField("Download hash command", "movie hash download " + new String(encodedBytes), true);
+      messageEmbeds.add(embedBuilder.build());
+    }
+
+    if (messageEmbeds.isEmpty()) {
+      messageEmbeds.add(EmbedHelper.createErrorMessage("No downloads available for " + command));
+    }
+
+    return messageEmbeds;
   }
 
   @Override
@@ -322,6 +343,31 @@ public class RadarrApi implements Api {
       LOGGER.error("Error trying to add movie", e);
       return EmbedHelper.createErrorMessage("Error adding movie, error=" + e.getMessage());
     }
+  }
+
+  private List<RadarrTorrent> lookupTorrents(String title) {
+    Long id = existingMovieTitlesToIds.get(title.toLowerCase());
+    if (id == null) {
+      LOGGER.warn("Could not find title id for title " + title);
+      return Collections.emptyList();
+    }
+    return ConnectionHelper.makeGetRequest(this, "release", "&movieId=" + id + "&sort_by=releaseWeight&order=asc", new ConnectionHelper.SimpleEntityResponseHandler<RadarrTorrent>() {
+      @Override
+      public List<RadarrTorrent> onSuccess(String response) throws Exception {
+        List<RadarrTorrent> radarrTorrents = new ArrayList<>();
+        if (response == null || response.isEmpty() || response.equalsIgnoreCase("[]")) {
+          LOGGER.warn("Found no response when looking for radarr torrents");
+          return Collections.emptyList();
+        }
+        JsonParser parser = new JsonParser();
+        JsonArray json = parser.parse(response).getAsJsonArray();
+
+        for (int i = 0; i < json.size(); i++) {
+          radarrTorrents.add(new Gson().fromJson(json.get(i), RadarrTorrent.class));
+        }
+        return radarrTorrents;
+      }
+    });
   }
 
   private List<RadarrMovie> lookupMovies(String search) throws Exception {

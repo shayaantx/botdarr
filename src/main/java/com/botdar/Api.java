@@ -14,6 +14,7 @@ public interface Api {
   List<MessageEmbed> downloads();
   List<MessageEmbed> cancelDownload(long id);
   List<MessageEmbed> getProfiles();
+  List<MessageEmbed> forceDownload(String command);
   void sendNotifications(JDA jda);
   void cacheData(JDA jda);
   String getApiToken();
