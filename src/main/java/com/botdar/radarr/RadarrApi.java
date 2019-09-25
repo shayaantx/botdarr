@@ -5,10 +5,7 @@ import com.botdar.Config;
 import com.botdar.commands.CommandResponse;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -18,6 +15,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -31,6 +30,7 @@ public class RadarrApi implements Api {
     if (instance == null) {
       synchronized (RadarrApi .class) {
         if (instance == null) {
+          LOGGER.info("Radarr api built");
           instance = new RadarrApi();
         }
       }
@@ -59,7 +59,7 @@ public class RadarrApi implements Api {
         embedBuilder.setTitle(radarrMovie.getTitle());
         embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
         if (findNew) {
-          embedBuilder.addField("Add movie command", "movie add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+          embedBuilder.addField("Add movie command", "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
         } else {
           embedBuilder.addField("Id", "" + existingMovie.getId(), false);
           embedBuilder.addField("Downloaded", existingMovie.isDownloaded() + "", false);
@@ -73,7 +73,7 @@ public class RadarrApi implements Api {
       }
       return messageEmbeds;
     } catch (Exception e) {
-      //TODO: log to logger
+      LOGGER.error("Error trying to lookup movie", e);
       return Arrays.asList(EmbedHelper.createErrorMessage("Error looking up content, e=" + e.getMessage()));
     }
   }
@@ -94,8 +94,10 @@ public class RadarrApi implements Api {
           embedBuilder.addField("Status", radarrQueue.getStatus(), true);
           embedBuilder.addField("Time Left", radarrQueue.getTimeleft(), true);
           if (radarrQueue.getStatusMessages() != null) {
-            for (String message : radarrQueue.getStatusMessages()) {
-              embedBuilder.addField("Download message", message, true);
+            for (RadarrQueueStatusMessages statusMessage : radarrQueue.getStatusMessages()) {
+              for (String message : statusMessage.getMessages()) {
+                embedBuilder.addField("Download message", message, true);
+              }
             }
           }
           embedBuilder.addField("Cancel download command", "movie cancel download " + radarrQueue.getId(), true);
@@ -116,16 +118,25 @@ public class RadarrApi implements Api {
       if (movies.size() == 0) {
         return Arrays.asList(EmbedHelper.createErrorMessage("No movies found"));
       }
+
       if (movies.size() == 1) {
+        RadarrMovie radarrMovie = movies.get(0);
+        if (existingMovieTitlesToIds.containsKey(radarrMovie.getTitle().toLowerCase())) {
+          return Arrays.asList(EmbedHelper.createErrorMessage("Movie already exists"));
+        }
         return Arrays.asList(addMovie(movies.get(0)));
       }
       List<MessageEmbed> restOfMovies = new ArrayList<>();
       restOfMovies.add(EmbedHelper.createInfoMessage("Too many movies found, please narrow search"));
       for (RadarrMovie radarrMovie : movies) {
+        if (existingMovieTitlesToIds.containsKey(radarrMovie.getTitle().toLowerCase())) {
+          //skip existing movies
+          continue;
+        }
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.setTitle(radarrMovie.getTitle());
         embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
-        embedBuilder.addField("Add movie command", "movie add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+        embedBuilder.addField("Add movie command", "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
         embedBuilder.setImage(radarrMovie.getRemotePoster());
         restOfMovies.add(embedBuilder.build());
       }
@@ -149,7 +160,7 @@ public class RadarrApi implements Api {
       }
       return EmbedHelper.createErrorMessage("Could not find movie with search text=" + searchText + " and id=" + id);
     } catch (Exception e) {
-      //TODO: log to logger
+      LOGGER.error("Error trying to add movie", e);
       return EmbedHelper.createErrorMessage("Error adding content, e=" + e.getMessage());
     }
   }
@@ -183,42 +194,73 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public List<MessageEmbed> lookupTorrents(String command, boolean showRejected) {
-    Long id = existingMovieTitlesToIds.get(command.toLowerCase());
-    if (id == null) {
-      return Arrays.asList(EmbedHelper.createErrorMessage("Could not find id for " + command));
+  public List<MessageEmbed> forceDownload(String command) {
+    String decodedKey = new String(Base64.getDecoder().decode(command.getBytes()));
+    int lastColonCharacter = decodedKey.lastIndexOf(':');
+    String[] decodedKeyArray =  {decodedKey.substring(0, lastColonCharacter), decodedKey.substring(lastColonCharacter + 1)};
+    if (decodedKeyArray.length != 2) {
+      return Arrays.asList(EmbedHelper.createErrorMessage("Invalid key=" + decodedKey));
     }
-    return ConnectionHelper.makeGetRequest(this, "release", "&movieId=" + id + "&sort_by=releaseWeight&order=asc", new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
-      @Override
-      public List<MessageEmbed> onSuccess(String response) throws Exception {
-        if (response == null || response.isEmpty() || response.equalsIgnoreCase("[]")) {
-          return Arrays.asList(EmbedHelper.createErrorMessage("No downloads available for " + command));
-        }
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
 
-        List<MessageEmbed> messageEmbeds = new ArrayList<>();
-        for (int i = 0; i < json.size(); i++) {
-          RadarrTorrent radarrTorrent = new Gson().fromJson(json.get(i), RadarrTorrent.class);
-          if (!showRejected && radarrTorrent.isRejected()) {
-            //dont show rejected torrents
-            continue;
+    String guid = decodedKeyArray[0];
+    String title = decodedKeyArray[1];
+    List<RadarrTorrent> radarrTorrents = lookupTorrents(title);
+
+    if (radarrTorrents.isEmpty()) {
+      return Arrays.asList(EmbedHelper.createErrorMessage("Found no movies to force download, title=" + title));
+    }
+
+    for (RadarrTorrent radarrTorrent : radarrTorrents) {
+      if (radarrTorrent.getGuid().equalsIgnoreCase(guid)) {
+        return ConnectionHelper.makePostRequest(this, "release", radarrTorrent, new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
+          @Override
+          public List<MessageEmbed> onSuccess(String response) throws Exception {
+            return Arrays.asList(EmbedHelper.createSuccessMessage("Forced the download"));
           }
-          EmbedBuilder embedBuilder = new EmbedBuilder();
-          embedBuilder.addBlankField(false);
-          embedBuilder.addField("Torrent", radarrTorrent.getGuid(), false);
-          embedBuilder.addField("Quality", radarrTorrent.getQuality().getQuality().getName(), true);
-          embedBuilder.addField("Indexer", radarrTorrent.getIndexer(), true);
-          embedBuilder.addField("Seeders", "" + radarrTorrent.getSeeders(), true);
-          embedBuilder.addField("Leechers", "" + radarrTorrent.getLeechers(), true);
-          messageEmbeds.add(embedBuilder.build());
-        }
-        if (messageEmbeds.isEmpty()) {
-          messageEmbeds.add(EmbedHelper.createErrorMessage("No downloads available for " + command));
-        }
-        return messageEmbeds;
+        });
       }
-    });
+    }
+    return Arrays.asList(EmbedHelper.createErrorMessage("Could not force download movie for title=" + title + ", guid=" + guid));
+  }
+
+  @Override
+  public List<MessageEmbed> lookupTorrents(String command, boolean showRejected) {
+    List<RadarrTorrent> radarrTorrents = lookupTorrents(command);
+    if (radarrTorrents.isEmpty()) {
+      return Arrays.asList(EmbedHelper.createErrorMessage("No downloads available for " + command));
+    }
+
+    List<MessageEmbed> messageEmbeds = new ArrayList<>();
+    for (RadarrTorrent radarrTorrent : radarrTorrents) {
+      if (!showRejected && radarrTorrent.isRejected()) {
+        //dont show rejected torrents
+        continue;
+      }
+      EmbedBuilder embedBuilder = new EmbedBuilder();
+      embedBuilder.addField("Title", radarrTorrent.getTitle(), false);
+      embedBuilder.addField("Torrent", radarrTorrent.getGuid(), false);
+      embedBuilder.addField("Quality", radarrTorrent.getQuality().getQuality().getName(), true);
+      embedBuilder.addField("Indexer", radarrTorrent.getIndexer(), true);
+      embedBuilder.addField("Seeders", "" + radarrTorrent.getSeeders(), true);
+      embedBuilder.addField("Leechers", "" + radarrTorrent.getLeechers(), true);
+      String[] rejections = radarrTorrent.getRejections();
+      if (rejections != null) {
+        embedBuilder.addBlankField(false);
+        for (String rejection : rejections) {
+          embedBuilder.addField("Rejection Reason", rejection, false);
+        }
+      }
+      String key = radarrTorrent.getGuid() + ":" + radarrTorrent.getMovieTitle();
+      byte[] encodedBytes = Base64.getEncoder().encode(key.getBytes());
+      embedBuilder.addField("Download hash command", "movie hash download " + new String(encodedBytes), true);
+      messageEmbeds.add(embedBuilder.build());
+    }
+
+    if (messageEmbeds.isEmpty()) {
+      messageEmbeds.add(EmbedHelper.createErrorMessage("No downloads available for " + command));
+    }
+
+    return messageEmbeds;
   }
 
   @Override
@@ -227,7 +269,7 @@ public class RadarrApi implements Api {
       @Override
       public List<MessageEmbed> onSuccess(String response) throws Exception {
         //TODO: implement
-        return null;
+        return Arrays.asList(EmbedHelper.createErrorMessage("Not implemented yet"));
       }
     });
   }
@@ -298,10 +340,34 @@ public class RadarrApi implements Api {
         return EmbedHelper.createSuccessMessage("Movie added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
-      //TODO: print to something other than console log
-      e.printStackTrace();
+      LOGGER.error("Error trying to add movie", e);
       return EmbedHelper.createErrorMessage("Error adding movie, error=" + e.getMessage());
     }
+  }
+
+  private List<RadarrTorrent> lookupTorrents(String title) {
+    Long id = existingMovieTitlesToIds.get(title.toLowerCase());
+    if (id == null) {
+      LOGGER.warn("Could not find title id for title " + title);
+      return Collections.emptyList();
+    }
+    return ConnectionHelper.makeGetRequest(this, "release", "&movieId=" + id + "&sort_by=releaseWeight&order=asc", new ConnectionHelper.SimpleEntityResponseHandler<RadarrTorrent>() {
+      @Override
+      public List<RadarrTorrent> onSuccess(String response) throws Exception {
+        List<RadarrTorrent> radarrTorrents = new ArrayList<>();
+        if (response == null || response.isEmpty() || response.equalsIgnoreCase("[]")) {
+          LOGGER.warn("Found no response when looking for radarr torrents");
+          return Collections.emptyList();
+        }
+        JsonParser parser = new JsonParser();
+        JsonArray json = parser.parse(response).getAsJsonArray();
+
+        for (int i = 0; i < json.size(); i++) {
+          radarrTorrents.add(new Gson().fromJson(json.get(i), RadarrTorrent.class));
+        }
+        return radarrTorrents;
+      }
+    });
   }
 
   private List<RadarrMovie> lookupMovies(String search) throws Exception {
@@ -339,4 +405,5 @@ public class RadarrApi implements Api {
   private Map<String, Long> existingMovieTitlesToIds = new ConcurrentHashMap<>();
   private Map<Long, RadarrMovie> existingTmdbIdsToMovies = new ConcurrentHashMap<>();
   private static volatile RadarrApi instance;
+  private static final Logger LOGGER = LogManager.getLogger();
 }

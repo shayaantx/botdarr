@@ -20,50 +20,94 @@ def getChangelistDescription() {
   return description;
 }
 
-node {
-	stage("Checkout") {
-		checkout scm
-	}
-
-	stage('Prepare docker') {
-		fileOperations([fileCreateOperation(fileContent: "${dockerFileContents}", fileName: './Dockerfile')]);
-	}
-		
-	def image = docker.build("botdar-image", "-f ./Dockerfile .");
-	image.inside('-u root') {
-		stage('Build') {
-			sh 'mvn -version'
-			sh 'mvn compile'
-		}
-		
-		stage("Package") {
-		  sh 'mvn package'
-		}
-		
-		stage("Archive") {
-			archiveArtifacts 'target/botdar-release.jar'
-		}
-
-		stage('Create Release') {
-		  def description = getChangelistDescription();
-		  withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
-        sh label: '', script: '''
-          token=${token}
-          tag=latest-${BUILD_NUMBER}
-          name=latest-${BUILD_NUMBER}
-          description=$(echo ${description} | sed -z \'s/\\n/\\\\n/g\') # Escape line breaks to prevent json parsing problems
-          # Create a release
-          release=$(curl -XPOST -H "Authorization:token $token" --data "{\\"tag_name\\": \\"$tag\\", \\"target_commitish\\": \\"master\\", \\"name\\": \\"$name\\", \\"body\\": \\"$description\\", \\"draft\\": false, \\"prerelease\\": true}" https://api.github.com/repos/shayaantx/botdar/releases)
-        '''
-      }
-		}
-
-		stage('Upload Release') {
-
-		}
-	}
-	
-  stage("Cleanup") {
-      deleteDir();
+def getNextVersion(scope) {
+  def latestVersion = sh returnStdout: true, script: 'git tag | sort -V | tail -1';
+  print "version=" + latestVersion;
+  def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() };
+  print "major=" + major + ",minor=" + minor + ",patch=" + patch;
+  if (scope == 'release') {
+    def newMinor = minor + 1;
+    def newMajor = major;
+    if (newMinor > 10) {
+      newMinor = 0;
+      newMajor = major + 1;
+    }
+    return "${newMinor}.${newMinor}.0";
+  } else {
+    return "${major}.${minor}.${patch + 1}";
   }
+}
+
+node {
+  try {
+    stage("Checkout") {
+      checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'git-user', url: 'https://github.com/shayaantx/botdar.git']]])
+    }
+
+    stage('Prepare docker') {
+      fileOperations([fileCreateOperation(fileContent: "${dockerFileContents}", fileName: './Dockerfile')]);
+    }
+
+    def tag = getNextVersion('development');
+    if (env.BRANCH_NAME == "master") {
+      tag = getNextVersion('release');
+    }
+    def image = docker.build("botdar-image", "-f ./Dockerfile .");
+    image.inside('-u root') {
+      stage('Build') {
+        sh 'mvn -version'
+        sh 'mvn compile'
+      }
+
+      stage("Package") {
+        sh 'mvn package'
+      }
+
+      stage("Archive") {
+        archiveArtifacts 'target/botdar-release.jar'
+      }
+
+      if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
+        //don't upload for PR's
+        stage('Create/Upload Release') {
+          withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
+            def description = getChangelistDescription();
+            print "branch name=" + env.BRANCH_NAME;
+            print "tag=" + tag;
+            sh 'chmod 700 upload-release.sh'
+            sh "./upload-release.sh ${token} ${tag} ${description}"
+          }
+        }
+      }
+    }
+
+    if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
+      //don't upload for PR's
+      stage('Upload to dockerhub') {
+        def dockerFileImage = """
+        FROM centos:7
+        RUN yum update; yum clean all; yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
+        ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+        ENV PATH=$PATH:$JAVA_HOME/bin
+
+        RUN mkdir -p /home/botdar
+        ADD target/botdar-release.jar /home/botdar
+
+        WORKDIR /home/botdar
+        RUN java -version
+
+        ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
+        """;
+        fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
+        def uploadImage = docker.build("rudeyoshi/botdar:${tag}", "-f ./DockerfileUpload .");
+        withDockerRegistry(credentialsId: 'docker-credentials') {
+          uploadImage.push(env.BRANCH_NAME == "master" ? "stable" : "latest");
+        }
+      }
+    }
+	} finally {
+    stage("Cleanup") {
+      deleteDir();
+    }
+	}
 }

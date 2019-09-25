@@ -25,11 +25,11 @@ public class RadarrQueue {
     this.id = id;
   }
 
-  public String[] getStatusMessages() {
+  public RadarrQueueStatusMessages[] getStatusMessages() {
     return statusMessages;
   }
 
-  public void setStatusMessages(String[] statusMessages) {
+  public void setStatusMessages(RadarrQueueStatusMessages[] statusMessages) {
     this.statusMessages = statusMessages;
   }
 
@@ -53,6 +53,6 @@ public class RadarrQueue {
   private String timeleft;
   private RadarrProfileQualityItem quality;
   private long id;
-  private String[] statusMessages;
+  private RadarrQueueStatusMessages[] statusMessages;
   private RadarrQueueMovie movie;
 }

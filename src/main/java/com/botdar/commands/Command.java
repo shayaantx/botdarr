@@ -3,12 +3,9 @@ package com.botdar.commands;
 import com.botdar.discord.EmbedHelper;
 import com.botdar.radarr.RadarrApi;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-
-import java.util.List;
 
 public enum Command {
-  ADD_MOVIE("movie add", "Adds a movie using search text and tmdb id (i.e., movie add John Wick 484737). The easiest" +
+  ADD_ID_MOVIE("movie id add", "Adds a movie using search text and tmdb id (i.e., movie add John Wick 484737). The easiest" +
     " way to use this command is to use \"movie find new TITLE\", then the results will contain the movie add command for you") {
     @Override
     public CommandResponse execute(String command) {
@@ -58,13 +55,19 @@ public enum Command {
       return new CommandResponse(RadarrApi.get().lookupTorrents(command, true));
     }
   },
+  MOVIE_DOWNLOAD("movie hash download", "Force downloads a movie using a hash string, you can only get") {
+    @Override
+    public CommandResponse execute(String command) {
+      return new CommandResponse(RadarrApi.get().forceDownload(command));
+    }
+  },
   MOVIE_DOWNLOADS("movie downloads", "Shows all the active movies downloading in radarr") {
     @Override
     public CommandResponse execute(String command) {
       return new CommandResponse(RADARR_API.downloads());
     }
   },
-  CANCEL_DOWNLOAD("movie cancel download", "Cancels a download") {
+  CANCEL_DOWNLOAD("movie cancel download", "Cancels a download (NOT IMPLEMENTED YET)") {
     @Override
     public CommandResponse execute(String command) {
       try {
@@ -80,8 +83,17 @@ public enum Command {
     public CommandResponse execute(String command) {
       EmbedBuilder embedBuilder = new EmbedBuilder();
       embedBuilder.setTitle("Commands");
+      embedBuilder.addField("movies help", "Shows all the commands for movies", false);
+      return new CommandResponse(embedBuilder.build());
+    }
+  },
+  HELP_MOVIES("movies help", "") {
+    @Override
+    public CommandResponse execute(String command) {
+      EmbedBuilder embedBuilder = new EmbedBuilder();
+      embedBuilder.setTitle("Commands");
       for (Command com : Command.values()) {
-        if (com == HELP) {
+        if (com == HELP_MOVIES || com == HELP) {
           continue;
         }
         embedBuilder.addField(com.commandText, com.description, false);
