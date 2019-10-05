@@ -9,7 +9,7 @@ Made this discord bot so I could access radarr, sonarr, and lidarr all from a si
 - [x] Radarr (v2)
 - [ ] Radarr (v3)
 - [ ] Sonarr (v2)
-- [ ] Sonarr (v3)
+- [x] Sonarr (v3)
 - [ ] Lidarr
 
 <br/>

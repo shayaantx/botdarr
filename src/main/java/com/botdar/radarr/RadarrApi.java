@@ -21,26 +21,13 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class RadarrApi implements Api {
-  private RadarrApi() {}
-
-  public static RadarrApi get() {
-    if (instance == null) {
-      synchronized (RadarrApi .class) {
-        if (instance == null) {
-          LOGGER.info("Radarr api built");
-          instance = new RadarrApi();
-        }
-      }
-    }
-    return instance;
-  }
+  public RadarrApi() {}
 
   @Override
   public String getApiUrl(String path) {
-    return Config.getProperty(Config.Constants.RADARR_URL) + "/api/" + path + "?apikey=" + Config.getProperty(Config.Constants.RADARR_TOKEN);
+    return getApiUrl(Config.Constants.RADARR_URL, Config.Constants.RADARR_TOKEN, path);
   }
 
   @Override
@@ -49,7 +36,7 @@ public class RadarrApi implements Api {
       List<MessageEmbed> messageEmbeds = new ArrayList<>();
       List<RadarrMovie> movies = lookupMovies(search);
       for (RadarrMovie radarrMovie : movies) {
-        RadarrMovie existingMovie = existingTmdbIdsToMovies.get(radarrMovie.getTmdbId());
+        RadarrMovie existingMovie = RADARR_CACHE.getExistingMovie(radarrMovie.getTmdbId());
         boolean isExistingMovie = existingMovie != null;
         boolean skip = findNew ? isExistingMovie : !isExistingMovie;
         if (skip) {
@@ -112,7 +99,7 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public List<MessageEmbed> addTitle(String searchText) {
+  public List<MessageEmbed> addWithTitle(String searchText) {
     try {
       List<RadarrMovie> movies = lookupMovies(searchText);
       if (movies.size() == 0) {
@@ -121,7 +108,7 @@ public class RadarrApi implements Api {
 
       if (movies.size() == 1) {
         RadarrMovie radarrMovie = movies.get(0);
-        if (existingMovieTitlesToIds.containsKey(radarrMovie.getTitle().toLowerCase())) {
+        if (RADARR_CACHE.doesMovieOrShowExist(radarrMovie.getTitle())) {
           return Arrays.asList(EmbedHelper.createErrorMessage("Movie already exists"));
         }
         return Arrays.asList(addMovie(movies.get(0)));
@@ -129,7 +116,7 @@ public class RadarrApi implements Api {
       List<MessageEmbed> restOfMovies = new ArrayList<>();
       restOfMovies.add(EmbedHelper.createInfoMessage("Too many movies found, please narrow search"));
       for (RadarrMovie radarrMovie : movies) {
-        if (existingMovieTitlesToIds.containsKey(radarrMovie.getTitle().toLowerCase())) {
+        if (RADARR_CACHE.doesMovieOrShowExist(radarrMovie.getTitle())) {
           //skip existing movies
           continue;
         }
@@ -147,7 +134,7 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public MessageEmbed add(String searchText, String id) {
+  public MessageEmbed addWithId(String searchText, String id) {
     try {
       List<RadarrMovie> movies = lookupMovies(searchText);
       if (movies.size() == 0) {
@@ -167,7 +154,7 @@ public class RadarrApi implements Api {
 
   @Override
   public List<MessageEmbed> getProfiles() {
-    Collection<RadarrProfile> profiles = existingProfiles.values();
+    Collection<RadarrProfile> profiles = RADARR_CACHE.getQualityProfiles();
     if (profiles == null || profiles.isEmpty()) {
       return Arrays.asList(EmbedHelper.createErrorMessage("Found 0 profiles, please setup Radarr with at least one profile"));
     }
@@ -275,15 +262,8 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public void sendNotifications(JDA jda) {
-    for (TextChannel textChannel : jda.getTextChannels()) {
-      List<MessageEmbed> downloads = downloads();
-      if (downloads == null || downloads.size() == 0) {
-        new CommandResponse(EmbedHelper.createInfoMessage("No downloads running currently")).send(textChannel);
-      } else {
-        new CommandResponse(downloads).send(textChannel);
-      }
-    }
+  public void sendPeriodicNotifications(JDA jda) {
+    sendDownloadUpdates(jda);
   }
 
   @Override
@@ -295,8 +275,7 @@ public class RadarrApi implements Api {
         JsonArray json = parser.parse(response).getAsJsonArray();
         for (int i = 0; i < json.size(); i++) {
           RadarrMovie radarrMovie = new Gson().fromJson(json.get(i), RadarrMovie.class);
-          existingTmdbIdsToMovies.put(radarrMovie.getTmdbId(), radarrMovie);
-          existingMovieTitlesToIds.put(radarrMovie.getTitle().toLowerCase(), radarrMovie.getId());
+          RADARR_CACHE.add(radarrMovie);
         }
         return null;
       }
@@ -304,7 +283,7 @@ public class RadarrApi implements Api {
 
     List<RadarrProfile> radarrProfiles = getRadarrProfiles();
     for (RadarrProfile radarrProfile : radarrProfiles) {
-      existingProfiles.put(radarrProfile.getName().toLowerCase(), radarrProfile);
+      RADARR_CACHE.addProfile(radarrProfile);
     }
   }
 
@@ -320,7 +299,7 @@ public class RadarrApi implements Api {
     radarrMovie.setMonitored(true);
 
     String radarrProfileName = Config.getProperty(Config.Constants.RADARR_DEFAULT_PROFILE);
-    RadarrProfile radarrProfile = existingProfiles.get(radarrProfileName.toLowerCase());
+    RadarrProfile radarrProfile = RADARR_CACHE.getProfile(radarrProfileName.toLowerCase());
     if (radarrProfile == null) {
       return EmbedHelper.createErrorMessage("Could not find radarr profile for default " + radarrProfileName);
     }
@@ -346,7 +325,7 @@ public class RadarrApi implements Api {
   }
 
   private List<RadarrTorrent> lookupTorrents(String title) {
-    Long id = existingMovieTitlesToIds.get(title.toLowerCase());
+    Long id = RADARR_CACHE.getMovieSonarrId(title);
     if (id == null) {
       LOGGER.warn("Could not find title id for title " + title);
       return Collections.emptyList();
@@ -400,10 +379,6 @@ public class RadarrApi implements Api {
       }
     });
   }
-
-  private Map<String, RadarrProfile> existingProfiles = new ConcurrentHashMap<>();
-  private Map<String, Long> existingMovieTitlesToIds = new ConcurrentHashMap<>();
-  private Map<Long, RadarrMovie> existingTmdbIdsToMovies = new ConcurrentHashMap<>();
-  private static volatile RadarrApi instance;
+  private static final RadarrCache RADARR_CACHE = new RadarrCache();
   private static final Logger LOGGER = LogManager.getLogger();
 }

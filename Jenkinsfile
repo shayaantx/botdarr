@@ -72,6 +72,7 @@ node {
         stage('Create/Upload Release') {
           withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
             def description = getChangelistDescription();
+            print "description=" + description;
             print "branch name=" + env.BRANCH_NAME;
             print "tag=" + tag;
             sh 'chmod 700 upload-release.sh'
