@@ -52,9 +52,9 @@ nohup java -jar botdar-release.jar &
 1. Create a folder on your host called botdar
 1. Create a logs folder in the botdar folder
 1. Put your properties file in this folder
-1. Then run below command
+1. Then run below command (replace FULL_PATH variables)
 ```
-docker run --name botdar -v /FULL_PATH_TO_PROPS/properties:/home/botdar/config/properties -v logs:/PATH_TO_BOTDAR_FOLDER/botdar/logs rudeyoshi/botdar:latest &
+docker run -d --name botdar -v /FULL_PATH_TO_PROPS/properties:/home/botdar/config/properties -v /FULL_PATH_TO_LOGS/logs:/PATH_TO_BOTDAR_FOLDER/botdar/logs rudeyoshi/botdar:latest &
 ```
 
 <br/>
