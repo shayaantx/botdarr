@@ -76,7 +76,7 @@ node {
             print "branch name=" + env.BRANCH_NAME;
             print "tag=" + tag;
             sh 'chmod 700 upload-release.sh'
-            sh "./upload-release.sh ${token} ${tag} ${description}"
+            sh "./upload-release.sh ${token} ${tag} \"${description}\""
           }
         }
       }
