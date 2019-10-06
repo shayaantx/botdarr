@@ -176,6 +176,7 @@ public class SonarrApi implements Api {
     for (SonarrProfile sonarrProfile : sonarrProfiles) {
       SONARR_CACHE.addProfile(sonarrProfile);
     }
+    LOGGER.info("Finished caching sonarr data");
   }
 
   @Override

@@ -285,6 +285,7 @@ public class RadarrApi implements Api {
     for (RadarrProfile radarrProfile : radarrProfiles) {
       RADARR_CACHE.addProfile(radarrProfile);
     }
+    LOGGER.info("Finished caching radarr data");
   }
 
   @Override
