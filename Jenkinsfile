@@ -105,8 +105,10 @@ node {
         def imageWithVersionTag = docker.build("rudeyoshi/botdar:${tag}", "-f ./DockerfileUpload .");
         def imageWithReleaseTag = docker.build("rudeyoshi/botdar:${releaseTag}", "-f ./DockerfileUpload .");
         withDockerRegistry(credentialsId: 'docker-credentials') {
-          imageWithReleaseTag.push();
           imageWithVersionTag.push();
+          //so release tag is always the latest version
+          sleep(10000);
+          imageWithReleaseTag.push();
         }
       }
     }
