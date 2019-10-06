@@ -107,7 +107,7 @@ node {
         withDockerRegistry(credentialsId: 'docker-credentials') {
           imageWithVersionTag.push();
           //so release tag is always the latest version
-          sleep(10000);
+          sleep(10);
           imageWithReleaseTag.push();
         }
       }
