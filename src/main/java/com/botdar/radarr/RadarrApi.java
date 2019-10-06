@@ -292,6 +292,36 @@ public class RadarrApi implements Api {
     return Config.Constants.RADARR_TOKEN;
   }
 
+  public List<MessageEmbed> discover() {
+    return ConnectionHelper.makeGetRequest(this, "movies/discover/recommendations", new ConnectionHelper.SimpleEntityResponseHandler<MessageEmbed>() {
+      @Override
+      public List<MessageEmbed> onSuccess(String response) throws Exception {
+        List<MessageEmbed> recommendedMovies = new ArrayList<>();
+        if (response == null || response.isEmpty() || response.equalsIgnoreCase("[]")) {
+          LOGGER.warn("Found no response when looking for movie recommendations");
+          return Collections.emptyList();
+        }
+        JsonParser parser = new JsonParser();
+        JsonArray json = parser.parse(response).getAsJsonArray();
+
+        for (int i = 0; i < json.size(); i++) {
+          if (i == 20) {
+            //don't show more than 20
+            break;
+          }
+          RadarrMovie radarrMovie = new Gson().fromJson(json.get(i), RadarrMovie.class);
+          EmbedBuilder embedBuilder = new EmbedBuilder();
+          embedBuilder.setTitle(radarrMovie.getTitle());
+          embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
+          embedBuilder.addField("Add movie command", "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+          embedBuilder.setImage(radarrMovie.getRemotePoster());
+          recommendedMovies.add(embedBuilder.build());
+        }
+        return recommendedMovies;
+      }
+    });
+  }
+
   private MessageEmbed addMovie(RadarrMovie radarrMovie) {
     //make sure we specify where the movie should get downloaded
     radarrMovie.setPath(Config.getProperty(Config.Constants.RADARR_PATH) + "/" + radarrMovie.getTitle() + "(" + radarrMovie.getYear() + ")");

@@ -4,6 +4,12 @@ import com.botdar.discord.EmbedHelper;
 import com.botdar.radarr.RadarrApi;
 
 public enum RadarrCommands implements Command {
+  DISCOVER_MOVIES("movie discover", "Finds new movies based on radarr recommendations (from trakt)") {
+    @Override
+    public CommandResponse execute(String command) {
+      return new CommandResponse(RADARR_API.discover());
+    }
+  },
   ADD_ID_MOVIE("movie id add", "Adds a movie using search text and tmdb id (i.e., movie id add John Wick 484737). The easiest" +
     " way to use this command is to use \"movie find new TITLE\", then the results will contain the movie add command for you") {
     @Override
