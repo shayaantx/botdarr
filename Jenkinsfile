@@ -100,9 +100,12 @@ node {
         ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
         """;
         fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
-        def uploadImage = docker.build("rudeyoshi/botdar:${tag}", "-f ./DockerfileUpload .");
+        def releaseTag = env.BRANCH_NAME == "master" ? "stable" : "latest";
+        def imageWithVersionTag = docker.build("rudeyoshi/botdar:${tag}", "-f ./DockerfileUpload .");
+        def imageWithReleaseTag = docker.build("rudeyoshi/botdar:${releaseTag}", "-f ./DockerfileUpload .");
         withDockerRegistry(credentialsId: 'docker-credentials') {
-          uploadImage.push(env.BRANCH_NAME == "master" ? "stable" : "latest");
+          imageWithVersionTag.push();
+          imageWithReleaseTag.push();
         }
       }
     }
