@@ -67,7 +67,7 @@ docker run -d --name botdar -v /FULL_PATH_TO_PROPS/properties:/home/botdar/confi
 
 <br/>
 
-## Tips
+## Radarr Tips
 
 1. Just cause you add a movie successfully does not mean the movie will show up instantly or at all
    - The way radarr works is you search for a film, then add it, then radarr will start searching through all the configured indexers for a torrent
@@ -94,3 +94,8 @@ docker run -d --name botdar -v /FULL_PATH_TO_PROPS/properties:/home/botdar/confi
 5. movie find existing
    - This command finds any existing films and gives you information about them.
    - It will tell you if the movie has been downloaded and if the radarr has the file.
+
+
+## Sonarr Tips
+
+TODO: add
