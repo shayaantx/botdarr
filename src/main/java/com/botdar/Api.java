@@ -87,7 +87,9 @@ public interface Api {
         List<MessageEmbed> downloads = downloads();
         if (downloads != null && downloads.size() > 0) {
           //TODO: this is fragile, should fix
-          if (downloads.size() == 1 && downloads.get(0).getDescription().equalsIgnoreCase("No downloads currently")) {
+          if (downloads.size() == 1 &&
+            downloads.get(0).getDescription() != null &&
+            downloads.get(0).getDescription().equalsIgnoreCase("No downloads currently")) {
             continue;
           }
           new CommandResponse(downloads).send(textChannel);

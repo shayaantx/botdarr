@@ -80,12 +80,12 @@ public class Config {
     /**
      * The root file path to where you want sonarr to download your movies
      */
-    public static final String SONARR_PATH = "radarr-path";
+    public static final String SONARR_PATH = "sonarr-path";
 
     /**
      * The default quality profile you want sonarr to use when adding movies
      */
-    public static final String SONARR_DEFAULT_PROFILE = "radarr-default-profile";
+    public static final String SONARR_DEFAULT_PROFILE = "sonarr-default-profile";
 
     public static final String LIDARR_URL = "lidar-url";
 

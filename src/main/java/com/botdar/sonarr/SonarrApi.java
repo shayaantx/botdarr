@@ -5,9 +5,7 @@ import com.botdar.Config;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
 import com.botdar.radarr.RadarrMovie;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -65,7 +63,21 @@ public class SonarrApi implements Api {
         }
         return Arrays.asList(addShow(shows.get(0)));
       }
-      return null;
+      List<MessageEmbed> restOfShows = new ArrayList<>();
+      restOfShows.add(EmbedHelper.createInfoMessage("Too many shows found, please narrow search"));
+      for (SonarrShow sonarrShow : shows) {
+        if (SONARR_CACHE.doesShowExist(sonarrShow.getTitle())) {
+          //skip existing movies
+          continue;
+        }
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        embedBuilder.setTitle(sonarrShow.getTitle());
+        embedBuilder.addField("TvdbId", "" + sonarrShow.getTvdbId(), false);
+        embedBuilder.addField("Add show command", "show id add " + sonarrShow.getTitle() + " " + sonarrShow.getTvdbId(), false);
+        embedBuilder.setImage(sonarrShow.getRemotePoster());
+        restOfShows.add(embedBuilder.build());
+      }
+      return restOfShows;
     } catch (Exception e) {
       LOGGER.error("Error found trying to add show=" + searchText, e);
       return Arrays.asList(EmbedHelper.createErrorMessage("Error trying to add show " + searchText + ", e=" + e.getMessage()));
@@ -224,9 +236,11 @@ public class SonarrApi implements Api {
   private MessageEmbed addShow(SonarrShow sonarrShow) {
     String title = sonarrShow.getTitle();
     //make sure we specify where the show should get downloaded
-    sonarrShow.setPath(Config.getProperty(Config.Constants.RADARR_PATH) + "/" + title);
+    sonarrShow.setPath(Config.getProperty(Config.Constants.SONARR_PATH) + "/" + title);
     //make sure the show is monitored
     sonarrShow.setMonitored(true);
+    //make sure to have seasons stored in separate folders
+    sonarrShow.setSeasonFolder(true);
 
     String sonarrProfileName = Config.getProperty(Config.Constants.SONARR_DEFAULT_PROFILE);
     SonarrProfile sonarrProfile = SONARR_CACHE.getProfile(sonarrProfileName.toLowerCase());
@@ -238,7 +252,7 @@ public class SonarrApi implements Api {
       HttpPost post = new HttpPost(getApiUrl("series"));
 
       post.addHeader("content-type", "application/x-www-form-urlencoded");
-      post.setEntity(new StringEntity(new Gson().toJson(sonarrShow, SonarrShow.class)));
+      post.setEntity(new StringEntity(new GsonBuilder().addSerializationExclusionStrategy(excludeUnnecessaryFields).create().toJson(sonarrShow, SonarrShow.class)));
 
       try (CloseableHttpResponse response = client.execute(post)) {
         int statusCode = response.getStatusLine().getStatusCode();
@@ -283,6 +297,19 @@ public class SonarrApi implements Api {
       }
     });
   }
+
+  private ExclusionStrategy excludeUnnecessaryFields = new ExclusionStrategy() {
+    @Override
+    public boolean shouldSkipField(FieldAttributes fieldAttributes) {
+      //profileId breaks the post request to /series for some reason and I don't believe its a required field
+      return fieldAttributes.getName().equalsIgnoreCase("profileId");
+    }
+
+    @Override
+    public boolean shouldSkipClass(Class<?> aClass) {
+      return false;
+    }
+  };
 
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
   private static final Logger LOGGER = LogManager.getLogger();
