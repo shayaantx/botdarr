@@ -2,14 +2,12 @@ package com.botdar.radarr;
 
 import com.botdar.Api;
 import com.botdar.Config;
-import com.botdar.commands.CommandResponse;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
 import com.google.gson.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -108,7 +106,7 @@ public class RadarrApi implements Api {
 
       if (movies.size() == 1) {
         RadarrMovie radarrMovie = movies.get(0);
-        if (RADARR_CACHE.doesMovieOrShowExist(radarrMovie.getTitle())) {
+        if (RADARR_CACHE.doesMovieExist(radarrMovie.getTitle())) {
           return Arrays.asList(EmbedHelper.createErrorMessage("Movie already exists"));
         }
         return Arrays.asList(addMovie(movies.get(0)));
@@ -116,7 +114,7 @@ public class RadarrApi implements Api {
       List<MessageEmbed> restOfMovies = new ArrayList<>();
       restOfMovies.add(EmbedHelper.createInfoMessage("Too many movies found, please narrow search"));
       for (RadarrMovie radarrMovie : movies) {
-        if (RADARR_CACHE.doesMovieOrShowExist(radarrMovie.getTitle())) {
+        if (RADARR_CACHE.doesMovieExist(radarrMovie.getTitle())) {
           //skip existing movies
           continue;
         }
@@ -334,7 +332,7 @@ public class RadarrApi implements Api {
     if (radarrProfile == null) {
       return EmbedHelper.createErrorMessage("Could not find radarr profile for default " + radarrProfileName);
     }
-    radarrMovie.setQualityProfileId(radarrProfile.getId());
+    radarrMovie.setQualityProfileId((int)radarrProfile.getId());
 
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl("movie"));
@@ -347,7 +345,7 @@ public class RadarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return EmbedHelper.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
-        return EmbedHelper.createSuccessMessage("Movie added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
+        return EmbedHelper.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
       LOGGER.error("Error trying to add movie", e);

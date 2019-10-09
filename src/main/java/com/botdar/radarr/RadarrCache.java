@@ -10,7 +10,7 @@ public class RadarrCache {
     return existingTmdbIdsToMovies.get(tmdbid);
   }
 
-  public boolean doesMovieOrShowExist(String title) {
+  public boolean doesMovieExist(String title) {
     return existingMovieTitlesToIds.containsKey(title.toLowerCase());
   }
 

@@ -187,6 +187,22 @@ public class SonarrShow {
     return id;
   }
 
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public String getTitleSlug() {
+    return titleSlug;
+  }
+
+  public void setTitleSlug(String titleSlug) {
+    this.titleSlug = titleSlug;
+  }
+
   private int qualityProfileId;
   private long id;
   private String title;
@@ -210,4 +226,7 @@ public class SonarrShow {
   private long tvMazeId;
   private String firstAired;
   private String seriesType;
+  private String path;
+  private String titleSlug;
+  private SonarrOptions addOptions = new SonarrOptions();
 }

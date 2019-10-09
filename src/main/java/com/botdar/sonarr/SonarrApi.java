@@ -4,15 +4,22 @@ import com.botdar.Api;
 import com.botdar.Config;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
+import com.botdar.radarr.RadarrMovie;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,12 +34,42 @@ public class SonarrApi implements Api {
 
   @Override
   public MessageEmbed addWithId(String searchText, String id) {
-    return null;
+    try {
+      List<SonarrShow> shows = lookupShows(searchText);
+      if (shows.size() == 0) {
+        return EmbedHelper.createErrorMessage("No shows found");
+      }
+      for (SonarrShow sonarrShow : shows) {
+        if (sonarrShow.getTvdbId() == Integer.valueOf(id)) {
+          return addShow(sonarrShow);
+        }
+      }
+      return EmbedHelper.createErrorMessage("Could not find show with search text=" + searchText + " and id=" + id);
+    } catch (Exception e) {
+      LOGGER.error("Error trying to add show=" + searchText, e);
+      return EmbedHelper.createErrorMessage("Error adding content, e=" + e.getMessage());
+    }
   }
 
   @Override
   public List<MessageEmbed> addWithTitle(String searchText) {
-    return null;
+    try {
+      List<SonarrShow> shows = lookupShows(searchText);
+      if (shows.size() == 0) {
+        return Arrays.asList(EmbedHelper.createErrorMessage("No shows found"));
+      }
+      if (shows.size() == 1) {
+        SonarrShow sonarrShow = shows.get(0);
+        if (SONARR_CACHE.doesShowExist(sonarrShow.getTitle())) {
+          return Arrays.asList(EmbedHelper.createErrorMessage("Show already exists"));
+        }
+        return Arrays.asList(addShow(shows.get(0)));
+      }
+      return null;
+    } catch (Exception e) {
+      LOGGER.error("Error found trying to add show=" + searchText, e);
+      return Arrays.asList(EmbedHelper.createErrorMessage("Error trying to add show " + searchText + ", e=" + e.getMessage()));
+    }
   }
 
   @Override
@@ -182,6 +219,38 @@ public class SonarrApi implements Api {
   @Override
   public String getApiToken() {
     return Config.Constants.SONARR_TOKEN;
+  }
+
+  private MessageEmbed addShow(SonarrShow sonarrShow) {
+    String title = sonarrShow.getTitle();
+    //make sure we specify where the show should get downloaded
+    sonarrShow.setPath(Config.getProperty(Config.Constants.RADARR_PATH) + "/" + title);
+    //make sure the show is monitored
+    sonarrShow.setMonitored(true);
+
+    String sonarrProfileName = Config.getProperty(Config.Constants.SONARR_DEFAULT_PROFILE);
+    SonarrProfile sonarrProfile = SONARR_CACHE.getProfile(sonarrProfileName.toLowerCase());
+    if (sonarrProfile == null) {
+      return EmbedHelper.createErrorMessage("Could not find sonarr profile for default " + sonarrProfile);
+    }
+    sonarrShow.setQualityProfileId((int)sonarrProfile.getId());
+    try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
+      HttpPost post = new HttpPost(getApiUrl("series"));
+
+      post.addHeader("content-type", "application/x-www-form-urlencoded");
+      post.setEntity(new StringEntity(new Gson().toJson(sonarrShow, SonarrShow.class)));
+
+      try (CloseableHttpResponse response = client.execute(post)) {
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode != 200 && statusCode != 201) {
+          return EmbedHelper.createErrorMessage("Could not add show, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
+        }
+        return EmbedHelper.createSuccessMessage("Show " + title + " added, sonarr-detail=" + response.getStatusLine().getReasonPhrase());
+      }
+    } catch (IOException e) {
+      LOGGER.error("Error trying to add show=" + title, e);
+      return EmbedHelper.createErrorMessage("Error adding show=" + title + ", error=" + e.getMessage());
+    }
   }
 
   private List<SonarrShow> lookupShows(String search) throws Exception {
