@@ -98,4 +98,7 @@ docker run -d --name botdar -v /FULL_PATH_TO_PROPS/properties:/home/botdar/confi
 
 ## Sonarr Tips
 
-TODO: add
+1. Just like radarr, when you add a show with sonarr it doesn't automatically mean the show will magically appear. It really depends
+  - on how many trackers your sonarr installation has and how diverse the content within said trackers is.
+
+TODO: add more tips for sonarr

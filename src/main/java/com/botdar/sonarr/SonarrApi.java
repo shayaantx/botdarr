@@ -139,7 +139,9 @@ public class SonarrApi implements Api {
         List<MessageEmbed> messageEmbeds = new ArrayList<>();
         JsonParser parser = new JsonParser();
         JsonArray json = parser.parse(response).getAsJsonArray();
-        for (int i = 0; i < json.size(); i++) {
+        //only show a max of 20 episodes
+        int size = json.size() >= 20 ? 20 : json.size();
+        for (int i = 0; i < size; i++) {
           SonarrQueue showQueue = new Gson().fromJson(json.get(i), SonarrQueue.class);
           EmbedBuilder embedBuilder = new EmbedBuilder();
           embedBuilder.setTitle(showQueue.getSonarrQueueShow().getTitle());
