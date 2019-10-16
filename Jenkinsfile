@@ -102,7 +102,7 @@ node {
         """;
         fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
         def releaseTag = env.BRANCH_NAME == "master" ? "stable" : "latest";
-        def imageWithReleaseTag = docker.build("rudeyoshi/botdar:${releaseTag}", "-f ./DockerfileUpload .");
+        def imageWithReleaseTag = docker.build("shayaantx/botdar:${releaseTag}", "-f ./DockerfileUpload .");
         withDockerRegistry(credentialsId: 'docker-credentials') {
           imageWithReleaseTag.push();
         }

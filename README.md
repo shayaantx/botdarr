@@ -1,6 +1,6 @@
 # Summary
 
-Made this discord bot so I could access radarr, sonarr, and lidarr all from a single discord channel
+Made this simple discord bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a single discord channel
 
 <br/>
 
@@ -25,12 +25,12 @@ https://discordpy.readthedocs.io/en/latest/discord.html
 1. Get latest copy of botdar botdar-release.jar
 1. Make sure you have openjdk 8 or oracle java 8 installed on your machine
 1. Create a file called "properties" (without double quotes) in same folder as the jar
-1. Fill it with the following properties
+1. Fill it with the following properties (you can omit sonarr properties if you aren't using it, same with radarr, however everything else listed below is required)
 ```
 # your discord bot token
 token=
 
-# your radarr url (i.e., http://SOME-IP:SOME-PORT
+# your radarr url (i.e., http://SOME-IP:SOME-PORT)
 radarr-url=
 # your radarr token (go to Radarr->Settings->General->Security->Api Key)
 radarr-token=
@@ -38,6 +38,18 @@ radarr-token=
 radarr-path=
 # the default quality profile you want to use (go to Radarr->Settings->Profiles)
 radarr-default-profile=
+
+# your radarr url (i.e., http://SOME-IP:SOME-PORT)
+sonarr-url=
+# your sonarr token (go to Sonarr->Settings->General->Security->Api Key)
+sonarr-token=
+# the root path your sonarr shows get added to
+sonarr-path=
+# the default quality profile you want to use (go to Sonarr->Settings->Profiles)
+sonarr-default-profile=any
+
+# the discord channel you want the bot installed on
+discord-channel=
 ```
 
 1. Run the jar using java
@@ -48,13 +60,18 @@ nohup java -jar botdar-release.jar &
 
 ## Docker installation
 
-1. Docker images are here https://cloud.docker.com/repository/docker/rudeyoshi/botdar/general
-1. Create a folder on your host called botdar
+1. Docker images are here https://cloud.docker.com/repository/docker/shayaantx/botdar/general
+1. Create a folder on your host called "botdar"
 1. Create a logs folder in the botdar folder
-1. Put your properties file in this folder
-1. Then run below command (replace FULL_PATH variables)
+1. Put your properties file in botdar folder
+1. Then run below command (replace BOTDAR_HOME variables)
 ```
-docker run -d --name botdar -v /FULL_PATH_TO_PROPS/properties:/home/botdar/config/properties -v /FULL_PATH_TO_LOGS/logs:/PATH_TO_BOTDAR_FOLDER/botdar/logs rudeyoshi/botdar:latest &
+# for latest
+docker run -d --name botdar -v /BOTDAR_HOME/properties:/home/botdar/config/properties -v /BOTDAR_HOME/logs:/home/botdar/logs shayaantx/botdar:latest &
+
+# for stable
+
+docker run -d --name botdar -v /BOTDAR_HOME/properties:/home/botdar/config/properties -v /BOTDAR_HOME/logs:/home/botdar/logs shayaantx/botdar:stable &
 ```
 
 <br/>
@@ -101,4 +118,11 @@ docker run -d --name botdar -v /FULL_PATH_TO_PROPS/properties:/home/botdar/confi
 1. Just like radarr, when you add a show with sonarr it doesn't automatically mean the show will magically appear. It really depends
   - on how many trackers your sonarr installation has and how diverse the content within said trackers is.
 
-TODO: add more tips for sonarr
+<br/>
+
+## Stuff I might add in the future
+
+1. Season search/download
+2. Per episode search/download
+3. Cancelling/blacklisting downloads (movies and tvshows)
+4. When I implement lidarr support I want to search by song instead of just artist/album (since lidarr doesn't support song search)
