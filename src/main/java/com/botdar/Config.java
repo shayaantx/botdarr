@@ -40,14 +40,59 @@ public class Config {
   }
 
   public static final class Constants {
+    /**
+     * The discord bot token
+     */
     public static final String TOKEN = "token";
+
+    /**
+     * The url to your radarr instance
+     * (i.e., http://SOME_IP:PORT)
+     */
     public static final String RADARR_URL = "radarr-url";
+
+    /**
+     * The api token for radarr
+     */
     public static final String RADARR_TOKEN = "radarr-token";
+
+    /**
+     * The root file path to where you want radarr to download your movies
+     */
     public static final String RADARR_PATH = "radarr-path";
+
+    /**
+     * The default quality profile you want radarr to use when adding movies
+     */
     public static final String RADARR_DEFAULT_PROFILE = "radarr-default-profile";
+
+    /**
+     * The url to your sonarr instance
+     * (i.e., http://SOME_IP:PORT)
+     */
     public static final String SONARR_URL = "sonarr-url";
+
+    /**
+     * The api token for sonarr
+     */
+    public static final String SONARR_TOKEN = "sonarr-token";
+
+    /**
+     * The root file path to where you want sonarr to download your movies
+     */
+    public static final String SONARR_PATH = "sonarr-path";
+
+    /**
+     * The default quality profile you want sonarr to use when adding movies
+     */
+    public static final String SONARR_DEFAULT_PROFILE = "sonarr-default-profile";
+
     public static final String LIDARR_URL = "lidar-url";
-    public static final String JACKETT_URL = "jackett-url";
+
+    /**
+     * The discord channel to send notifications to
+     */
+    public static final String DISCORD_CHANNEL = "discord-channel";
   }
 
   private final Properties properties;

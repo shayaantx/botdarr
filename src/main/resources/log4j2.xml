@@ -29,6 +29,18 @@
 
             <DefaultRolloverStrategy max="10" />
         </RollingFile>
+        <RollingFile name="SonarrLog">
+            <FileName>logs/sonarr.log</FileName>
+            <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
+            <PatternLayout>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
         <RollingFile name="NetworkLog">
             <FileName>logs/network.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
@@ -52,6 +64,10 @@
 
         <Logger name="com.botdar.radarr" level="info" additivity="false">
             <AppenderRef ref="RadarrLog" />
+        </Logger>
+
+        <Logger name="com.botdar.sonarr" level="info" additivity="false">
+            <AppenderRef ref="SonarrLog" />
         </Logger>
 
         <Logger name="com.botdar.connections" level="info" additivity="false">

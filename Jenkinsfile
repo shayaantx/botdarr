@@ -60,6 +60,7 @@ node {
       }
 
       stage("Package") {
+        fileOperations([fileCreateOperation(fileContent: "version=${tag}", fileName: './src/main/resources/version.txt')]);
         sh 'mvn package'
       }
 
@@ -72,10 +73,11 @@ node {
         stage('Create/Upload Release') {
           withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
             def description = getChangelistDescription();
+            print "description=" + description;
             print "branch name=" + env.BRANCH_NAME;
             print "tag=" + tag;
             sh 'chmod 700 upload-release.sh'
-            sh "./upload-release.sh ${token} ${tag} ${description}"
+            sh "./upload-release.sh ${token} ${tag} \"${description}\""
           }
         }
       }
@@ -99,9 +101,10 @@ node {
         ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
         """;
         fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
-        def uploadImage = docker.build("rudeyoshi/botdar:${tag}", "-f ./DockerfileUpload .");
+        def releaseTag = env.BRANCH_NAME == "master" ? "stable" : "latest";
+        def imageWithReleaseTag = docker.build("shayaantx/botdar:${releaseTag}", "-f ./DockerfileUpload .");
         withDockerRegistry(credentialsId: 'docker-credentials') {
-          uploadImage.push(env.BRANCH_NAME == "master" ? "stable" : "latest");
+          imageWithReleaseTag.push();
         }
       }
     }
