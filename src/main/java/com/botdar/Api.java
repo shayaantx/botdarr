@@ -14,7 +14,7 @@ public interface Api {
   String getApiUrl(String path);
 
   /**
-   * Attempt to add content using the given search text and id (the tmdbid)
+   * Attempt to add content using the given search text and id (the tmdbid or tvdbid)
    */
   MessageEmbed addWithId(String searchText, String id);
 

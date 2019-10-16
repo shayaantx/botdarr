@@ -118,11 +118,14 @@ docker run -d --name botdar -v /BOTDAR_HOME/properties:/home/botdar/config/prope
 1. Just like radarr, when you add a show with sonarr it doesn't automatically mean the show will magically appear. It really depends
   - on how many trackers your sonarr installation has and how diverse the content within said trackers is.
 
+TODO: need to add more tips for sonarr  
+  
 <br/>
 
 ## Stuff I might add in the future
 
-1. Season search/download
+1. Interactive season search/download (only available in v3 sonarr)
 2. Per episode search/download
 3. Cancelling/blacklisting downloads (movies and tvshows)
 4. When I implement lidarr support I want to search by song instead of just artist/album (since lidarr doesn't support song search)
+5. Test cases!
