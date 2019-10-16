@@ -2,7 +2,6 @@ package com.botdar.commands;
 
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
 
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class CommandResponse {
       for (MessageEmbed messageEmbed : htmlResponses) {
         messageChannel.sendMessage(messageEmbed).queue();
       }
-    } else{
+    } else {
       messageChannel.sendMessage(htmlResponse).queue();
     }
   }

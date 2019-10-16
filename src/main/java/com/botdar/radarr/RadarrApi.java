@@ -4,7 +4,9 @@ import com.botdar.Api;
 import com.botdar.Config;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -21,7 +23,8 @@ import java.net.URLEncoder;
 import java.util.*;
 
 public class RadarrApi implements Api {
-  public RadarrApi() {}
+  public RadarrApi() {
+  }
 
   @Override
   public String getApiUrl(String path) {
@@ -182,7 +185,7 @@ public class RadarrApi implements Api {
   public List<MessageEmbed> forceDownload(String command) {
     String decodedKey = new String(Base64.getDecoder().decode(command.getBytes()));
     int lastColonCharacter = decodedKey.lastIndexOf(':');
-    String[] decodedKeyArray =  {decodedKey.substring(0, lastColonCharacter), decodedKey.substring(lastColonCharacter + 1)};
+    String[] decodedKeyArray = {decodedKey.substring(0, lastColonCharacter), decodedKey.substring(lastColonCharacter + 1)};
     if (decodedKeyArray.length != 2) {
       return Arrays.asList(EmbedHelper.createErrorMessage("Invalid key=" + decodedKey));
     }
@@ -332,7 +335,7 @@ public class RadarrApi implements Api {
     if (radarrProfile == null) {
       return EmbedHelper.createErrorMessage("Could not find radarr profile for default " + radarrProfileName);
     }
-    radarrMovie.setQualityProfileId((int)radarrProfile.getId());
+    radarrMovie.setQualityProfileId((int) radarrProfile.getId());
 
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl("movie"));
@@ -408,6 +411,7 @@ public class RadarrApi implements Api {
       }
     });
   }
+
   private static final RadarrCache RADARR_CACHE = new RadarrCache();
   private static final Logger LOGGER = LogManager.getLogger();
 }

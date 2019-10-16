@@ -10,9 +10,10 @@ import java.util.Properties;
 
 public class Config {
   private static volatile Config instance;
+
   private static Config getConfig() {
     if (instance == null) {
-      synchronized (Config .class) {
+      synchronized (Config.class) {
         if (instance == null) {
           instance = new Config();
         }

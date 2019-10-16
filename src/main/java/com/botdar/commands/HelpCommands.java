@@ -45,6 +45,7 @@ public enum HelpCommands implements Command {
       return new CommandResponse(embedBuilder.build());
     }
   };
+
   private HelpCommands(String commandText, String description) {
     this.commandText = commandText;
     this.description = description;

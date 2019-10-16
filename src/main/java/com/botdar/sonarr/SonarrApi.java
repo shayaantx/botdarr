@@ -4,7 +4,6 @@ import com.botdar.Api;
 import com.botdar.Config;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
-import com.botdar.radarr.RadarrMovie;
 import com.google.gson.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -109,7 +108,7 @@ public class SonarrApi implements Api {
             for (SonarrSeason sonarrSeason : existingShow.getSeasons()) {
               embedBuilder.addField("",
                 "Season#" + sonarrSeason.getSeasonNumber() +
-                ",Available Epsiodes=" + sonarrSeason.getStatistics().getEpisodeCount() + ",Total Epsiodes=" + sonarrSeason.getStatistics().getTotalEpisodeCount(), false);
+                  ",Available Epsiodes=" + sonarrSeason.getStatistics().getEpisodeCount() + ",Total Epsiodes=" + sonarrSeason.getStatistics().getTotalEpisodeCount(), false);
             }
           }
         }
@@ -249,7 +248,7 @@ public class SonarrApi implements Api {
     if (sonarrProfile == null) {
       return EmbedHelper.createErrorMessage("Could not find sonarr profile for default " + sonarrProfile);
     }
-    sonarrShow.setQualityProfileId((int)sonarrProfile.getId());
+    sonarrShow.setQualityProfileId((int) sonarrProfile.getId());
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl("series"));
 

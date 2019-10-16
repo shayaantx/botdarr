@@ -19,8 +19,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BotdarApplication {
-	public static void main(String[] args) throws Exception {
-	  try {
+  public static void main(String[] args) throws Exception {
+    try {
       JDA jda = new JDABuilder(Config.getProperty(Config.Constants.TOKEN)).addEventListeners(new ListenerAdapter() {
         @Override
         public void onReady(@Nonnull ReadyEvent event) {
@@ -41,14 +41,14 @@ public class BotdarApplication {
       }).build();
       jda.awaitReady();
     } catch (Throwable e) {
-	    LOGGER.error("Error caught during main", e);
-	    throw e;
+      LOGGER.error("Error caught during main", e);
+      throw e;
     }
-	}
+  }
 
-	private static void processMessage(@Nonnull MessageReceivedEvent event) {
+  private static void processMessage(@Nonnull MessageReceivedEvent event) {
     String strippedMessage = event.getMessage().getContentStripped();
-	  try {
+    try {
       for (Command command : ALL_COMMANDS) {
         if (strippedMessage.startsWith(command.getIdentifier())) {
           String commandOperation = strippedMessage.replaceAll(command.getIdentifier(), "");
@@ -58,8 +58,8 @@ public class BotdarApplication {
         }
       }
     } catch (Exception e) {
-	    LOGGER.error("Error trying to execute command " + strippedMessage, e);
-	    new CommandResponse(EmbedHelper.createErrorMessage("Error trying to parse command " + strippedMessage)).send(event.getChannel());
+      LOGGER.error("Error trying to execute command " + strippedMessage, e);
+      new CommandResponse(EmbedHelper.createErrorMessage("Error trying to parse command " + strippedMessage)).send(event.getChannel());
     }
   }
 
