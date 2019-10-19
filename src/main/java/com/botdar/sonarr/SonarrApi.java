@@ -138,15 +138,19 @@ public class SonarrApi implements Api {
         List<MessageEmbed> messageEmbeds = new ArrayList<>();
         JsonParser parser = new JsonParser();
         JsonArray json = parser.parse(response).getAsJsonArray();
+        boolean tooManyDownloads = json.size() >= 20;
         //only show a max of 20 episodes
-        int size = json.size() >= 20 ? 20 : json.size();
+        int size = tooManyDownloads ? 20 : json.size();
         for (int i = 0; i < size; i++) {
           SonarrQueue showQueue = new Gson().fromJson(json.get(i), SonarrQueue.class);
           EmbedBuilder embedBuilder = new EmbedBuilder();
+          SonarQueueEpisode episode = showQueue.getEpisode();
           embedBuilder.setTitle(showQueue.getSonarrQueueShow().getTitle());
+          embedBuilder.addField("Season/Episode", "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber(), true);
           embedBuilder.addField("Quality", showQueue.getQuality().getQuality().getName(), true);
           embedBuilder.addField("Status", showQueue.getStatus(), true);
-          embedBuilder.addField("Time Left", showQueue.getTimeleft(), true);
+          embedBuilder.addField("Time Left", showQueue.getTimeleft() == null ? "unknown" : showQueue.getTimeleft(), true);
+          embedBuilder.addField("Overview", episode.getTitle() + ": " + episode.getOverview(), false);
           if (showQueue.getStatusMessages() != null) {
             for (SonarrQueueStatusMessages statusMessage : showQueue.getStatusMessages()) {
               for (String message : statusMessage.getMessages()) {
@@ -159,6 +163,9 @@ public class SonarrApi implements Api {
         }
         if (messageEmbeds == null || messageEmbeds.size() == 0) {
           return Arrays.asList(EmbedHelper.createInfoMessage("No downloads currently"));
+        }
+        if (tooManyDownloads) {
+          messageEmbeds.add(EmbedHelper.createInfoMessage("Too many downloads, limiting results to 20"));
         }
         return messageEmbeds;
       }
