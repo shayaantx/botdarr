@@ -10,6 +10,7 @@ import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -185,9 +186,9 @@ public class RadarrApi implements Api {
   public List<MessageEmbed> forceDownload(String command) {
     String decodedKey = new String(Base64.getDecoder().decode(command.getBytes()));
     //the hash format is guid:title
-    //title couldn't contain : so we find the first occurrence 
-    int firstColonCharacter = decodedKey.indexOf(':');
-    String[] decodedKeyArray = {decodedKey.substring(0, firstColonCharacter), decodedKey.substring(firstColonCharacter + 1)};
+    //title couldn't contain : so we find the first occurrence
+    int titleIndex = decodedKey.indexOf("title=");
+    String[] decodedKeyArray = {decodedKey.substring(0, titleIndex - 1), decodedKey.substring(titleIndex + 6)};
     if (decodedKeyArray.length != 2) {
       return Arrays.asList(EmbedHelper.createErrorMessage("Invalid key=" + decodedKey));
     }
@@ -205,7 +206,7 @@ public class RadarrApi implements Api {
         return ConnectionHelper.makePostRequest(this, "release", radarrTorrent, new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
           @Override
           public List<MessageEmbed> onSuccess(String response) throws Exception {
-            return Arrays.asList(EmbedHelper.createSuccessMessage("Forced the download"));
+            return Arrays.asList(EmbedHelper.createSuccessMessage("Forced the download for " + title));
           }
         });
       }
@@ -214,10 +215,10 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public List<MessageEmbed> lookupTorrents(String command, boolean showRejected) {
-    List<RadarrTorrent> radarrTorrents = lookupTorrents(command);
+  public List<MessageEmbed> lookupTorrents(String movieTitle, boolean showRejected) {
+    List<RadarrTorrent> radarrTorrents = lookupTorrents(movieTitle);
     if (radarrTorrents.isEmpty()) {
-      return Arrays.asList(EmbedHelper.createErrorMessage("No downloads available for " + command));
+      return Arrays.asList(EmbedHelper.createErrorMessage("No downloads available for " + movieTitle));
     }
 
     List<MessageEmbed> messageEmbeds = new ArrayList<>();
@@ -233,6 +234,7 @@ public class RadarrApi implements Api {
       embedBuilder.addField("Indexer", radarrTorrent.getIndexer(), true);
       embedBuilder.addField("Seeders", "" + radarrTorrent.getSeeders(), true);
       embedBuilder.addField("Leechers", "" + radarrTorrent.getLeechers(), true);
+      embedBuilder.addField("Size", "" + FileUtils.byteCountToDisplaySize(radarrTorrent.getSize()), true);
       String[] rejections = radarrTorrent.getRejections();
       if (rejections != null) {
         embedBuilder.addBlankField(false);
@@ -240,14 +242,14 @@ public class RadarrApi implements Api {
           embedBuilder.addField("Rejection Reason", rejection, false);
         }
       }
-      String key = radarrTorrent.getGuid() + ":" + radarrTorrent.getMovieTitle();
+      String key = radarrTorrent.getGuid() + ":title=" + movieTitle;
       byte[] encodedBytes = Base64.getEncoder().encode(key.getBytes());
       embedBuilder.addField("Download hash command", "movie hash download " + new String(encodedBytes), true);
       messageEmbeds.add(embedBuilder.build());
     }
 
     if (messageEmbeds.isEmpty()) {
-      messageEmbeds.add(EmbedHelper.createErrorMessage("No downloads available for " + command));
+      messageEmbeds.add(EmbedHelper.createErrorMessage("No downloads available for " + movieTitle));
     }
 
     return messageEmbeds;
