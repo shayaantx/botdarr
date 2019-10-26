@@ -184,8 +184,10 @@ public class RadarrApi implements Api {
   @Override
   public List<MessageEmbed> forceDownload(String command) {
     String decodedKey = new String(Base64.getDecoder().decode(command.getBytes()));
-    int lastColonCharacter = decodedKey.lastIndexOf(':');
-    String[] decodedKeyArray = {decodedKey.substring(0, lastColonCharacter), decodedKey.substring(lastColonCharacter + 1)};
+    //the hash format is guid:title
+    //title couldn't contain : so we find the first occurrence 
+    int firstColonCharacter = decodedKey.indexOf(':');
+    String[] decodedKeyArray = {decodedKey.substring(0, firstColonCharacter), decodedKey.substring(firstColonCharacter + 1)};
     if (decodedKeyArray.length != 2) {
       return Arrays.asList(EmbedHelper.createErrorMessage("Invalid key=" + decodedKey));
     }
