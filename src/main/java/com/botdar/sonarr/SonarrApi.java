@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
+
 public class SonarrApi implements Api {
   @Override
   public String getApiUrl(String path) {
@@ -150,6 +152,10 @@ public class SonarrApi implements Api {
           embedBuilder.addField("Quality", showQueue.getQuality().getQuality().getName(), true);
           embedBuilder.addField("Status", showQueue.getStatus(), true);
           embedBuilder.addField("Time Left", showQueue.getTimeleft() == null ? "unknown" : showQueue.getTimeleft(), true);
+          String overview = episode.getTitle() + ": " + episode.getOverview();
+          if (overview.length() > VALUE_MAX_LENGTH) {
+            overview = overview.substring(0, VALUE_MAX_LENGTH);
+          }
           embedBuilder.addField("Overview", episode.getTitle() + ": " + episode.getOverview(), false);
           if (showQueue.getStatusMessages() != null) {
             for (SonarrQueueStatusMessages statusMessage : showQueue.getStatusMessages()) {
