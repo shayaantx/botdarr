@@ -156,7 +156,7 @@ public class SonarrApi implements Api {
           if (overview.length() > VALUE_MAX_LENGTH) {
             overview = overview.substring(0, VALUE_MAX_LENGTH);
           }
-          embedBuilder.addField("Overview", episode.getTitle() + ": " + episode.getOverview(), false);
+          embedBuilder.addField("Overview", overview, false);
           if (showQueue.getStatusMessages() != null) {
             for (SonarrQueueStatusMessages statusMessage : showQueue.getStatusMessages()) {
               for (String message : statusMessage.getMessages()) {
