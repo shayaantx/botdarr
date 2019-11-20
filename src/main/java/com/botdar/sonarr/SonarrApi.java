@@ -78,7 +78,7 @@ public class SonarrApi implements Api {
         embedBuilder.setImage(sonarrShow.getRemotePoster());
         restOfShows.add(embedBuilder.build());
       }
-      return restOfShows;
+      return restOfShows.size() > 20 ? restOfShows.subList(0, 19) : restOfShows;
     } catch (Exception e) {
       LOGGER.error("Error found trying to add show=" + searchText, e);
       return Arrays.asList(EmbedHelper.createErrorMessage("Error trying to add show " + searchText + ", e=" + e.getMessage()));
@@ -148,6 +148,11 @@ public class SonarrApi implements Api {
           EmbedBuilder embedBuilder = new EmbedBuilder();
           SonarQueueEpisode episode = showQueue.getEpisode();
           embedBuilder.setTitle(showQueue.getSonarrQueueShow().getTitle());
+          if (episode == null) {
+            //something is wrong with the download, skip
+            LOGGER.error("Series " + showQueue.getSonarrQueueShow().getTitle() + " missing episode info for id " + showQueue.getId());
+            continue;
+          }
           embedBuilder.addField("Season/Episode", "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber(), true);
           embedBuilder.addField("Quality", showQueue.getQuality().getQuality().getName(), true);
           embedBuilder.addField("Status", showQueue.getStatus(), true);

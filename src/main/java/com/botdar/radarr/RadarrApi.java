@@ -129,7 +129,7 @@ public class RadarrApi implements Api {
         embedBuilder.setImage(radarrMovie.getRemotePoster());
         restOfMovies.add(embedBuilder.build());
       }
-      return restOfMovies;
+      return restOfMovies.size() > 20 ? restOfMovies.subList(0, 19) : restOfMovies;
     } catch (Exception e) {
       return Arrays.asList(EmbedHelper.createErrorMessage("Error trying to add movie " + searchText + ", e=" + e.getMessage()));
     }
