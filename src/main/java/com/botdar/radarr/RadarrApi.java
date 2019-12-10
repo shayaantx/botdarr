@@ -81,7 +81,7 @@ public class RadarrApi implements Api {
           embedBuilder.setTitle(radarrQueue.getRadarrQueueMovie().getTitle());
           embedBuilder.addField("Quality", radarrQueue.getQuality().getQuality().getName(), true);
           embedBuilder.addField("Status", radarrQueue.getStatus(), true);
-          embedBuilder.addField("Time Left", radarrQueue.getTimeleft(), true);
+          embedBuilder.addField("Time Left", radarrQueue.getTimeleft() == null ? "unknown" : radarrQueue.getTimeleft(), true);
           if (radarrQueue.getStatusMessages() != null) {
             for (RadarrQueueStatusMessages statusMessage : radarrQueue.getStatusMessages()) {
               for (String message : statusMessage.getMessages()) {
