@@ -23,7 +23,7 @@ public class Config {
   }
 
   private Config() {
-    try (InputStream input = new FileInputStream("config/properties")) {
+    try (InputStream input = new FileInputStream(propertiesPath)) {
       properties = new Properties();
       properties.load(input);
       if (Strings.isBlank(properties.getProperty(Constants.TOKEN))) {
@@ -91,11 +91,12 @@ public class Config {
     public static final String LIDARR_URL = "lidar-url";
 
     /**
-     * The discord channel to send notifications to
+     * The discord channel(s) to send notifications to
      */
-    public static final String DISCORD_CHANNEL = "discord-channel";
+    public static final String DISCORD_CHANNELS = "discord-channels";
   }
 
+  private static String propertiesPath = "config/properties";
   private final Properties properties;
   private static final Logger LOGGER = LogManager.getLogger();
 }

@@ -64,6 +64,10 @@ node {
         sh 'mvn package'
       }
 
+      stage("Test") {
+        sh 'mvn test'
+      }
+
       stage("Archive") {
         archiveArtifacts 'target/botdar-release.jar'
       }

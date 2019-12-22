@@ -417,5 +417,4 @@ public class RadarrApi implements Api {
   }
 
   private static final RadarrCache RADARR_CACHE = new RadarrCache();
-  private static final Logger LOGGER = LogManager.getLogger();
 }

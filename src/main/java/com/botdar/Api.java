@@ -4,8 +4,13 @@ import com.botdar.commands.CommandResponse;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public interface Api {
   /**
@@ -79,11 +84,13 @@ public interface Api {
 
   default void sendDownloadUpdates(JDA jda) {
     for (TextChannel textChannel : jda.getTextChannels()) {
-      String discordChannel = Config.getProperty(Config.Constants.DISCORD_CHANNEL);
-      if (discordChannel == null || discordChannel.isEmpty()) {
+      String discordChannels = Config.getProperty(Config.Constants.DISCORD_CHANNELS);
+      if (discordChannels == null || discordChannels.isEmpty()) {
+        LOGGER.warn("No discord channels set in properties file, cannot send notifications");
         continue;
       }
-      if (discordChannel.equalsIgnoreCase(textChannel.getName())) {
+      Set<String> supportedDiscordChannels = new HashSet<>(Arrays.asList(discordChannels.split(" , ")));
+      if (supportedDiscordChannels.contains(textChannel.getName())) {
         List<MessageEmbed> downloads = downloads();
         if (downloads != null && downloads.size() > 0) {
           //TODO: this is fragile, should fix
@@ -94,7 +101,11 @@ public interface Api {
           }
           new CommandResponse(downloads).send(textChannel);
         }
+      } else {
+        LOGGER.debug("Channel " + textChannel.getName() + " is not configured for notifications");
       }
     }
   }
+
+  static final Logger LOGGER = LogManager.getLogger();
 }

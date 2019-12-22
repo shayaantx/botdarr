@@ -331,5 +331,4 @@ public class SonarrApi implements Api {
   };
 
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
-  private static final Logger LOGGER = LogManager.getLogger();
 }
