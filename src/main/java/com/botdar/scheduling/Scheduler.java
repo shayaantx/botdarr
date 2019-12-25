@@ -36,7 +36,7 @@ public class Scheduler {
             LOGGER.error("Error during api notification", e);
           }
         }
-      }, 1, 10, TimeUnit.MINUTES);
+      }, 0, 1, TimeUnit.HOURS);
     }
   }
 
