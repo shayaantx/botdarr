@@ -1,14 +1,14 @@
 package com.botdar;
 
 import com.botdar.commands.CommandResponse;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -89,7 +89,7 @@ public interface Api {
         LOGGER.warn("No discord channels set in properties file, cannot send notifications");
         continue;
       }
-      Set<String> supportedDiscordChannels = new HashSet<>(Arrays.asList(discordChannels.split(" , ")));
+      Set<String> supportedDiscordChannels = Sets.newHashSet(Splitter.on(',').trimResults().split(discordChannels));
       if (supportedDiscordChannels.contains(textChannel.getName())) {
         List<MessageEmbed> downloads = downloads();
         if (downloads != null && downloads.size() > 0) {
