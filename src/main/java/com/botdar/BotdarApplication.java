@@ -35,8 +35,13 @@ public class BotdarApplication {
 
         @Override
         public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-          processMessage(event);
-          super.onMessageReceived(event);
+          try {
+            Context.getConfig().setUsername(event.getAuthor().getName());
+            processMessage(event);
+            super.onMessageReceived(event);
+          } finally {
+            Context.reset();
+          }
         }
       }).build();
       jda.awaitReady();
@@ -68,5 +73,5 @@ public class BotdarApplication {
     addAll(Arrays.asList(RadarrCommands.values()));
     addAll(Arrays.asList(SonarrCommands.values()));
   }};
-  private static final Logger LOGGER = LogManager.getLogger();
+  private static final Logger LOGGER = LogManager.getLogger(BotdarApplication.class);
 }

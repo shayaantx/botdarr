@@ -2,6 +2,7 @@ package com.botdar.sonarr;
 
 import com.botdar.Api;
 import com.botdar.Config;
+import com.botdar.Context;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
 import com.google.gson.*;
@@ -14,7 +15,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -278,6 +278,7 @@ public class SonarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return EmbedHelper.createErrorMessage("Could not add show, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
+        LogManager.getLogger("AuditLog").info("User " + Context.getConfig().getUsername() + " added " + title);
         return EmbedHelper.createSuccessMessage("Show " + title + " added, sonarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {

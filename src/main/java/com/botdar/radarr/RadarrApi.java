@@ -2,6 +2,7 @@ package com.botdar.radarr;
 
 import com.botdar.Api;
 import com.botdar.Config;
+import com.botdar.Context;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
 import com.google.gson.Gson;
@@ -17,7 +18,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -352,6 +352,7 @@ public class RadarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return EmbedHelper.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
+        LogManager.getLogger("AuditLog").info("User " + Context.getConfig().getUsername() + " added " + radarrMovie.getTitle());
         return EmbedHelper.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
