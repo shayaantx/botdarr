@@ -7,6 +7,7 @@ import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -139,7 +140,12 @@ public class RadarrApi implements Api {
   public MessageEmbed addWithId(String searchText, String id) {
     try {
       List<RadarrMovie> movies = lookupMovies(searchText);
-      if (movies.size() == 0) {
+      if (movies.isEmpty()) {
+        LOGGER.warn("Search text " + searchText + "yielded no movies, trying id");
+      }
+      movies = lookupMovieById(id);
+      if (movies.isEmpty()) {
+        LOGGER.warn("Search id " + id + "yielded no movies, stopping");
         return EmbedHelper.createErrorMessage("No movies found");
       }
       for (RadarrMovie radarrMovie : movies) {
@@ -387,7 +393,8 @@ public class RadarrApi implements Api {
   }
 
   private List<RadarrMovie> lookupMovies(String search) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, "movie/lookup", "&term=" + URLEncoder.encode(search, "UTF-8"), new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+    return ConnectionHelper.makeGetRequest(this, "movie/lookup", "&term=" + URLEncoder.encode(search, "UTF-8"),
+      new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) {
         List<RadarrMovie> movies = new ArrayList<>();
@@ -396,6 +403,20 @@ public class RadarrApi implements Api {
         for (int i = 0; i < json.size(); i++) {
           movies.add(new Gson().fromJson(json.get(i), RadarrMovie.class));
         }
+        return movies;
+      }
+    });
+  }
+
+  private List<RadarrMovie> lookupMovieById(String tmdbid) throws Exception {
+    return ConnectionHelper.makeGetRequest(this, "movie/lookup/tmdb", "&tmdbId=" + URLEncoder.encode(tmdbid, "UTF-8"),
+      new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+      @Override
+      public List<RadarrMovie> onSuccess(String response) {
+        List<RadarrMovie> movies = new ArrayList<>();
+        JsonParser parser = new JsonParser();
+        JsonObject json = parser.parse(response).getAsJsonObject();
+        movies.add(new Gson().fromJson(json, RadarrMovie.class));
         return movies;
       }
     });
