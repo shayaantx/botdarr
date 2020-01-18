@@ -11,11 +11,11 @@ def getChangelistDescription() {
   def description = "";
   def changeLogSets = currentBuild.changeSets;
   for (int i = 0; i < changeLogSets.size(); i++) {
-      def entries = changeLogSets[i].items;
-      for (int j = 0; j < entries.length; j++) {
-          def entry = entries[j]
-          description += "${entry.commitId} by ${entry.author} on ${new Date(entry.timestamp)}: ${entry.msg}\n";
-      }
+    def entries = changeLogSets[i].items;
+    for (int j = 0; j < entries.length; j++) {
+      def entry = entries[j]
+      description += "${entry.commitId} by ${entry.author} on ${new Date(entry.timestamp)}: ${entry.msg}\n";
+    }
   }
   return description;
 }
@@ -41,7 +41,7 @@ def getNextVersion(scope) {
 node {
   try {
     stage("Checkout") {
-      checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'git-user', url: 'https://github.com/shayaantx/botdar.git']]])
+      checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github', url: 'https://github.com/shayaantx/botdar.git']]])
     }
 
     stage('Prepare docker') {
@@ -55,17 +55,16 @@ node {
     def image = docker.build("botdar-image", "-f ./Dockerfile .");
     image.inside('-u root') {
       stage('Build') {
-        sh 'mvn -version'
-        sh 'mvn compile'
+        sh './mvnw --no-transfer-progress compile'
       }
 
       stage("Test") {
-        sh 'mvn test'
+        sh './mvnw --no-transfer-progress test'
       }
-      
+
       stage("Package") {
         fileOperations([fileCreateOperation(fileContent: "version=${tag}", fileName: './src/main/resources/version.txt')]);
-        sh 'mvn package'
+        sh './mvnw --no-transfer-progress package -DskipTests'
       }
 
       stage("Archive") {
@@ -112,9 +111,9 @@ node {
         }
       }
     }
-	} finally {
+  } finally {
     stage("Cleanup") {
       deleteDir();
     }
-	}
+  }
 }

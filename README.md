@@ -141,4 +141,3 @@ TODO: need to add more tips for sonarr
 2. Per episode search/download
 3. Cancelling/blacklisting downloads (movies and tvshows)
 4. When I implement lidarr support I want to search by song instead of just artist/album (since lidarr doesn't support song search)
-5. Test cases!
