@@ -64,7 +64,7 @@ node {
 
       stage("Package") {
         fileOperations([fileCreateOperation(fileContent: "version=${tag}", fileName: './src/main/resources/version.txt')]);
-        sh './mvnw --no-transfer-progress package'
+        sh './mvnw --no-transfer-progress package -DskipTests'
       }
 
       stage("Archive") {
