@@ -55,17 +55,16 @@ node {
     def image = docker.build("botdar-image", "-f ./Dockerfile .");
     image.inside('-u root') {
       stage('Build') {
-        sh 'mvn -version'
-        sh 'mvn -B compile'
+        sh './mvnw --no-transfer-progress compile'
       }
 
       stage("Test") {
-        sh 'mvn -B test'
+        sh './mvnw --no-transfer-progress test'
       }
 
       stage("Package") {
         fileOperations([fileCreateOperation(fileContent: "version=${tag}", fileName: './src/main/resources/version.txt')]);
-        sh 'mvn -B package'
+        sh './mvnw --no-transfer-progress package'
       }
 
       stage("Archive") {
