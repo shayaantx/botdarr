@@ -2,9 +2,9 @@ package com.botdar.sonarr;
 
 import com.botdar.Api;
 import com.botdar.Config;
+import com.botdar.Context;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
-import com.botdar.radarr.RadarrMovie;
 import com.google.gson.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -15,7 +15,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -23,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
+import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class SonarrApi implements Api {
   @Override
@@ -77,7 +78,7 @@ public class SonarrApi implements Api {
         embedBuilder.setImage(sonarrShow.getRemotePoster());
         restOfShows.add(embedBuilder.build());
       }
-      return restOfShows;
+      return restOfShows.size() > 20 ? restOfShows.subList(0, 19) : restOfShows;
     } catch (Exception e) {
       LOGGER.error("Error found trying to add show=" + searchText, e);
       return Arrays.asList(EmbedHelper.createErrorMessage("Error trying to add show " + searchText + ", e=" + e.getMessage()));
@@ -109,7 +110,7 @@ public class SonarrApi implements Api {
             for (SonarrSeason sonarrSeason : existingShow.getSeasons()) {
               embedBuilder.addField("",
                 "Season#" + sonarrSeason.getSeasonNumber() +
-                ",Available Epsiodes=" + sonarrSeason.getStatistics().getEpisodeCount() + ",Total Epsiodes=" + sonarrSeason.getStatistics().getTotalEpisodeCount(), false);
+                  ",Available Epsiodes=" + sonarrSeason.getStatistics().getEpisodeCount() + ",Total Epsiodes=" + sonarrSeason.getStatistics().getTotalEpisodeCount(), false);
             }
           }
         }
@@ -139,15 +140,28 @@ public class SonarrApi implements Api {
         List<MessageEmbed> messageEmbeds = new ArrayList<>();
         JsonParser parser = new JsonParser();
         JsonArray json = parser.parse(response).getAsJsonArray();
+        boolean tooManyDownloads = json.size() >= 20;
         //only show a max of 20 episodes
-        int size = json.size() >= 20 ? 20 : json.size();
+        int size = tooManyDownloads ? 20 : json.size();
         for (int i = 0; i < size; i++) {
           SonarrQueue showQueue = new Gson().fromJson(json.get(i), SonarrQueue.class);
           EmbedBuilder embedBuilder = new EmbedBuilder();
+          SonarQueueEpisode episode = showQueue.getEpisode();
           embedBuilder.setTitle(showQueue.getSonarrQueueShow().getTitle());
+          if (episode == null) {
+            //something is wrong with the download, skip
+            LOGGER.error("Series " + showQueue.getSonarrQueueShow().getTitle() + " missing episode info for id " + showQueue.getId());
+            continue;
+          }
+          embedBuilder.addField("Season/Episode", "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber(), true);
           embedBuilder.addField("Quality", showQueue.getQuality().getQuality().getName(), true);
           embedBuilder.addField("Status", showQueue.getStatus(), true);
-          embedBuilder.addField("Time Left", showQueue.getTimeleft(), true);
+          embedBuilder.addField("Time Left", showQueue.getTimeleft() == null ? "unknown" : showQueue.getTimeleft(), true);
+          String overview = episode.getTitle() + ": " + episode.getOverview();
+          if (overview.length() > VALUE_MAX_LENGTH) {
+            overview = overview.substring(0, VALUE_MAX_LENGTH);
+          }
+          embedBuilder.addField("Overview", overview, false);
           if (showQueue.getStatusMessages() != null) {
             for (SonarrQueueStatusMessages statusMessage : showQueue.getStatusMessages()) {
               for (String message : statusMessage.getMessages()) {
@@ -160,6 +174,9 @@ public class SonarrApi implements Api {
         }
         if (messageEmbeds == null || messageEmbeds.size() == 0) {
           return Arrays.asList(EmbedHelper.createInfoMessage("No downloads currently"));
+        }
+        if (tooManyDownloads) {
+          messageEmbeds.add(EmbedHelper.createInfoMessage("Too many downloads, limiting results to 20"));
         }
         return messageEmbeds;
       }
@@ -249,7 +266,7 @@ public class SonarrApi implements Api {
     if (sonarrProfile == null) {
       return EmbedHelper.createErrorMessage("Could not find sonarr profile for default " + sonarrProfile);
     }
-    sonarrShow.setQualityProfileId((int)sonarrProfile.getId());
+    sonarrShow.setQualityProfileId((int) sonarrProfile.getId());
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl("series"));
 
@@ -261,6 +278,7 @@ public class SonarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return EmbedHelper.createErrorMessage("Could not add show, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
+        LogManager.getLogger("AuditLog").info("User " + Context.getConfig().getUsername() + " added " + title);
         return EmbedHelper.createSuccessMessage("Show " + title + " added, sonarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
@@ -314,5 +332,4 @@ public class SonarrApi implements Api {
   };
 
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
-  private static final Logger LOGGER = LogManager.getLogger();
 }

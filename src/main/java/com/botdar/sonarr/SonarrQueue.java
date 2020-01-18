@@ -50,10 +50,19 @@ public class SonarrQueue {
     this.series = radarrQueueMovie;
   }
 
+  public SonarQueueEpisode getEpisode() {
+    return episode;
+  }
+
+  public void setEpisode(SonarQueueEpisode episode) {
+    this.episode = episode;
+  }
+
   private String status;
   private String timeleft;
   private SonarrProfileQualityItem quality;
   private long id;
   private SonarrQueueStatusMessages[] statusMessages;
   private SonarrQueueShow series;
+  private SonarQueueEpisode episode;
 }

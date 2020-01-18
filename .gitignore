@@ -31,3 +31,5 @@ build/
 .vscode/
 properties*
 *.log
+dependency-reduced-pom.xml
+*.jar

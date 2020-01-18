@@ -19,8 +19,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BotdarApplication {
-	public static void main(String[] args) throws Exception {
-	  try {
+  public static void main(String[] args) throws Exception {
+    try {
       JDA jda = new JDABuilder(Config.getProperty(Config.Constants.TOKEN)).addEventListeners(new ListenerAdapter() {
         @Override
         public void onReady(@Nonnull ReadyEvent event) {
@@ -35,20 +35,25 @@ public class BotdarApplication {
 
         @Override
         public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-          processMessage(event);
-          super.onMessageReceived(event);
+          try {
+            Context.getConfig().setUsername(event.getAuthor().getName());
+            processMessage(event);
+            super.onMessageReceived(event);
+          } finally {
+            Context.reset();
+          }
         }
       }).build();
       jda.awaitReady();
     } catch (Throwable e) {
-	    LOGGER.error("Error caught during main", e);
-	    throw e;
+      LOGGER.error("Error caught during main", e);
+      throw e;
     }
-	}
+  }
 
-	private static void processMessage(@Nonnull MessageReceivedEvent event) {
+  private static void processMessage(@Nonnull MessageReceivedEvent event) {
     String strippedMessage = event.getMessage().getContentStripped();
-	  try {
+    try {
       for (Command command : ALL_COMMANDS) {
         if (strippedMessage.startsWith(command.getIdentifier())) {
           String commandOperation = strippedMessage.replaceAll(command.getIdentifier(), "");
@@ -58,8 +63,8 @@ public class BotdarApplication {
         }
       }
     } catch (Exception e) {
-	    LOGGER.error("Error trying to execute command " + strippedMessage, e);
-	    new CommandResponse(EmbedHelper.createErrorMessage("Error trying to parse command " + strippedMessage)).send(event.getChannel());
+      LOGGER.error("Error trying to execute command " + strippedMessage, e);
+      new CommandResponse(EmbedHelper.createErrorMessage("Error trying to parse command " + strippedMessage)).send(event.getChannel());
     }
   }
 
@@ -68,5 +73,5 @@ public class BotdarApplication {
     addAll(Arrays.asList(RadarrCommands.values()));
     addAll(Arrays.asList(SonarrCommands.values()));
   }};
-  private static final Logger LOGGER = LogManager.getLogger();
+  private static final Logger LOGGER = LogManager.getLogger(BotdarApplication.class);
 }

@@ -2,26 +2,31 @@ package com.botdar.radarr;
 
 import com.botdar.Api;
 import com.botdar.Config;
+import com.botdar.Context;
 import com.botdar.connections.ConnectionHelper;
 import com.botdar.discord.EmbedHelper;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
 
 public class RadarrApi implements Api {
-  public RadarrApi() {}
+  public RadarrApi() {
+  }
 
   @Override
   public String getApiUrl(String path) {
@@ -77,7 +82,7 @@ public class RadarrApi implements Api {
           embedBuilder.setTitle(radarrQueue.getRadarrQueueMovie().getTitle());
           embedBuilder.addField("Quality", radarrQueue.getQuality().getQuality().getName(), true);
           embedBuilder.addField("Status", radarrQueue.getStatus(), true);
-          embedBuilder.addField("Time Left", radarrQueue.getTimeleft(), true);
+          embedBuilder.addField("Time Left", radarrQueue.getTimeleft() == null ? "unknown" : radarrQueue.getTimeleft(), true);
           if (radarrQueue.getStatusMessages() != null) {
             for (RadarrQueueStatusMessages statusMessage : radarrQueue.getStatusMessages()) {
               for (String message : statusMessage.getMessages()) {
@@ -125,7 +130,7 @@ public class RadarrApi implements Api {
         embedBuilder.setImage(radarrMovie.getRemotePoster());
         restOfMovies.add(embedBuilder.build());
       }
-      return restOfMovies;
+      return restOfMovies.size() > 20 ? restOfMovies.subList(0, 19) : restOfMovies;
     } catch (Exception e) {
       return Arrays.asList(EmbedHelper.createErrorMessage("Error trying to add movie " + searchText + ", e=" + e.getMessage()));
     }
@@ -135,7 +140,12 @@ public class RadarrApi implements Api {
   public MessageEmbed addWithId(String searchText, String id) {
     try {
       List<RadarrMovie> movies = lookupMovies(searchText);
-      if (movies.size() == 0) {
+      if (movies.isEmpty()) {
+        LOGGER.warn("Search text " + searchText + "yielded no movies, trying id");
+      }
+      movies = lookupMovieById(id);
+      if (movies.isEmpty()) {
+        LOGGER.warn("Search id " + id + "yielded no movies, stopping");
         return EmbedHelper.createErrorMessage("No movies found");
       }
       for (RadarrMovie radarrMovie : movies) {
@@ -181,8 +191,10 @@ public class RadarrApi implements Api {
   @Override
   public List<MessageEmbed> forceDownload(String command) {
     String decodedKey = new String(Base64.getDecoder().decode(command.getBytes()));
-    int lastColonCharacter = decodedKey.lastIndexOf(':');
-    String[] decodedKeyArray =  {decodedKey.substring(0, lastColonCharacter), decodedKey.substring(lastColonCharacter + 1)};
+    //the hash format is guid:title
+    //title couldn't contain : so we find the first occurrence
+    int titleIndex = decodedKey.indexOf("title=");
+    String[] decodedKeyArray = {decodedKey.substring(0, titleIndex - 1), decodedKey.substring(titleIndex + 6)};
     if (decodedKeyArray.length != 2) {
       return Arrays.asList(EmbedHelper.createErrorMessage("Invalid key=" + decodedKey));
     }
@@ -200,7 +212,7 @@ public class RadarrApi implements Api {
         return ConnectionHelper.makePostRequest(this, "release", radarrTorrent, new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
           @Override
           public List<MessageEmbed> onSuccess(String response) throws Exception {
-            return Arrays.asList(EmbedHelper.createSuccessMessage("Forced the download"));
+            return Arrays.asList(EmbedHelper.createSuccessMessage("Forced the download for " + title));
           }
         });
       }
@@ -209,10 +221,10 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public List<MessageEmbed> lookupTorrents(String command, boolean showRejected) {
-    List<RadarrTorrent> radarrTorrents = lookupTorrents(command);
+  public List<MessageEmbed> lookupTorrents(String movieTitle, boolean showRejected) {
+    List<RadarrTorrent> radarrTorrents = lookupTorrents(movieTitle);
     if (radarrTorrents.isEmpty()) {
-      return Arrays.asList(EmbedHelper.createErrorMessage("No downloads available for " + command));
+      return Arrays.asList(EmbedHelper.createErrorMessage("No downloads available for " + movieTitle));
     }
 
     List<MessageEmbed> messageEmbeds = new ArrayList<>();
@@ -228,6 +240,7 @@ public class RadarrApi implements Api {
       embedBuilder.addField("Indexer", radarrTorrent.getIndexer(), true);
       embedBuilder.addField("Seeders", "" + radarrTorrent.getSeeders(), true);
       embedBuilder.addField("Leechers", "" + radarrTorrent.getLeechers(), true);
+      embedBuilder.addField("Size", "" + FileUtils.byteCountToDisplaySize(radarrTorrent.getSize()), true);
       String[] rejections = radarrTorrent.getRejections();
       if (rejections != null) {
         embedBuilder.addBlankField(false);
@@ -235,14 +248,14 @@ public class RadarrApi implements Api {
           embedBuilder.addField("Rejection Reason", rejection, false);
         }
       }
-      String key = radarrTorrent.getGuid() + ":" + radarrTorrent.getMovieTitle();
+      String key = radarrTorrent.getGuid() + ":title=" + movieTitle;
       byte[] encodedBytes = Base64.getEncoder().encode(key.getBytes());
       embedBuilder.addField("Download hash command", "movie hash download " + new String(encodedBytes), true);
       messageEmbeds.add(embedBuilder.build());
     }
 
     if (messageEmbeds.isEmpty()) {
-      messageEmbeds.add(EmbedHelper.createErrorMessage("No downloads available for " + command));
+      messageEmbeds.add(EmbedHelper.createErrorMessage("No downloads available for " + movieTitle));
     }
 
     return messageEmbeds;
@@ -332,7 +345,7 @@ public class RadarrApi implements Api {
     if (radarrProfile == null) {
       return EmbedHelper.createErrorMessage("Could not find radarr profile for default " + radarrProfileName);
     }
-    radarrMovie.setQualityProfileId((int)radarrProfile.getId());
+    radarrMovie.setQualityProfileId((int) radarrProfile.getId());
 
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl("movie"));
@@ -345,6 +358,7 @@ public class RadarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return EmbedHelper.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
+        LogManager.getLogger("AuditLog").info("User " + Context.getConfig().getUsername() + " added " + radarrMovie.getTitle());
         return EmbedHelper.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
@@ -379,7 +393,8 @@ public class RadarrApi implements Api {
   }
 
   private List<RadarrMovie> lookupMovies(String search) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, "movie/lookup", "&term=" + URLEncoder.encode(search, "UTF-8"), new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+    return ConnectionHelper.makeGetRequest(this, "movie/lookup", "&term=" + URLEncoder.encode(search, "UTF-8"),
+      new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) {
         List<RadarrMovie> movies = new ArrayList<>();
@@ -388,6 +403,20 @@ public class RadarrApi implements Api {
         for (int i = 0; i < json.size(); i++) {
           movies.add(new Gson().fromJson(json.get(i), RadarrMovie.class));
         }
+        return movies;
+      }
+    });
+  }
+
+  private List<RadarrMovie> lookupMovieById(String tmdbid) throws Exception {
+    return ConnectionHelper.makeGetRequest(this, "movie/lookup/tmdb", "&tmdbId=" + URLEncoder.encode(tmdbid, "UTF-8"),
+      new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+      @Override
+      public List<RadarrMovie> onSuccess(String response) {
+        List<RadarrMovie> movies = new ArrayList<>();
+        JsonParser parser = new JsonParser();
+        JsonObject json = parser.parse(response).getAsJsonObject();
+        movies.add(new Gson().fromJson(json, RadarrMovie.class));
         return movies;
       }
     });
@@ -408,6 +437,6 @@ public class RadarrApi implements Api {
       }
     });
   }
+
   private static final RadarrCache RADARR_CACHE = new RadarrCache();
-  private static final Logger LOGGER = LogManager.getLogger();
 }

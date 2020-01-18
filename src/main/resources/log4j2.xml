@@ -17,6 +17,18 @@
 
             <DefaultRolloverStrategy max="10" />
         </RollingFile>
+        <RollingFile name="AuditLog">
+            <FileName>logs/audit.log</FileName>
+            <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.audit.zip</FilePattern>
+            <PatternLayout>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
         <RollingFile name="RadarrLog">
             <FileName>logs/radarr.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
@@ -56,7 +68,6 @@
     </Appenders>
 
     <Loggers>
-        <!-- Log everything in custom package -->
         <Logger name="com.botdar" level="info" additivity="false">
             <AppenderRef ref="Console" />
             <AppenderRef ref="BotLog" />
@@ -74,11 +85,16 @@
             <AppenderRef ref="NetworkLog" />
         </Logger>
 
-        <Root level="error">
+        <Logger name="AuditLog" level="info" additivity="false">
+            <AppenderRef ref="AuditLog" />
+        </Logger>
+
+        <Root level="all" additivity="false">
             <AppenderRef ref="Console" />
             <AppenderRef ref="BotLog" />
             <AppenderRef ref="RadarrLog" />
+            <AppenderRef ref="SonarrLog" />
+            <AppenderRef ref="AuditLog" />
         </Root>
-
     </Loggers>
 </Configuration>

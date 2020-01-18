@@ -2,7 +2,6 @@ package com.botdar.scheduling;
 
 import com.botdar.Api;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class Scheduler {
   public static Scheduler getScheduler() {
     if (instance == null) {
-      synchronized (Scheduler .class) {
+      synchronized (Scheduler.class) {
         if (instance == null) {
           instance = new Scheduler();
         }
@@ -37,7 +36,7 @@ public class Scheduler {
             LOGGER.error("Error during api notification", e);
           }
         }
-      }, 1, 10, TimeUnit.MINUTES);
+      }, 0, 1, TimeUnit.HOURS);
     }
   }
 

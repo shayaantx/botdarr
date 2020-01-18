@@ -113,6 +113,7 @@ public class ConnectionHelper {
     }
   }
 
+  //TODO: add ability to return any object (instead of just a list)
   public static abstract class SimpleEntityResponseHandler<T> implements ResponseHandler<T> {
 
     @Override
@@ -128,8 +129,11 @@ public class ConnectionHelper {
 
   public static interface ResponseHandler<T> {
     List<T> onSuccess(String response) throws Exception;
+
     List<T> onFailure(int statusCode, String reason);
+
     List<T> onException(Exception e);
   }
+
   private static final Logger LOGGER = LogManager.getLogger();
 }

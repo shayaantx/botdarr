@@ -58,7 +58,7 @@ nohup java -jar botdar-release.jar &
 ```
 <br/>
 
-## Docker installation
+## Run with Docker
 
 1. Docker images are here https://cloud.docker.com/repository/docker/shayaantx/botdar/general
 1. Create a folder on your host called "botdar"
@@ -73,6 +73,19 @@ docker run -d --name botdar -v /BOTDAR_HOME/properties:/home/botdar/config/prope
 
 docker run -d --name botdar -v /BOTDAR_HOME/properties:/home/botdar/config/properties -v /BOTDAR_HOME/logs:/home/botdar/logs shayaantx/botdar:stable &
 ```
+
+Or if you want to use docker-compose
+
+```
+version: '2.2'
+botdar:
+    image: shayaantx/botdar:latest
+    container_name: botdar
+    volumes:
+       - /BOTDAR_HOME/properties:/home/botdar/config/properties
+       - /BOTDAR_HOME/logs:/home/botdar/logs
+```
+
 
 <br/>
 

@@ -24,6 +24,7 @@ public class SonarrSeason {
   public void setStatistics(SonarrSeasonStatistics statistics) {
     this.statistics = statistics;
   }
+
   private int seasonNumber;
   private boolean monitored;
   private SonarrSeasonStatistics statistics;

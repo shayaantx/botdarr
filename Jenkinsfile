@@ -1,7 +1,7 @@
 def dockerFileContents = """
 FROM centos:7
-RUN yum update; yum clean all;
-RUN yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
+RUN yum update clean all
+RUN yum -y install java-1.8.0-openjdk-devel.x86_64
 RUN yum -y install maven
 RUN adduser jenkins
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
@@ -14,7 +14,7 @@ def getChangelistDescription() {
       def entries = changeLogSets[i].items;
       for (int j = 0; j < entries.length; j++) {
           def entry = entries[j]
-          description += "${entry.commitId} by ${entry.author} on ${new Date(entry.timestamp)}: ${entry.msg}";
+          description += "${entry.commitId} by ${entry.author} on ${new Date(entry.timestamp)}: ${entry.msg}\n";
       }
   }
   return description;
@@ -59,6 +59,10 @@ node {
         sh 'mvn compile'
       }
 
+      stage("Test") {
+        sh 'mvn test'
+      }
+      
       stage("Package") {
         fileOperations([fileCreateOperation(fileContent: "version=${tag}", fileName: './src/main/resources/version.txt')]);
         sh 'mvn package'
