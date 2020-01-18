@@ -11,11 +11,11 @@ def getChangelistDescription() {
   def description = "";
   def changeLogSets = currentBuild.changeSets;
   for (int i = 0; i < changeLogSets.size(); i++) {
-      def entries = changeLogSets[i].items;
-      for (int j = 0; j < entries.length; j++) {
-          def entry = entries[j]
-          description += "${entry.commitId} by ${entry.author} on ${new Date(entry.timestamp)}: ${entry.msg}\n";
-      }
+    def entries = changeLogSets[i].items;
+    for (int j = 0; j < entries.length; j++) {
+      def entry = entries[j]
+      description += "${entry.commitId} by ${entry.author} on ${new Date(entry.timestamp)}: ${entry.msg}\n";
+    }
   }
   return description;
 }
@@ -56,16 +56,16 @@ node {
     image.inside('-u root') {
       stage('Build') {
         sh 'mvn -version'
-        sh 'mvn compile'
+        sh 'mvn -B compile'
       }
 
       stage("Test") {
-        sh 'mvn test'
+        sh 'mvn -B test'
       }
-      
+
       stage("Package") {
         fileOperations([fileCreateOperation(fileContent: "version=${tag}", fileName: './src/main/resources/version.txt')]);
-        sh 'mvn package'
+        sh 'mvn -B package'
       }
 
       stage("Archive") {
@@ -112,9 +112,9 @@ node {
         }
       }
     }
-	} finally {
+  } finally {
     stage("Cleanup") {
       deleteDir();
     }
-	}
+  }
 }
