@@ -1,7 +1,10 @@
 package com.botdar.commands;
 
-public interface Command {
-  public String getIdentifier();
+import com.botdar.clients.ChatClientResponse;
 
-  public CommandResponse execute(String command);
+public interface Command {
+  public String getCommandText();
+  public String getDescription();
+  public String getIdentifier();
+  public CommandResponse<? extends ChatClientResponse> execute(String command);
 }

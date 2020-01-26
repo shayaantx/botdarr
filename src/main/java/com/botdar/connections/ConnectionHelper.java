@@ -1,10 +1,10 @@
 package com.botdar.connections;
 
-import com.botdar.Api;
+import com.botdar.api.Api;
 import com.botdar.Config;
-import com.botdar.discord.EmbedHelper;
+import com.botdar.clients.ChatClientResponse;
+import com.botdar.clients.ChatClientResponseBuilder;
 import com.google.gson.Gson;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -101,16 +101,21 @@ public class ConnectionHelper {
     }
   }
 
-  public static abstract class SimpleMessageEmbedResponseHandler implements ResponseHandler<MessageEmbed> {
-    @Override
-    public List<MessageEmbed> onFailure(int statusCode, String reason) {
-      return Arrays.asList(EmbedHelper.createErrorMessage("Request failed with status code=" + statusCode + ", reason=" + reason));
+  public static abstract class SimpleMessageEmbedResponseHandler implements ResponseHandler<ChatClientResponse> {
+    public SimpleMessageEmbedResponseHandler(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
+      this.chatClientResponseBuilder = chatClientResponseBuilder;
     }
 
     @Override
-    public List<MessageEmbed> onException(Exception e) {
-      return Arrays.asList(EmbedHelper.createErrorMessage("Requested failed with exception, e=" + e.getMessage()));
+    public List<ChatClientResponse> onFailure(int statusCode, String reason) {
+      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Request failed with status code=" + statusCode + ", reason=" + reason));
     }
+
+    @Override
+    public List<ChatClientResponse> onException(Exception e) {
+      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Requested failed with exception, e=" + e.getMessage()));
+    }
+    private ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   }
 
   //TODO: add ability to return any object (instead of just a list)

@@ -73,11 +73,11 @@
             <AppenderRef ref="BotLog" />
         </Logger>
 
-        <Logger name="com.botdar.radarr" level="info" additivity="false">
+        <Logger name="com.botdar.api.radarr" level="info" additivity="false">
             <AppenderRef ref="RadarrLog" />
         </Logger>
 
-        <Logger name="com.botdar.sonarr" level="info" additivity="false">
+        <Logger name="com.botdar.api.sonarr" level="info" additivity="false">
             <AppenderRef ref="SonarrLog" />
         </Logger>
 

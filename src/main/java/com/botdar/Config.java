@@ -1,5 +1,6 @@
 package com.botdar;
 
+import com.botdar.clients.ChatClientType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -26,10 +27,48 @@ public class Config {
     try (InputStream input = new FileInputStream(propertiesPath)) {
       properties = new Properties();
       properties.load(input);
-      if (Strings.isBlank(properties.getProperty(Constants.TOKEN))) {
-        throw new RuntimeException("Discord token not set");
+
+      boolean configuredDiscord =
+        !Strings.isBlank(properties.getProperty(Constants.DISCORD_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Constants.DISCORD_CHANNELS));
+
+      boolean configuredSlack =
+        !Strings.isBlank(properties.getProperty(Constants.SLACK_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Constants.SLACK_CHANNELS));
+
+      if (!configuredDiscord && !configuredSlack) {
+        throw new RuntimeException("You don't have discord or slack configured, please configure one");
       }
-      //TODO: add validation to make sure all properties are set
+
+      if (configuredDiscord && configuredSlack) {
+        throw new RuntimeException("You have both discord and slack configured, you can only use one at a time");
+      }
+
+      if (configuredDiscord) {
+        chatClientType = ChatClientType.DISCORD;
+      } else {
+        chatClientType = ChatClientType.SLACK;
+      }
+
+      this.isRaddarrEnabled =
+        !Strings.isBlank(properties.getProperty(Constants.RADARR_URL)) &&
+        !Strings.isBlank(properties.getProperty(Constants.RADARR_PATH)) &&
+        !Strings.isBlank(properties.getProperty(Constants.RADARR_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Constants.RADARR_DEFAULT_PROFILE));
+
+      if (!this.isRaddarrEnabled) {
+        LOGGER.warn("Radarr commands are not enabled, make sure you set the radarr url, path, token, default profile");
+      }
+
+      this.isSonarrEnabled =
+        !Strings.isBlank(properties.getProperty(Constants.SONARR_URL)) &&
+          !Strings.isBlank(properties.getProperty(Constants.SONARR_PATH)) &&
+          !Strings.isBlank(properties.getProperty(Constants.SONARR_TOKEN)) &&
+          !Strings.isBlank(properties.getProperty(Constants.SONARR_DEFAULT_PROFILE));
+
+      if (!this.isSonarrEnabled) {
+        LOGGER.warn("Sonarr commands are not enabled, make sure you set the sonarr url, path, token, default profile");
+      }
     } catch (Exception ex) {
       LOGGER.error("Error loading properties file", ex);
       throw new RuntimeException(ex);
@@ -40,11 +79,38 @@ public class Config {
     return getConfig().properties.getProperty(key);
   }
 
+  public static boolean isRadarrEnabled() {
+    return getConfig().isRaddarrEnabled;
+  }
+
+  public static boolean isSonarrEnabled() {
+    return getConfig().isSonarrEnabled;
+  }
+
+  public static ChatClientType getChatClientType() {
+    return getConfig().chatClientType;
+  }
+
   public static final class Constants {
     /**
      * The discord bot token
      */
-    public static final String TOKEN = "token";
+    public static final String DISCORD_TOKEN = "discord-token";
+
+    /**
+     * The discord channel(s) to send notifications to
+     */
+    public static final String DISCORD_CHANNELS = "discord-channels";
+
+    /**
+     * The slack bot oauth token
+     */
+    public static final String SLACK_TOKEN = "slack-token";
+
+    /**
+     * The slack channel(s) to send notifications to
+     */
+    public static final String SLACK_CHANNELS = "slack-channels";
 
     /**
      * The url to your radarr instance
@@ -88,15 +154,14 @@ public class Config {
      */
     public static final String SONARR_DEFAULT_PROFILE = "sonarr-default-profile";
 
+    //TODO: implement
     public static final String LIDARR_URL = "lidar-url";
-
-    /**
-     * The discord channel(s) to send notifications to
-     */
-    public static final String DISCORD_CHANNELS = "discord-channels";
   }
 
   private static String propertiesPath = "config/properties";
   private final Properties properties;
+  private final boolean isRaddarrEnabled;
+  private final boolean isSonarrEnabled;
+  private final ChatClientType chatClientType;
   private static final Logger LOGGER = LogManager.getLogger();
 }

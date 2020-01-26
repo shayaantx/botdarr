@@ -1,7 +1,7 @@
 package com.botdar.scheduling;
 
-import com.botdar.Api;
-import net.dv8tion.jda.api.JDA;
+import com.botdar.api.Api;
+import com.botdar.clients.ChatClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,41 +23,35 @@ public class Scheduler {
   }
 
 
-  public void initApiNotifications(List<Api> apis, JDA jda) {
+  public void initApiNotifications(List<Api> apis, ChatClient chatClient) {
     if (notificationFuture == null) {
-      notificationFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            for (Api api : apis) {
-              api.sendPeriodicNotifications(jda);
-            }
-          } catch (Throwable e) {
-            LOGGER.error("Error during api notification", e);
+      notificationFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(() -> {
+        try {
+          for (Api api : apis) {
+            api.sendPeriodicNotifications(chatClient);
           }
+        } catch (Throwable e) {
+          LOGGER.error("Error during api notification", e);
         }
       }, 0, 1, TimeUnit.HOURS);
     }
   }
 
-  public void initApiCaching(List<Api> apis, JDA jda) {
+  public void initApiCaching(List<Api> apis) {
     //cache initially
     for (Api api : apis) {
-      api.cacheData(jda);
+      api.cacheData();
     }
 
     //then cache on a schedule
     if (cacheFuture == null) {
-      cacheFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            for (Api api : apis) {
-              api.cacheData(jda);
-            }
-          } catch (Throwable e) {
-            LOGGER.error("Error during api cache", e);
+      cacheFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(() -> {
+        try {
+          for (Api api : apis) {
+            api.cacheData();
           }
+        } catch (Throwable e) {
+          LOGGER.error("Error during api cache", e);
         }
       }, 0, 2, TimeUnit.MINUTES);
     }
