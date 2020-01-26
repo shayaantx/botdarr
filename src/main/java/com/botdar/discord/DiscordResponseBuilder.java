@@ -4,10 +4,7 @@ import com.botdar.Config;
 import com.botdar.api.sonarr.*;
 import com.botdar.clients.ChatClientResponseBuilder;
 import com.botdar.api.radarr.*;
-import com.botdar.commands.BaseCommand;
 import com.botdar.commands.Command;
-import com.botdar.commands.RadarrCommands;
-import com.botdar.commands.SonarrCommands;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.apache.commons.io.FileUtils;
@@ -15,14 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
@@ -31,7 +23,11 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
   public DiscordResponse getHelpResponse() {
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle("Commands");
-    addVersionToMessage(embedBuilder);
+    try {
+      embedBuilder.setDescription(ChatClientResponseBuilder.getVersion());
+    } catch (IOException e) {
+      throw new RuntimeException("Error getting botdarr version", e);
+    }
     boolean radarrEnabled = Config.isRadarrEnabled();
     boolean sonarrEnabled = Config.isSonarrEnabled();
     if (radarrEnabled) {
@@ -272,24 +268,6 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
       embedBuilder.addField(com.getCommandText(), com.getDescription(), false);
     }
     return new DiscordResponse(embedBuilder.build());
-  }
-
-  /**
-   * We add version.txt during the build of the jar (in the Jenkinsfile)
-   * so local builds won't show it
-   * @param embedBuilder EmbedBuilder
-   */
-  private static void addVersionToMessage(EmbedBuilder embedBuilder) {
-    ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-    InputStream is = classloader.getResourceAsStream("version.txt");
-    if (is != null) {
-      try (BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.defaultCharset()))) {
-        String versionTxt = br.lines().collect(Collectors.joining(System.lineSeparator()));
-        embedBuilder.setDescription(versionTxt);
-      } catch (IOException e) {
-        LOGGER.error("Error trying to get version.txt", e);
-      }
-    }
   }
 
   private static final Logger LOGGER = LogManager.getLogger(DiscordResponseBuilder.class);

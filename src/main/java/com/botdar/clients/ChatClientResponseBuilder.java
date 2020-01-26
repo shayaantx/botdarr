@@ -8,8 +8,15 @@ import com.botdar.api.sonarr.SonarrProfile;
 import com.botdar.api.sonarr.SonarrQueue;
 import com.botdar.api.sonarr.SonarrShow;
 import com.botdar.commands.Command;
+import net.dv8tion.jda.api.EmbedBuilder;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
   T getHelpResponse();
@@ -28,4 +35,16 @@ public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
   T getNewOrExistingMovie(RadarrMovie lookupMovie, RadarrMovie existingMovie, boolean findNew);
   T getMovie(RadarrMovie radarrMovie);
   T getDiscoverableMovies(RadarrMovie radarrMovie);
+
+  static String getVersion() throws IOException {
+    ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+    InputStream is = classloader.getResourceAsStream("version.txt");
+    if (is != null) {
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.defaultCharset()))) {
+        String versionTxt = br.lines().collect(Collectors.joining(System.lineSeparator()));
+        return versionTxt;
+      }
+    }
+    return "local";
+  }
 }

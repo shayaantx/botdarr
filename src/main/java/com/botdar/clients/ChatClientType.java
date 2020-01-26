@@ -8,10 +8,12 @@ import com.botdar.discord.DiscordResponse;
 import com.botdar.discord.DiscordResponseBuilder;
 import com.botdar.scheduling.Scheduler;
 import com.botdar.slack.SlackChatClient;
+import com.botdar.slack.SlackMessage;
 import com.botdar.slack.SlackResponse;
 import com.botdar.slack.SlackResponseBuilder;
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.rtm.RTMClient;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.JDA;
@@ -48,13 +50,14 @@ public enum ChatClientType {
             //build chat client
             ChatClient<DiscordResponse> discordChatClient = new DiscordChatClient(event.getJDA());
 
-            //capture/process the command, then send the response
+            //capture/process the command
             CommandResponse commandResponse = processMessage(
               config.commands,
               event.getMessage().getContentStripped(),
               event.getAuthor().getName(),
               responseChatClientResponseBuilder);
             if (commandResponse != null) {
+              //then send the response
               discordChatClient.sendMessage(commandResponse);
             }
             super.onMessageReceived(event);
@@ -76,10 +79,23 @@ public enum ChatClientType {
       ChatClientResponseBuilder<SlackResponse> responseChatClientResponseBuilder = new SlackResponseBuilder();
       ApisAndCommandConfig config = buildConfig(responseChatClientResponseBuilder);
 
-      rtm.addMessageHandler((message) -> {
-        //TODO: parse message types for the one we care about
+      slackChatClient.addMessageHandler((message) -> {
         JsonObject json = jsonParser.parse(message).getAsJsonObject();
-        LOGGER.info(json.toString());
+        SlackMessage slackMessage = new Gson().fromJson(json, SlackMessage.class);
+        if (slackMessage.getType() != null && slackMessage.getType().equalsIgnoreCase("message")) {
+          //capture/process the command
+          CommandResponse commandResponse = processMessage(
+            config.commands,
+            slackMessage.getText(),
+            //TODO: map user id to actual username
+            slackMessage.getUserId(),
+            responseChatClientResponseBuilder);
+          if (commandResponse != null) {
+            //then send the response
+            slackChatClient.sendMessage(commandResponse);
+          }
+        }
+        LogManager.getLogger("SlackLog").debug(json);
       });
 
       slackChatClient.connect();
@@ -87,8 +103,6 @@ public enum ChatClientType {
       //start the scheduler threads that send notifications and cache data periodically
       initScheduling(slackChatClient, config.apis);
     }
-
-    private RTMClient rtm;
   };
 
   void initScheduling(ChatClient chatClient, List<Api> apis) {

@@ -1,5 +1,6 @@
 package com.botdar.slack;
 
+import com.botdar.Config;
 import com.botdar.api.radarr.RadarrMovie;
 import com.botdar.api.radarr.RadarrProfile;
 import com.botdar.api.radarr.RadarrQueue;
@@ -9,23 +10,57 @@ import com.botdar.api.sonarr.SonarrQueue;
 import com.botdar.api.sonarr.SonarrShow;
 import com.botdar.clients.ChatClientResponseBuilder;
 import com.botdar.commands.Command;
+import com.github.seratch.jslack.api.model.block.SectionBlock;
+import com.github.seratch.jslack.api.model.block.composition.MarkdownTextObject;
+import com.github.seratch.jslack.api.model.block.composition.PlainTextObject;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResponse> {
   @Override
   public SlackResponse getHelpResponse() {
-    return null;
+    SlackResponse slackResponse = new SlackResponse();
+    try {
+      slackResponse.addBlock(SectionBlock.builder()
+        .fields(Arrays.asList(PlainTextObject.builder().emoji(true).text("Version: " + ChatClientResponseBuilder.getVersion()).build()))
+        .text(MarkdownTextObject.builder().text("*Commands*").build())
+        .build());
+
+      boolean radarrEnabled = Config.isRadarrEnabled();
+      boolean sonarrEnabled = Config.isSonarrEnabled();
+      if (radarrEnabled) {
+        slackResponse.addBlock(SectionBlock.builder()
+          .text(MarkdownTextObject.builder().text("*movies help* - Shows all the commands for movies").build())
+          .build());
+      }
+
+      if (sonarrEnabled) {
+        slackResponse.addBlock(SectionBlock.builder()
+          .text(MarkdownTextObject.builder().text("*shows help* - Shows all the commands for shows").build())
+          .build());
+      }
+
+      if (!radarrEnabled && !sonarrEnabled) {
+        slackResponse.addBlock(SectionBlock.builder()
+          .text(MarkdownTextObject.builder().text("*No radarr or sonarr commands configured, check your properties file and logs*").build())
+          .build());
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Error getting botdarr version", e);
+    }
+    return slackResponse;
   }
 
   @Override
   public SlackResponse getMoviesHelpResponse(List<Command> radarrCommands) {
-    return null;
+    return getListOfCommands(radarrCommands);
   }
 
   @Override
   public SlackResponse getShowsHelpResponse(List<Command> sonarrCommands) {
-    return null;
+    return getListOfCommands(sonarrCommands);
   }
 
   @Override
@@ -91,5 +126,18 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
   @Override
   public SlackResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
     return null;
+  }
+
+  private SlackResponse getListOfCommands(List<Command> commands) {
+    SlackResponse slackResponse = new SlackResponse();
+    slackResponse.addBlock(SectionBlock.builder()
+      .text(MarkdownTextObject.builder().text("*Commands*").build())
+      .build());
+    for (Command command : commands) {
+      slackResponse.addBlock(SectionBlock.builder()
+        .text(MarkdownTextObject.builder().text("*" + command.getCommandText() + "* - " + command.getDescription()).build())
+        .build());
+    }
+    return slackResponse;
   }
 }
