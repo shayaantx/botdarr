@@ -57,7 +57,7 @@ public enum ChatClientType {
               responseChatClientResponseBuilder);
             if (commandResponse != null) {
               //then send the response
-              discordChatClient.sendMessage(commandResponse);
+              discordChatClient.sendMessage(commandResponse, event.getChannel().getName());
             }
             super.onMessageReceived(event);
           }
@@ -91,7 +91,7 @@ public enum ChatClientType {
             responseChatClientResponseBuilder);
           if (commandResponse != null) {
             //then send the response
-            slackChatClient.sendMessage(commandResponse);
+            slackChatClient.sendMessage(commandResponse, slackMessage.getChannel());
           }
         }
         LogManager.getLogger("SlackLog").debug(json);

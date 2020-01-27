@@ -42,9 +42,9 @@ public interface Api {
   default void sendDownloadUpdates(ChatClient chatClient, ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
     List<ChatClientResponse> downloads = downloads();
     if (downloads != null && !downloads.isEmpty()) {
-      chatClient.sendMessage(downloads);
+      chatClient.sendMessage(downloads, null);
     } else {
-      chatClient.sendMessage(chatClientResponseBuilder.createInfoMessage("No downloads currently"));
+      chatClient.sendMessage(chatClientResponseBuilder.createInfoMessage("No downloads currently"), null);
     }
   }
 

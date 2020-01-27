@@ -17,36 +17,40 @@ public class DiscordChatClient implements ChatClient<DiscordResponse> {
   }
 
   @Override
-  public void sendMessage(DiscordResponse chatClientResponse) {
-    sendMessages(channel -> channel.sendMessage(chatClientResponse.getMessage()).queue());
+  public void sendMessage(DiscordResponse chatClientResponse, String channelName) {
+    sendMessages(channel -> channel.sendMessage(chatClientResponse.getMessage()).queue(), channelName);
   }
 
   @Override
-  public void sendMessage(List<DiscordResponse> chatClientResponses) {
+  public void sendMessage(List<DiscordResponse> chatClientResponses, String channelName) {
     sendMessages(channel -> {
       for (DiscordResponse discordResponse : chatClientResponses) {
         channel.sendMessage(discordResponse.getMessage()).queue();
       }
-    });
+    }, channelName);
   }
 
   @Override
-  public void sendMessage(CommandResponse<DiscordResponse> commandResponse) {
+  public void sendMessage(CommandResponse<DiscordResponse> commandResponse, String targetChannel) {
     if (commandResponse.getSingleChatClientResponse() != null) {
-      sendMessage(commandResponse.getSingleChatClientResponse());
+      sendMessage(commandResponse.getSingleChatClientResponse(), targetChannel);
     } else if (commandResponse.getMultipleChatClientResponses() != null) {
-      sendMessage(commandResponse.getMultipleChatClientResponses());
+      sendMessage(commandResponse.getMultipleChatClientResponses(), targetChannel);
     } else {
       //TODO: err
     }
   }
 
-  private void sendMessages(MessageSender messageSender) {
+  private void sendMessages(MessageSender messageSender, String channelName) {
     Set<String> supportedDiscordChannels = Sets.newHashSet(Splitter.on(',').trimResults().split(Config.getProperty(Config.Constants.DISCORD_CHANNELS)));
     for (TextChannel textChannel : jda.getTextChannels()) {
-      if (supportedDiscordChannels.contains(textChannel.getName())) {
-        messageSender.send(textChannel);
+      if (!supportedDiscordChannels.contains(textChannel.getName())) {
+        continue;
       }
+      if (channelName != null && !channelName.equalsIgnoreCase(textChannel.getName())) {
+        continue;
+      }
+      messageSender.send(textChannel);
     }
   }
 

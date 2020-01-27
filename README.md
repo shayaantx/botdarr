@@ -1,10 +1,10 @@
 # Summary
 
-Made this simple discord bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a single discord channel
+Made this simple slack/discord bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a multiple slack/discord channels
 
 <br/>
 
-## Currently Supported
+## Currently Supported API's
 
 - [x] Radarr (v2)
 - [ ] Radarr (v3)
@@ -12,23 +12,41 @@ Made this simple discord bot so I could access radarr, sonarr, and lidarr (not i
 - [x] Sonarr (v3)
 - [ ] Lidarr
 
+# Currently Supported Chat Client's
+
+- [x] Discord
+- [x] Slack
+
 <br/>
 
 ## Discord Bot Installation
 
 https://discordpy.readthedocs.io/en/latest/discord.html
 
+## Slack Bot Installation
+
+https://api.slack.com/apps
+* The simplest permission setup is to have the "bot" OAuth Scope. Which seems only available in api.slack.com when you install the app from the wizard
+* Once you add a slack app to a channel, make sure you tag your bot user in that channel. Otherwise I've noticed events and messages don't post
 <br/>
 
 ## Manual Installation
 
-1. Get latest copy of botdar botdar-release.jar
+1. Get latest copy of botdarr botdarr-release.jar
 1. Make sure you have openjdk 8 or oracle java 8 installed on your machine
 1. Create a file called "properties" (without double quotes) in same folder as the jar
 1. Fill it with the following properties (you can omit sonarr properties if you aren't using it, same with radarr, however everything else listed below is required)
+1. You can only configure discord or slack token/channels, otherwise you will get an error during startup
 ```
 # your discord bot token
-token=
+discord-token=
+# the discord channel(s) you want the bot installed on
+discord-channels=
+
+# your slack bot token (the both user oauth access token, not the oauth access token)
+slack-token=xoxb-*
+# the slack channel(s) you want the bot installed on
+slack-channels=
 
 # your radarr url (i.e., http://SOME-IP:SOME-PORT)
 radarr-url=
@@ -47,43 +65,40 @@ sonarr-token=
 sonarr-path=
 # the default quality profile you want to use (go to Sonarr->Settings->Profiles)
 sonarr-default-profile=any
-
-# the discord channel you want the bot installed on
-discord-channel=
 ```
 
 1. Run the jar using java
 ```
-nohup java -jar botdar-release.jar &
+nohup java -jar botdarr-release.jar &
 ```
 <br/>
 
 ## Run with Docker
 
-1. Docker images are here https://cloud.docker.com/repository/docker/shayaantx/botdar/general
-1. Create a folder on your host called "botdar"
-1. Create a logs folder in the botdar folder
-1. Put your properties file in botdar folder
-1. Then run below command (replace BOTDAR_HOME variables)
+1. Docker images are here https://cloud.docker.com/repository/docker/shayaantx/botdarr/general
+1. Create a folder on your host called "botdarr"
+1. Create a logs folder in the botdarr folder
+1. Put your properties file in botdarr folder
+1. Then run below command (replace BOTDARR_HOME variables)
 ```
 # for latest
-docker run -d --name botdar -v /BOTDAR_HOME/properties:/home/botdar/config/properties -v /BOTDAR_HOME/logs:/home/botdar/logs shayaantx/botdar:latest &
+docker run -d --name botdarr -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:latest &
 
 # for stable
 
-docker run -d --name botdar -v /BOTDAR_HOME/properties:/home/botdar/config/properties -v /BOTDAR_HOME/logs:/home/botdar/logs shayaantx/botdar:stable &
+docker run -d --name botdarr -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:stable &
 ```
 
 Or if you want to use docker-compose
 
 ```
 version: '2.2'
-botdar:
-    image: shayaantx/botdar:latest
-    container_name: botdar
+botdarr:
+    image: shayaantx/botdarr:latest
+    container_name: botdarr
     volumes:
-       - /BOTDAR_HOME/properties:/home/botdar/config/properties
-       - /BOTDAR_HOME/logs:/home/botdar/logs
+       - /BOTDARR_HOME/properties:/home/botdarr/config/properties
+       - /BOTDARR_HOME/logs:/home/botdarr/logs
 ```
 
 
