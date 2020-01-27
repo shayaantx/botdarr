@@ -116,7 +116,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.botdar.BotdarrApplication</mainClass>
+                            <mainClass>com.botdarr.BotdarrApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

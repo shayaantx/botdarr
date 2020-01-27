@@ -52,7 +52,7 @@ node {
     if (env.BRANCH_NAME == "master") {
       tag = getNextVersion('release');
     }
-    def image = docker.build("botdar-image", "-f ./Dockerfile .");
+    def image = docker.build("botdarr-image", "-f ./Dockerfile .");
     image.inside('-u root') {
       stage('Build') {
         sh './mvnw --no-transfer-progress compile'
@@ -68,7 +68,7 @@ node {
       }
 
       stage("Archive") {
-        archiveArtifacts 'target/botdar-release.jar'
+        archiveArtifacts 'target/botdarr-release.jar'
       }
 
       if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
@@ -95,17 +95,17 @@ node {
         ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
         ENV PATH=$PATH:$JAVA_HOME/bin
 
-        RUN mkdir -p /home/botdar
-        ADD target/botdar-release.jar /home/botdar
+        RUN mkdir -p /home/botdarr
+        ADD target/botdarr-release.jar /home/botdarr
 
-        WORKDIR /home/botdar
+        WORKDIR /home/botdarr
         RUN java -version
 
-        ENTRYPOINT ["java", "-jar", "botdar-release.jar"]
+        ENTRYPOINT ["java", "-jar", "botdarr-release.jar"]
         """;
         fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
         def releaseTag = env.BRANCH_NAME == "master" ? "stable" : "latest";
-        def imageWithReleaseTag = docker.build("shayaantx/botdar:${releaseTag}", "-f ./DockerfileUpload .");
+        def imageWithReleaseTag = docker.build("shayaantx/botdarr:${releaseTag}", "-f ./DockerfileUpload .");
         withDockerRegistry(credentialsId: 'docker-credentials') {
           imageWithReleaseTag.push();
         }

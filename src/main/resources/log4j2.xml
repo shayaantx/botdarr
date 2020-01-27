@@ -65,28 +65,44 @@
 
             <DefaultRolloverStrategy max="10" />
         </RollingFile>
+        <RollingFile name="SlackLog">
+            <FileName>logs/slack.log</FileName>
+            <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
+            <PatternLayout>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
     </Appenders>
 
     <Loggers>
-        <Logger name="com.botdar" level="info" additivity="false">
+        <Logger name="com.botdarr" level="info" additivity="false">
             <AppenderRef ref="Console" />
             <AppenderRef ref="BotLog" />
         </Logger>
 
-        <Logger name="com.botdar.api.radarr" level="info" additivity="false">
+        <Logger name="com.botdarr.api.radarr" level="info" additivity="false">
             <AppenderRef ref="RadarrLog" />
         </Logger>
 
-        <Logger name="com.botdar.api.sonarr" level="info" additivity="false">
+        <Logger name="com.botdarr.api.sonarr" level="info" additivity="false">
             <AppenderRef ref="SonarrLog" />
         </Logger>
 
-        <Logger name="com.botdar.connections" level="info" additivity="false">
+        <Logger name="com.botdarr.connections" level="info" additivity="false">
             <AppenderRef ref="NetworkLog" />
         </Logger>
 
         <Logger name="AuditLog" level="info" additivity="false">
             <AppenderRef ref="AuditLog" />
+        </Logger>
+
+        <Logger name="SlackLog" level="info" additivity="false">
+            <AppenderRef ref="SlackLog" />
         </Logger>
 
         <Root level="all" additivity="false">
@@ -95,6 +111,7 @@
             <AppenderRef ref="RadarrLog" />
             <AppenderRef ref="SonarrLog" />
             <AppenderRef ref="AuditLog" />
+            <AppenderRef ref="SlackLog" />
         </Root>
     </Loggers>
 </Configuration>
