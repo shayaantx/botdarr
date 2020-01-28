@@ -152,9 +152,11 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
           contextBlockElements.add(PlainTextObject.builder().text(message).build());
         }
       }
-      slackResponse.addBlock(ContextBlock.builder()
-        .elements(contextBlockElements)
-        .build());
+      if (radarrQueue.getStatusMessages() != null && radarrQueue.getStatusMessages().length > 0) {
+        slackResponse.addBlock(ContextBlock.builder()
+          .elements(contextBlockElements)
+          .build());
+      }
     }
     slackResponse.addBlock(SectionBlock.builder()
       .text(MarkdownTextObject.builder().text("Cancel download command - " + "movie cancel download " + radarrQueue.getId()).build())
