@@ -133,9 +133,6 @@ public class SonarrApi implements Api {
           }
           responses.add(chatClientResponseBuilder.getShowDownloadResponses(showQueue));
         }
-        if (responses == null || responses.size() == 0) {
-          return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No downloads currently"));
-        }
         if (tooManyDownloads) {
           responses.add(chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to 20"));
         }

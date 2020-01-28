@@ -68,9 +68,6 @@ public class RadarrApi implements Api {
           RadarrQueue radarrQueue = new Gson().fromJson(json.get(i), RadarrQueue.class);
           chatClientResponses.add(chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue));
         }
-        if (chatClientResponses == null || chatClientResponses.size() == 0) {
-          return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No downloads currently"));
-        }
         if (tooManyDownloads) {
           chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to 20"));
         }
