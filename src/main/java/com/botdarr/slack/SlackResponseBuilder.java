@@ -109,7 +109,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       overview = overview.substring(0, VALUE_MAX_LENGTH);
     }
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Overview" + overview).build())
+      .text(MarkdownTextObject.builder().text("Overview - " + overview).build())
       .build());
     if (showQueue.getStatusMessages() != null) {
       List<ContextBlockElement> contextBlockElements = new ArrayList<>();
@@ -118,9 +118,11 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
           contextBlockElements.add(PlainTextObject.builder().text(message).build());
         }
       }
-      slackResponse.addBlock(ContextBlock.builder()
-        .elements(contextBlockElements)
-        .build());
+      if (showQueue.getStatusMessages() != null && showQueue.getStatusMessages().length > 0) {
+        slackResponse.addBlock(ContextBlock.builder()
+          .elements(contextBlockElements)
+          .build());
+      }
     }
     slackResponse.addBlock(SectionBlock.builder()
       .text(MarkdownTextObject.builder().text("Cancel download command - " + "show cancel download " + showQueue.getId()).build())
