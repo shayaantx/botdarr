@@ -78,7 +78,7 @@ nohup java -jar botdarr-release.jar &
 1. Docker images are here https://cloud.docker.com/repository/docker/shayaantx/botdarr/general
 1. Create a folder on your host called "botdarr"
 1. Create a logs folder in the botdarr folder
-1. Put your properties file in botdarr folder
+1. Put your properties file in botdarr folder inside a folder named "config"
 1. Then run below command (replace BOTDARR_HOME variables)
 ```
 # for latest
