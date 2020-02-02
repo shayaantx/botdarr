@@ -8,6 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
 
 public interface Api {
@@ -42,8 +44,13 @@ public interface Api {
   String getApiToken();
 
   default String getApiUrl(String apiUrlKey, String apiTokenKey, String path) {
-    String urlBase = Strings.isBlank(getUrlBase()) ? "" : getUrlBase();
-    return Config.getProperty(apiUrlKey) + "/" + urlBase + "/api/" + path + "?apikey=" + Config.getProperty(apiTokenKey);
+    try {
+      String urlBase = Strings.isBlank(getUrlBase()) ? "" : "/" + getUrlBase();
+      return Config.getProperty(apiUrlKey) + urlBase + "/api/" + path + "?apikey=" + URLEncoder.encode(Config.getProperty(apiTokenKey), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      LOGGER.error("Error encoding api token", e);
+      throw new RuntimeException("Error calculating the api url", e);
+    }
   }
 
   static final Logger LOGGER = LogManager.getLogger();

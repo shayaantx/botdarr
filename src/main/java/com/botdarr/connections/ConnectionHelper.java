@@ -5,10 +5,12 @@ import com.botdarr.Config;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.google.gson.Gson;
+import com.sun.jndi.toolkit.url.Uri;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -25,10 +27,6 @@ import java.util.List;
 public class ConnectionHelper {
   public static <T> List<T> makeGetRequest(Api api, String path, ResponseHandler<T> responseHandler) {
     return makeGetRequest(api, path, "", responseHandler);
-  }
-
-  public static <T> List<T> makeDeleteRequest(Api api, String path, ResponseHandler<T> responseHandler) {
-    return makeDeleteRequest(api, path, "", responseHandler);
   }
 
   public static <T, K> List<T> makePostRequest(Api api, String path, K params, ResponseHandler<T> responseHandler) {
