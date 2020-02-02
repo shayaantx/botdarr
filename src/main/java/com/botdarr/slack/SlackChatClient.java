@@ -20,13 +20,14 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SlackChatClient implements ChatClient<SlackResponse> {
   public SlackChatClient(RTMClient rtmClient) {
     this.rtm = rtmClient;
     rtm.addCloseHandler(reason -> {
-      //TODO: if we close do need to reconnect?
-      LOGGER.error("Error caught during slack close handler", reason.toString());
+      connected.set(false);
+      LOGGER.error("Error caught during slack close handler, reason=" +  reason.toString());
     });
     rtm.addErrorHandler(reason -> {
       LOGGER.error("Error caught from slack error handler", reason);
@@ -40,9 +41,14 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
   public void connect() throws Exception {
     // must connect within 30 seconds after establishing wss endpoint
     this.rtm.connect();
-    //once we are connected, don't exist
     while(true) {
-      Thread.sleep(1000);
+      //set state of whether we are connected or not (jslack doesn't expose session in rtm client so we need our own state)
+      connected.set(true);
+      while (connected.get()) {
+        Thread.sleep(1000);
+      }
+      //if we for some reason stop being connected, reconnect and retry
+      this.rtm.reconnect();
     }
   }
 
@@ -120,6 +126,8 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
   private interface MessageSender {
     void send(String channel);
   }
+
+  private AtomicBoolean connected = new AtomicBoolean(false);
 
   private final RTMClient rtm;
   private static final Logger LOGGER = LogManager.getLogger("SlackLog");

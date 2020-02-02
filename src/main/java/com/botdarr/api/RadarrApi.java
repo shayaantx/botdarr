@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -18,6 +19,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
@@ -25,6 +27,11 @@ import java.util.*;
 public class RadarrApi implements Api {
   public RadarrApi(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
     this.chatClientResponseBuilder = chatClientResponseBuilder;
+  }
+
+  @Override
+  public String getUrlBase() {
+    return Config.getProperty(Config.Constants.RADARR_URL_BASE);
   }
 
   @Override
@@ -57,23 +64,11 @@ public class RadarrApi implements Api {
 
   @Override
   public List<ChatClientResponse> downloads() {
-    return ConnectionHelper.makeGetRequest(this, "queue", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
-      @Override
-      public List<ChatClientResponse> onSuccess(String response) throws Exception {
-        List<ChatClientResponse> chatClientResponses = new ArrayList<>();
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        boolean tooManyDownloads = json.size() >= 20;
-        for (int i = 0; i < json.size(); i++) {
-          RadarrQueue radarrQueue = new Gson().fromJson(json.get(i), RadarrQueue.class);
-          chatClientResponses.add(chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue));
-        }
-        if (tooManyDownloads) {
-          chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to 20"));
-        }
-        return chatClientResponses;
-      }
-    });
+    List<ChatClientResponse> chatClientResponses = getMovieDownloads();
+    if (chatClientResponses.isEmpty()) {
+      chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No movies downloading"));
+    }
+    return chatClientResponses;
   }
 
   public List<ChatClientResponse> addWithTitle(String searchText) {
@@ -216,7 +211,12 @@ public class RadarrApi implements Api {
 
   @Override
   public void sendPeriodicNotifications(ChatClient chatClient) {
-    sendDownloadUpdates(chatClient, this.chatClientResponseBuilder);
+    List<ChatClientResponse> downloads = getMovieDownloads();
+    if (downloads != null && !downloads.isEmpty()) {
+      chatClient.sendMessage(downloads, null);
+    } else {
+      LOGGER.debug("No movie downloads available for sending");
+    }
   }
 
   @Override
@@ -271,9 +271,29 @@ public class RadarrApi implements Api {
     });
   }
 
+  private List<ChatClientResponse> getMovieDownloads() {
+    return ConnectionHelper.makeGetRequest(this, "queue", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+      @Override
+      public List<ChatClientResponse> onSuccess(String response) throws Exception {
+        List<ChatClientResponse> chatClientResponses = new ArrayList<>();
+        JsonParser parser = new JsonParser();
+        JsonArray json = parser.parse(response).getAsJsonArray();
+        boolean tooManyDownloads = json.size() >= 20;
+        for (int i = 0; i < json.size(); i++) {
+          RadarrQueue radarrQueue = new Gson().fromJson(json.get(i), RadarrQueue.class);
+          chatClientResponses.add(chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue));
+        }
+        if (tooManyDownloads) {
+          chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to 20"));
+        }
+        return chatClientResponses;
+      }
+    });
+  }
+
   private ChatClientResponse addMovie(RadarrMovie radarrMovie) {
     //make sure we specify where the movie should get downloaded
-    radarrMovie.setPath(Config.getProperty(Config.Constants.RADARR_PATH) + "/" + radarrMovie.getTitle() + "(" + radarrMovie.getYear() + ")");
+    radarrMovie.setPath(Config.getProperty(Config.Constants.RADARR_PATH) + File.separator + radarrMovie.getTitle() + "(" + radarrMovie.getYear() + ")");
     //make sure the movie is monitored
     radarrMovie.setMonitored(true);
 
@@ -288,9 +308,20 @@ public class RadarrApi implements Api {
       HttpPost post = new HttpPost(getApiUrl("movie"));
 
       post.addHeader("content-type", "application/x-www-form-urlencoded");
-      post.setEntity(new StringEntity(new Gson().toJson(radarrMovie, RadarrMovie.class)));
+      String json = new Gson().toJson(radarrMovie, RadarrMovie.class);
+      post.setEntity(new StringEntity(json));
+
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Client request=" + post.toString());
+        LOGGER.debug("Client data=" + (json));
+      }
 
       try (CloseableHttpResponse response = client.execute(post)) {
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Respone=" + response.toString());
+          LOGGER.debug("Response content=" + IOUtils.toString(response.getEntity().getContent()));
+          LOGGER.debug("Reason=" + response.getStatusLine().toString());
+        }
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode != 200 && statusCode != 201) {
           return chatClientResponseBuilder.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());

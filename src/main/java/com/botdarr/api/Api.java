@@ -11,6 +11,11 @@ import java.util.List;
 
 public interface Api {
   /**
+   * The url base for this api (can be null/empty)
+   */
+  String getUrlBase();
+
+  /**
    * Get this api's url endpoint
    */
   String getApiUrl(String path);
@@ -36,16 +41,7 @@ public interface Api {
   String getApiToken();
 
   default String getApiUrl(String apiUrlKey, String apiTokenKey, String path) {
-    return Config.getProperty(apiUrlKey) + "/api/" + path + "?apikey=" + Config.getProperty(apiTokenKey);
-  }
-
-  default void sendDownloadUpdates(ChatClient chatClient, ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
-    List<ChatClientResponse> downloads = downloads();
-    if (downloads != null && !downloads.isEmpty()) {
-      chatClient.sendMessage(downloads, null);
-    } else {
-      chatClient.sendMessage(chatClientResponseBuilder.createInfoMessage("No downloads currently"), null);
-    }
+    return Config.getProperty(apiUrlKey) + "/" +  getUrlBase() + "/api/" + path + "?apikey=" + Config.getProperty(apiTokenKey);
   }
 
   static final Logger LOGGER = LogManager.getLogger();

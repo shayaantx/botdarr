@@ -26,9 +26,24 @@ public class SonarrApi implements Api {
   public SonarrApi(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
     this.chatClientResponseBuilder = chatClientResponseBuilder;
   }
+
+  @Override
+  public String getUrlBase() {
+    return Config.getProperty(Config.Constants.SONARR_URL_BASE);
+  }
+
   @Override
   public String getApiUrl(String path) {
     return getApiUrl(Config.Constants.SONARR_URL, Config.Constants.SONARR_TOKEN, path);
+  }
+
+  @Override
+  public List<ChatClientResponse> downloads() {
+    List<ChatClientResponse> chatClientResponses = getShowDownloads();
+    if (chatClientResponses.isEmpty()) {
+      chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No shows downloading"));
+    }
+    return chatClientResponses;
   }
 
   public ChatClientResponse addWithId(String searchText, String id) {
@@ -112,35 +127,6 @@ public class SonarrApi implements Api {
     return null;
   }
 
-  @Override
-  public List<ChatClientResponse> downloads() {
-    return ConnectionHelper.makeGetRequest(this, "queue", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
-      @Override
-      public List<ChatClientResponse> onSuccess(String response) throws Exception {
-        List<ChatClientResponse> responses = new ArrayList<>();
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        boolean tooManyDownloads = json.size() >= 20;
-        //only show a max of 20 episodes
-        int size = tooManyDownloads ? 20 : json.size();
-        for (int i = 0; i < size; i++) {
-          SonarrQueue showQueue = new Gson().fromJson(json.get(i), SonarrQueue.class);
-          SonarQueueEpisode episode = showQueue.getEpisode();
-          if (episode == null) {
-            //something is wrong with the download, skip
-            LOGGER.error("Series " + showQueue.getSonarrQueueShow().getTitle() + " missing episode info for id " + showQueue.getId());
-            continue;
-          }
-          responses.add(chatClientResponseBuilder.getShowDownloadResponses(showQueue));
-        }
-        if (tooManyDownloads) {
-          responses.add(chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to 20"));
-        }
-        return responses;
-      }
-    });
-  }
-
   public List<ChatClientResponse> cancelDownload(long id) {
     //TODO: implement
     return null;
@@ -166,7 +152,12 @@ public class SonarrApi implements Api {
 
   @Override
   public void sendPeriodicNotifications(ChatClient chatClient) {
-    sendDownloadUpdates(chatClient, this.chatClientResponseBuilder);
+    List<ChatClientResponse> downloads = getShowDownloads();
+    if (downloads != null && !downloads.isEmpty()) {
+      chatClient.sendMessage(downloads, null);
+    } else {
+      LOGGER.debug("No show downloads available for sending");
+    }
   }
 
   @Override
@@ -193,6 +184,34 @@ public class SonarrApi implements Api {
   @Override
   public String getApiToken() {
     return Config.Constants.SONARR_TOKEN;
+  }
+
+  private List<ChatClientResponse> getShowDownloads() {
+    return ConnectionHelper.makeGetRequest(this, "queue", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+      @Override
+      public List<ChatClientResponse> onSuccess(String response) throws Exception {
+        List<ChatClientResponse> responses = new ArrayList<>();
+        JsonParser parser = new JsonParser();
+        JsonArray json = parser.parse(response).getAsJsonArray();
+        boolean tooManyDownloads = json.size() >= 20;
+        //only show a max of 20 episodes
+        int size = tooManyDownloads ? 20 : json.size();
+        for (int i = 0; i < size; i++) {
+          SonarrQueue showQueue = new Gson().fromJson(json.get(i), SonarrQueue.class);
+          SonarQueueEpisode episode = showQueue.getEpisode();
+          if (episode == null) {
+            //something is wrong with the download, skip
+            LOGGER.error("Series " + showQueue.getSonarrQueueShow().getTitle() + " missing episode info for id " + showQueue.getId());
+            continue;
+          }
+          responses.add(chatClientResponseBuilder.getShowDownloadResponses(showQueue));
+        }
+        if (tooManyDownloads) {
+          responses.add(chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to 20"));
+        }
+        return responses;
+      }
+    });
   }
 
   private ChatClientResponse addShow(SonarrShow sonarrShow) {

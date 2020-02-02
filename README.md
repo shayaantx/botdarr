@@ -12,16 +12,39 @@ Made this simple slack/discord bot so I could access radarr, sonarr, and lidarr 
 - [x] Sonarr (v3)
 - [ ] Lidarr
 
-# Currently Supported Chat Client's
+## Currently Supported Chat Client's
 
 - [x] Discord
 - [x] Slack
+- [ ] Telegram
 
 <br/>
 
 ## Discord Bot Installation
 
-https://discordpy.readthedocs.io/en/latest/discord.html
+Follow instructions here https://discordpy.readthedocs.io/en/latest/discord.html or instructions below
+
+1. Go to https://discordapp.com/developers/applications (if you don't have an account yet, you'll need to make one)
+1. Click "New Application"
+![](images/create-application.png)
+1. After the application has been made, click "OAuth2"
+![](images/oauth2-menu.png)
+1. Check the "bot" scope in the OAuth2 page
+![](images/oauth2-scope.png)
+1. Then check the following text permissions; Send Messages, Embed Links, Read Message History
+![](images/oauth2-permissions.png)
+1. Once you've selected permissions and scope, copy the url at the bottom of the scopes menu somewhere for now
+![](images/oauth2-scope-url.png)
+1. Next click the "Bot" menu option
+![](images/bot-menu.png)
+1. Next click Add Bot (click ok on confirmation windows after clicking add)
+![](images/bot-add-bot.png)
+1. Next you should have your Bots filled with details about your bot, click "Click to reveal token", and save this token later when you make your properties file
+![](images/bot-token.png)
+1. Take the link from step#6 and copy it into a browser. Once you do this, you will be able to authorize which discord server you want to add the bot to
+![](images/authorize.png)
+1. Next on your discord you need to add the bot user to different text channels (the text channels here are used specified in the properties file in the "discord-channels" property)
+1. Once you've added the bot to a channel, then you can start botdar and see your bot appear in the members list.
 
 ## Slack Bot Installation
 

@@ -134,6 +134,11 @@ public class Config {
     public static final String RADARR_DEFAULT_PROFILE = "radarr-default-profile";
 
     /**
+     * The url base for radarr
+     */
+    public static final String RADARR_URL_BASE = "radarr-url-base";
+
+    /**
      * The url to your sonarr instance
      * (i.e., http://SOME_IP:PORT)
      */
@@ -153,6 +158,11 @@ public class Config {
      * The default quality profile you want sonarr to use when adding movies
      */
     public static final String SONARR_DEFAULT_PROFILE = "sonarr-default-profile";
+
+    /**
+     * The url base for sonarr
+     */
+    public static final String SONARR_URL_BASE = "sonarr-url-base";
 
     //TODO: implement
     public static final String LIDARR_URL = "lidar-url";

@@ -145,10 +145,17 @@ public enum ChatClientType {
     List<Command> sonarrCommands = SonarrCommands.getCommands(sonarrApi);
 
     List<Command> commands = new ArrayList<>();
-    commands.addAll(radarrCommands);
-    commands.addAll(sonarrCommands);
+    List<Api> apis = new ArrayList<>();
+    if (Config.isRadarrEnabled()) {
+      commands.addAll(radarrCommands);
+      apis.add(radarrApi);
+    }
+    if (Config.isSonarrEnabled()) {
+      commands.addAll(sonarrCommands);
+      apis.add(sonarrApi);
+    }
     commands.addAll(HelpCommands.getCommands(responseChatClientResponseBuilder, radarrCommands, sonarrCommands));
-    return new ApisAndCommandConfig(Arrays.asList(radarrApi, sonarrApi), commands);
+    return new ApisAndCommandConfig(apis, commands);
   }
 
   private static class ApisAndCommandConfig {
