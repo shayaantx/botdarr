@@ -60,6 +60,10 @@ https://api.slack.com/apps
 1. Create a file called "properties" (without double quotes) in same folder as the jar
 1. Fill it with the following properties (you can omit sonarr properties if you aren't using it, same with radarr, however everything else listed below is required)
 1. You can only configure discord or slack token/channels, otherwise you will get an error during startup
+1. There are is an available option for url base for both radarr/sonarr. If you have a url base and use radarr WITHOUT configuring the url base here, 
+I've found radarr will execute most api requests normally, but /api/movie POST requests wont (assume this is a bug but haven't had time to investigate yet). 
+Radarr seems to return a 200 http code, not actually add the movie, and return json as if you are calling /api/movie as a GET request, unless you prefix 
+the api url with your radarr url base.
 ```
 # your discord bot token
 discord-token=
@@ -79,6 +83,8 @@ radarr-token=
 radarr-path=
 # the default quality profile you want to use (go to Radarr->Settings->Profiles)
 radarr-default-profile=
+# leave empty if you never changed this in radarr
+radarr-url-base=
 
 # your radarr url (i.e., http://SOME-IP:SOME-PORT)
 sonarr-url=
@@ -88,6 +94,8 @@ sonarr-token=
 sonarr-path=
 # the default quality profile you want to use (go to Sonarr->Settings->Profiles)
 sonarr-default-profile=any
+# leave empty if you never changed this in sonarr
+sonarr-url-base=
 ```
 
 1. Run the jar using java
