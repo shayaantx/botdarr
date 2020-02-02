@@ -6,6 +6,7 @@ import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.List;
 
@@ -41,7 +42,8 @@ public interface Api {
   String getApiToken();
 
   default String getApiUrl(String apiUrlKey, String apiTokenKey, String path) {
-    return Config.getProperty(apiUrlKey) + "/" +  getUrlBase() + "/api/" + path + "?apikey=" + Config.getProperty(apiTokenKey);
+    String urlBase = Strings.isBlank(getUrlBase()) ? "" : getUrlBase();
+    return Config.getProperty(apiUrlKey) + "/" + urlBase + "/api/" + path + "?apikey=" + Config.getProperty(apiTokenKey);
   }
 
   static final Logger LOGGER = LogManager.getLogger();
