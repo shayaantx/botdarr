@@ -115,6 +115,10 @@ public class SonarrApi implements Api {
       if (responses.size() == 0) {
         return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " shows for search term=" + search));
       }
+      if (responses.size() > MAX_RESULTS_TO_SHOW) {
+        responses = responses.subList(0, MAX_RESULTS_TO_SHOW - 1);
+        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many shows found, limiting results to " + MAX_RESULTS_TO_SHOW));
+      }
       return responses;
     } catch (Exception e) {
       LOGGER.error("Error trying to lookup show, searchText=" + search, e);
@@ -193,10 +197,7 @@ public class SonarrApi implements Api {
         List<ChatClientResponse> responses = new ArrayList<>();
         JsonParser parser = new JsonParser();
         JsonArray json = parser.parse(response).getAsJsonArray();
-        boolean tooManyDownloads = json.size() >= 20;
-        //only show a max of 20 episodes
-        int size = tooManyDownloads ? 20 : json.size();
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < json.size(); i++) {
           SonarrQueue showQueue = new Gson().fromJson(json.get(i), SonarrQueue.class);
           SonarQueueEpisode episode = showQueue.getEpisode();
           if (episode == null) {
@@ -206,8 +207,9 @@ public class SonarrApi implements Api {
           }
           responses.add(chatClientResponseBuilder.getShowDownloadResponses(showQueue));
         }
-        if (tooManyDownloads) {
-          responses.add(chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to 20"));
+        if (json.size() >= MAX_RESULTS_TO_SHOW) {
+          responses = responses.subList(0, MAX_RESULTS_TO_SHOW - 1);
+          responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_RESULTS_TO_SHOW));
         }
         return responses;
       }
@@ -295,4 +297,5 @@ public class SonarrApi implements Api {
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
+  private static final int MAX_RESULTS_TO_SHOW = 20;
 }

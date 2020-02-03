@@ -52,6 +52,10 @@ public class RadarrApi implements Api {
         }
         responses.add(chatClientResponseBuilder.getNewOrExistingMovie(lookupMovie, existingMovie, findNew));
       }
+      if (responses.size() > MAX_RESULTS_TO_SHOW) {
+        responses = responses.subList(0, MAX_RESULTS_TO_SHOW - 1);
+        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many movies found, please narrow search"));
+      }
       if (responses.size() == 0) {
         return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " movies for search term=" + search));
       }
@@ -94,12 +98,13 @@ public class RadarrApi implements Api {
         restOfMovies.add(chatClientResponseBuilder.getMovie(radarrMovie));
       }
       if (restOfMovies.size() > 1) {
+        restOfMovies = restOfMovies.subList(0, MAX_RESULTS_TO_SHOW - 1);
         restOfMovies.add(0, chatClientResponseBuilder.createInfoMessage("Too many movies found, please narrow search"));
       }
       if (restOfMovies.size() == 0) {
         return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No new movies found, check existing movies"));
       }
-      return restOfMovies.size() > 20 ? restOfMovies.subList(0, 19) : restOfMovies;
+      return restOfMovies;
     } catch (Exception e) {
       return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error trying to add movie " + searchText + ", e=" + e.getMessage()));
     }
@@ -259,8 +264,8 @@ public class RadarrApi implements Api {
         JsonArray json = parser.parse(response).getAsJsonArray();
 
         for (int i = 0; i < json.size(); i++) {
-          if (i == 20) {
-            //don't show more than 20
+          if (i == MAX_RESULTS_TO_SHOW) {
+            //don't show more than MAX_RESULTS_TO_SHOW
             break;
           }
           RadarrMovie radarrMovie = new Gson().fromJson(json.get(i), RadarrMovie.class);
@@ -278,13 +283,14 @@ public class RadarrApi implements Api {
         List<ChatClientResponse> chatClientResponses = new ArrayList<>();
         JsonParser parser = new JsonParser();
         JsonArray json = parser.parse(response).getAsJsonArray();
-        boolean tooManyDownloads = json.size() >= 20;
+        boolean tooManyDownloads = json.size() >= MAX_RESULTS_TO_SHOW;
         for (int i = 0; i < json.size(); i++) {
           RadarrQueue radarrQueue = new Gson().fromJson(json.get(i), RadarrQueue.class);
           chatClientResponses.add(chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue));
         }
         if (tooManyDownloads) {
-          chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to 20"));
+          chatClientResponses = chatClientResponses.subList(0, MAX_RESULTS_TO_SHOW - 1);
+          chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_RESULTS_TO_SHOW));
         }
         return chatClientResponses;
       }
@@ -408,4 +414,5 @@ public class RadarrApi implements Api {
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final RadarrCache RADARR_CACHE = new RadarrCache();
+  private static final int MAX_RESULTS_TO_SHOW = 20;
 }
