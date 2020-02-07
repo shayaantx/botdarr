@@ -91,7 +91,7 @@ public class SonarrApi implements Api {
       if (restOfShows.size() == 0) {
         return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No new shows found, check existing movies"));
       }
-      return restOfShows.size() > 20 ? restOfShows.subList(0, 19) : restOfShows;
+      return subList(restOfShows);
     } catch (Exception e) {
       LOGGER.error("Error found trying to add show=" + searchText, e);
       return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error trying to add show " + searchText + ", e=" + e.getMessage()));
@@ -116,7 +116,7 @@ public class SonarrApi implements Api {
         return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " shows for search term=" + search));
       }
       if (responses.size() > MAX_RESULTS_TO_SHOW) {
-        responses = responses.subList(0, MAX_RESULTS_TO_SHOW - 1);
+        responses = subList(responses);
         responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many shows found, limiting results to " + MAX_RESULTS_TO_SHOW));
       }
       return responses;
@@ -208,7 +208,7 @@ public class SonarrApi implements Api {
           responses.add(chatClientResponseBuilder.getShowDownloadResponses(showQueue));
         }
         if (json.size() >= MAX_RESULTS_TO_SHOW) {
-          responses = responses.subList(0, MAX_RESULTS_TO_SHOW - 1);
+          responses = subList(responses);
           responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_RESULTS_TO_SHOW));
         }
         return responses;
@@ -294,6 +294,10 @@ public class SonarrApi implements Api {
       return false;
     }
   };
+
+  private List<ChatClientResponse> subList(List<ChatClientResponse> responses) {
+    return responses.subList(0, responses.size() > MAX_RESULTS_TO_SHOW ? MAX_RESULTS_TO_SHOW - 1 : responses.size());
+  }
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final SonarrCache SONARR_CACHE = new SonarrCache();

@@ -98,7 +98,7 @@ public class RadarrApi implements Api {
         restOfMovies.add(chatClientResponseBuilder.getMovie(radarrMovie));
       }
       if (restOfMovies.size() > 1) {
-        restOfMovies = restOfMovies.subList(0, MAX_RESULTS_TO_SHOW - 1);
+        restOfMovies = subList(restOfMovies);
         restOfMovies.add(0, chatClientResponseBuilder.createInfoMessage("Too many movies found, please narrow search"));
       }
       if (restOfMovies.size() == 0) {
@@ -106,6 +106,7 @@ public class RadarrApi implements Api {
       }
       return restOfMovies;
     } catch (Exception e) {
+      LOGGER.error("Error trying to add movie", e);
       return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error trying to add movie " + searchText + ", e=" + e.getMessage()));
     }
   }
@@ -289,7 +290,7 @@ public class RadarrApi implements Api {
           chatClientResponses.add(chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue));
         }
         if (tooManyDownloads) {
-          chatClientResponses = chatClientResponses.subList(0, MAX_RESULTS_TO_SHOW - 1);
+          chatClientResponses = subList(chatClientResponses);
           chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_RESULTS_TO_SHOW));
         }
         return chatClientResponses;
@@ -410,6 +411,10 @@ public class RadarrApi implements Api {
         return radarrProfiles;
       }
     });
+  }
+
+  private List<ChatClientResponse> subList(List<ChatClientResponse> responses) {
+    return responses.subList(0, responses.size() > MAX_RESULTS_TO_SHOW ? MAX_RESULTS_TO_SHOW - 1 : responses.size());
   }
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;

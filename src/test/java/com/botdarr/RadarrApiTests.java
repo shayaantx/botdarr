@@ -20,6 +20,7 @@ import org.mockserver.model.MediaType;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -280,6 +281,150 @@ public class RadarrApiTests {
     Assert.assertEquals(1, testResponses.get(0).radarrQueue.getId());
     Assert.assertEquals("05:00", testResponses.get(0).radarrQueue.getTimeleft());
     Assert.assertEquals("DOWNLOADING", testResponses.get(0).radarrQueue.getStatus());
+  }
+
+  @Test
+  public <T extends TestResponse> void addWithTitle_noMoviesFound() {
+    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+    HttpRequest request = HttpRequest.request()
+      .withMethod("GET")
+      .withPath("/api/movie/lookup")
+      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
+      .withQueryStringParameter("term", "searchTerm");
+
+    //setup expected response in mock server
+    mockServerRule.getClient()
+      .when(request)
+      .respond(HttpResponse.response()
+        .withStatusCode(200)
+        .withBody(new Gson().toJson(new RadarrMovie[] {}), MediaType.APPLICATION_JSON));
+
+    //trigger api
+    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithTitle("searchTerm"));
+
+    //verify request was sent
+    mockServerRule.getClient().verify(request);
+
+    //verify response data
+    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
+    //no movies should be found, the only response should be a message
+    Assert.assertEquals(1, testResponses.size());
+    Assert.assertEquals("No movies found", testResponses.get(0).responseMessage);
+  }
+
+  @Test
+  public <T extends TestResponse> void addWithTitle_foundExistingMovieWithSingleResult() {
+    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+    HttpRequest request = HttpRequest.request()
+      .withMethod("GET")
+      .withPath("/api/movie/lookup")
+      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
+      .withQueryStringParameter("term", "searchTerm");
+
+    RadarrMovie expectedRadarrMovie = new RadarrMovie();
+    expectedRadarrMovie.setTitle("movie1");
+    expectedRadarrMovie.setTmdbId(1);
+
+    RadarrCache radarrCache = Deencapsulation.getField(radarrApi, "RADARR_CACHE");
+    radarrCache.add(expectedRadarrMovie);
+
+    //setup expected response in mock server
+    mockServerRule.getClient()
+      .when(request)
+      .respond(HttpResponse.response()
+        .withStatusCode(200)
+        .withBody(new Gson().toJson(new RadarrMovie[] {expectedRadarrMovie}), MediaType.APPLICATION_JSON));
+
+    //trigger api
+    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithTitle("searchTerm"));
+
+    //verify request was sent
+    mockServerRule.getClient().verify(request);
+
+    //verify response data
+    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
+    //no movies should be found, the only response should be a message
+    Assert.assertEquals(1, testResponses.size());
+    Assert.assertEquals("Movie already exists", testResponses.get(0).responseMessage);
+  }
+
+  @Test
+  public <T extends TestResponse> void addWithTitle_foundExistingMovieWithMultipleResults() {
+    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+    HttpRequest request = HttpRequest.request()
+      .withMethod("GET")
+      .withPath("/api/movie/lookup")
+      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
+      .withQueryStringParameter("term", "movie1");
+
+    RadarrMovie expectedRadarrMovie = new RadarrMovie();
+    expectedRadarrMovie.setTitle("movie1");
+    expectedRadarrMovie.setTmdbId(1);
+
+    RadarrMovie expectedRadarrMovie2 = new RadarrMovie();
+    expectedRadarrMovie2.setTitle("movie2");
+    expectedRadarrMovie2.setTmdbId(2);
+
+    RadarrCache radarrCache = Deencapsulation.getField(radarrApi, "RADARR_CACHE");
+    radarrCache.add(expectedRadarrMovie);
+    radarrCache.add(expectedRadarrMovie2);
+
+    //setup expected response in mock server
+    mockServerRule.getClient()
+      .when(request)
+      .respond(HttpResponse.response()
+        .withStatusCode(200)
+        .withBody(new Gson().toJson(new RadarrMovie[] {expectedRadarrMovie, expectedRadarrMovie2}), MediaType.APPLICATION_JSON));
+
+    //trigger api
+    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithTitle("movie1"));
+
+    //verify request was sent
+    mockServerRule.getClient().verify(request);
+
+    //verify response data
+    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
+    //no movies should be found, the only response should be a message
+    Assert.assertEquals(1, testResponses.size());
+    Assert.assertEquals("No new movies found, check existing movies", testResponses.get(0).responseMessage);
+  }
+
+  @Test
+  public <T extends TestResponse> void addWithTitle_foundManyResultsLimitedToMax() {
+    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+    HttpRequest request = HttpRequest.request()
+      .withMethod("GET")
+      .withPath("/api/movie/lookup")
+      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
+      .withQueryStringParameter("term", "movie");
+    List<RadarrMovie> radarrMovies = new ArrayList<>();
+    for (int i = 0; i < 30; i++) {
+      RadarrMovie expectedRadarrMovie = new RadarrMovie();
+      expectedRadarrMovie.setTitle("movie" + i);
+      expectedRadarrMovie.setTmdbId(i);
+
+      radarrMovies.add(expectedRadarrMovie);
+    }
+
+    //setup expected response in mock server
+    mockServerRule.getClient()
+      .when(request)
+      .respond(HttpResponse.response()
+        .withStatusCode(200)
+        .withBody(new Gson().toJson(radarrMovies.toArray()), MediaType.APPLICATION_JSON));
+
+    //trigger api
+    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithTitle("movie"));
+
+    //verify request was sent
+    mockServerRule.getClient().verify(request);
+
+    //verify response data
+    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
+    //even though we sent 30 movies, the api limits it to 20
+    //with the first message being a message about too many movies found
+    Assert.assertEquals(20, testResponses.size());
+    Assert.assertEquals("Too many movies found, please narrow search", testResponses.get(0).responseMessage);
   }
 
   private static class TestResponse implements ChatClientResponse {
