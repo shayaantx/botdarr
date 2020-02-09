@@ -12,6 +12,8 @@ Made this simple slack/discord bot so I could access radarr, sonarr, and lidarr 
 - [x] Sonarr (v3)
 - [ ] Lidarr
 
+<br/>
+
 ## Currently Supported Chat Client's
 
 - [x] Discord
@@ -22,38 +24,13 @@ Made this simple slack/discord bot so I could access radarr, sonarr, and lidarr 
 
 ## Discord Bot Installation
 
-Follow instructions here https://discordpy.readthedocs.io/en/latest/discord.html or instructions below
-
-1. Go to https://discordapp.com/developers/applications (if you don't have an account yet, you'll need to make one)
-1. Click "New Application"
-![](images/create-application.png)
-1. After the application has been made, click "OAuth2"
-![](images/oauth2-menu.png)
-1. Check the "bot" scope in the OAuth2 page
-![](images/oauth2-scope.png)
-1. Then check the following text permissions; Send Messages, Embed Links, Read Message History
-![](images/oauth2-permissions.png)
-1. Once you've selected permissions and scope, copy the url at the bottom of the scopes menu somewhere for now
-![](images/oauth2-scope-url.png)
-1. Next click the "Bot" menu option
-![](images/bot-menu.png)
-1. Next click Add Bot (click ok on confirmation windows after clicking add)
-![](images/bot-add-bot.png)
-1. Next you should have your Bots filled with details about your bot, click "Click to reveal token", and save this token later when you make your properties file
-![](images/bot-token.png)
-1. Take the link from step#6 and copy it into a browser. Once you do this, you will be able to authorize which discord server you want to add the bot to
-![](images/authorize.png)
-1. Next on your discord you need to add the bot user to different text channels (the text channels here are used specified in the properties file in the "discord-channels" property)
-1. Once you've added the bot to a channel, then you can start botdar and see your bot appear in the members list.
+See https://github.com/shayaantx/botdarr/wiki/Install-Discord-Bot
 
 ## Slack Bot Installation
 
-https://api.slack.com/apps
-* The simplest permission setup is to have the "bot" OAuth Scope. Which seems only available in api.slack.com when you install the app from the wizard
-* Once you add a slack app to a channel, make sure you tag your bot user in that channel. Otherwise I've noticed events and messages don't post
-<br/>
+See https://github.com/shayaantx/botdarr/wiki/Install-Slack-Bot
 
-## Manual Installation
+## Jar installation/Configuration
 
 1. Get latest copy of botdarr botdarr-release.jar
 1. Make sure you have openjdk 8 or oracle java 8 installed on your machine
@@ -140,6 +117,7 @@ botdarr:
 * Type help in discord to get information about commands and what is supported
 * Type movies help in discord to get information about movie commands
 * Every minute notifications will appear indicating the current downloads, their status, and their time remaining.
+* (discord only for now) When you react to movie/show results with add commands in the result with a "thumbs up" the content will be added.
 
 <br/>
 

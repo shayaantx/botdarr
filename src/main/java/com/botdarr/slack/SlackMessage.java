@@ -17,8 +17,18 @@ public class SlackMessage {
     return channel;
   }
 
+  public String getReaction() {
+    return reaction;
+  }
+
+  public SlackMessageItem getItem() {
+    return item;
+  }
+
   private String type;
   private String text;
   private String user; //slack user id
   private String channel;
+  private String reaction;
+  private SlackMessageItem item;
 }

@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
+import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResponse> {
@@ -76,7 +78,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .text(PlainTextObject.builder().text("TvdbId - " + show.getTvdbId()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
-      .text(PlainTextObject.builder().text("Add show command - " + "show id add " + show.getTitle() + " " + show.getTvdbId()).build())
+      .text(PlainTextObject.builder().text(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + "show id add " + show.getTitle() + " " + show.getTvdbId()).build())
       .build());
     slackResponse.addBlock(ImageBlock.builder()
       .imageUrl(show.getRemotePoster())
@@ -301,7 +303,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .build());
     if (findNew) {
       slackResponse.addBlock(SectionBlock.builder()
-        .text(MarkdownTextObject.builder().text("Add show command - " + "show id add " + sonarrShow.getTitle() + " " + sonarrShow.getTvdbId()).build())
+        .text(MarkdownTextObject.builder().text(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + "show id add " + sonarrShow.getTitle() + " " + sonarrShow.getTvdbId()).build())
         .build());
     } else {
       slackResponse.addBlock(SectionBlock.builder()
@@ -342,7 +344,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .build());
     if (findNew) {
       slackResponse.addBlock(SectionBlock.builder()
-        .text(MarkdownTextObject.builder().text("Add movie command - " + "movie id add " + lookupMovie.getTitle() + " " + lookupMovie.getTmdbId()).build())
+        .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + lookupMovie.getTitle() + " " + lookupMovie.getTmdbId()).build())
         .build());
     } else {
       slackResponse.addBlock(SectionBlock.builder()
@@ -372,7 +374,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .text(MarkdownTextObject.builder().text("TmdbId - " + radarrMovie.getTmdbId()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Add movie command - " + "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId()).build())
+      .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId()).build())
       .build());
     slackResponse.addBlock(ImageBlock.builder()
       .imageUrl(radarrMovie.getRemotePoster())

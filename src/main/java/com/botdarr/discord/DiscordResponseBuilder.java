@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 
+import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class DiscordResponseBuilder implements ChatClientResponseBuilder<DiscordResponse> {
@@ -59,7 +61,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle(show.getTitle());
     embedBuilder.addField("TvdbId", "" + show.getTvdbId(), false);
-    embedBuilder.addField("Add show command", "show id add " + show.getTitle() + " " + show.getTvdbId(), false);
+    embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, "show id add " + show.getTitle() + " " + show.getTvdbId(), false);
     embedBuilder.setImage(show.getRemotePoster());
     return new DiscordResponse(embedBuilder.build());
   }
@@ -174,7 +176,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle(sonarrShow.getTitle());
     embedBuilder.addField("TvdbId", "" + sonarrShow.getTvdbId(), true);
     if (findNew) {
-      embedBuilder.addField("Add show command", "show id add " + sonarrShow.getTitle() + " " + sonarrShow.getTvdbId(), false);
+      embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, "show id add " + sonarrShow.getTitle() + " " + sonarrShow.getTvdbId(), false);
     } else {
       embedBuilder.addField("Id", "" + existingShow.getId(), true);
       if (existingShow.getSeasons() != null) {
@@ -196,7 +198,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle(radarrMovie.getTitle());
     embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
     if (findNew) {
-      embedBuilder.addField("Add movie command", "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+      embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
     } else {
       embedBuilder.addField("Id", "" + existingMovie.getId(), false);
       embedBuilder.addField("Downloaded", existingMovie.isDownloaded() + "", false);
@@ -211,7 +213,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle(radarrMovie.getTitle());
     embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
-    embedBuilder.addField("Add movie command", "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+    embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
     embedBuilder.setImage(radarrMovie.getRemotePoster());
     return new DiscordResponse(embedBuilder.build());
   }

@@ -302,4 +302,5 @@ public class SonarrApi implements Api {
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
   private static final int MAX_RESULTS_TO_SHOW = 20;
+  public static final String ADD_SHOW_COMMAND_FIELD_PREFIX = "Add show command";
 }

@@ -17,14 +17,22 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageHistory;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+
+import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 
 public enum ChatClientType {
   DISCORD() {
@@ -36,8 +44,13 @@ public enum ChatClientType {
 
         JDA jda = new JDABuilder(Config.getProperty(Config.Constants.DISCORD_TOKEN)).addEventListeners(new ListenerAdapter() {
           @Override
+          public void onGenericEvent(@Nonnull GenericEvent event) {
+            super.onGenericEvent(event);
+          }
+
+          @Override
           public void onReady(@Nonnull ReadyEvent event) {
-            LOGGER.info("Connected to discord");
+            LogManager.getLogger("DiscordLog").info("Connected to discord");
             ChatClient chatClient = new DiscordChatClient(event.getJDA());
             //start the scheduler threads that send notifications and cache data periodically
             initScheduling(chatClient, config.apis);
@@ -45,26 +58,56 @@ public enum ChatClientType {
           }
 
           @Override
-          public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-            //build chat client
-            ChatClient<DiscordResponse> discordChatClient = new DiscordChatClient(event.getJDA());
+          public void onGuildMessageReactionAdd(@Nonnull GuildMessageReactionAddEvent event) {
+            if (event.getReactionEmote().getName().equalsIgnoreCase(THUMBS_UP_EMOTE)) {
+              MessageHistory.MessageRetrieveAction me = event.getChannel().getHistoryAround(event.getMessageId(), 1);
+              me.queue(messageHistory -> {
+                List<Message> messageHistories = messageHistory.getRetrievedHistory();
+                messageLoop:
+                for (Message message : messageHistories) {
+                  List<MessageEmbed> embeds = message.getEmbeds();
+                  fieldLoop:
+                  for (MessageEmbed.Field field : embeds.get(0).getFields()) {
+                    if (field.getName().equals(ADD_MOVIE_COMMAND_FIELD_PREFIX) || field.getName().equals(ADD_SHOW_COMMAND_FIELD_PREFIX)) {
+                      //capture/process the command
+                      handleCommand(event.getJDA(), field.getValue(), event.getUser().getName(), event.getChannel().getName());
+                      break messageLoop;
+                    }
+                  }
+                }
+              });
+            }
+            super.onGuildMessageReactionAdd(event);
+          }
 
+          @Override
+          public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
             //capture/process the command
+            handleCommand(event.getJDA(), event.getMessage().getContentStripped(), event.getAuthor().getName(), event.getChannel().getName());
+            LogManager.getLogger("DiscordLog").debug(event.getMessage().getContentRaw());
+            super.onMessageReceived(event);
+          }
+
+          private void handleCommand(JDA jda, String message, String author, String channelName) {
+            //build chat client
+            ChatClient<DiscordResponse> discordChatClient = new DiscordChatClient(jda);
+
             CommandResponse commandResponse = processMessage(
               config.commands,
-              event.getMessage().getContentStripped(),
-              event.getAuthor().getName(),
+              message,
+              author,
               responseChatClientResponseBuilder);
             if (commandResponse != null) {
               //then send the response
-              discordChatClient.sendMessage(commandResponse, event.getChannel().getName());
+              discordChatClient.sendMessage(commandResponse, channelName);
             }
-            super.onMessageReceived(event);
           }
+
+          private static final String THUMBS_UP_EMOTE = "\uD83D\uDC4D";
         }).build();
         jda.awaitReady();
       } catch (Throwable e) {
-        LOGGER.error("Error caught during main", e);
+        LogManager.getLogger("DiscordLog").error("Error caught during main", e);
         throw e;
       }
     }
