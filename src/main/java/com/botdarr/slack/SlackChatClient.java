@@ -4,11 +4,17 @@ import com.botdarr.Config;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.commands.CommandResponse;
 import com.github.seratch.jslack.Slack;
+import com.github.seratch.jslack.api.methods.SlackApiException;
 import com.github.seratch.jslack.api.methods.request.chat.ChatPostMessageRequest;
+import com.github.seratch.jslack.api.methods.request.conversations.ConversationsHistoryRequest;
 import com.github.seratch.jslack.api.methods.request.conversations.ConversationsListRequest;
+import com.github.seratch.jslack.api.methods.request.groups.GroupsHistoryRequest;
+import com.github.seratch.jslack.api.methods.request.users.UsersInfoRequest;
 import com.github.seratch.jslack.api.methods.response.conversations.ConversationsListResponse;
 import com.github.seratch.jslack.api.model.Conversation;
 import com.github.seratch.jslack.api.model.ConversationType;
+import com.github.seratch.jslack.api.model.Message;
+import com.github.seratch.jslack.api.model.User;
 import com.github.seratch.jslack.api.model.block.DividerBlock;
 import com.github.seratch.jslack.api.model.block.LayoutBlock;
 import com.github.seratch.jslack.api.rtm.RTMClient;
@@ -19,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -57,7 +64,7 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
     sendMessages(channelId -> {
       try {
         Slack.getInstance().methods().chatPostMessage(ChatPostMessageRequest.builder()
-          .token(Config.getProperty(Config.Constants.SLACK_TOKEN))
+          .token(Config.getProperty(Config.Constants.SLACK_BOT_TOKEN))
           .blocks(chatClientResponse.getBlocks())
           .channel(channelId).build());
       } catch (Exception e) {
@@ -74,7 +81,7 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
           List<LayoutBlock> blocks = slackResponse.getBlocks();
           blocks.add(DividerBlock.builder().build());
           Slack.getInstance().methods().chatPostMessage(ChatPostMessageRequest.builder()
-            .token(Config.getProperty(Config.Constants.SLACK_TOKEN))
+            .token(Config.getProperty(Config.Constants.SLACK_BOT_TOKEN))
             .blocks(blocks)
             .channel(channelId).build());
           Thread.sleep(1000); //slack is rate limited
@@ -96,12 +103,43 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
     }
   }
 
+  public List<Message> getPublicMessages(SlackMessage slackMessage) throws IOException, SlackApiException {
+    return Slack.getInstance().methods().conversationsHistory(ConversationsHistoryRequest.builder()
+      .token(Config.getProperty(Config.Constants.SLACK_USER_TOKEN))
+      .channel(slackMessage.getItem().getChannel())
+      .oldest(slackMessage.getItem().getTs())
+      .inclusive(true)
+      .limit(1)
+      .build()).getMessages();
+  }
+
+  public List<Message> getPrivateMessages(SlackMessage slackMessage) throws IOException, SlackApiException {
+    return Slack.getInstance().methods().groupsHistory(GroupsHistoryRequest.builder()
+      .token(Config.getProperty(Config.Constants.SLACK_USER_TOKEN))
+      .channel(slackMessage.getItem().getChannel())
+      .oldest(slackMessage.getItem().getTs())
+      .inclusive(true)
+      .count(1)
+      .build()).getMessages();
+  }
+
+  public User getUser(String userId) {
+    try {
+      return Slack.getInstance().methods().usersInfo(UsersInfoRequest.builder()
+        .user(userId)
+        .token(Config.getProperty(Config.Constants.SLACK_BOT_TOKEN)).build()).getUser();
+    } catch (Exception e) {
+      LOGGER.error("Error getting user", e);
+      throw new RuntimeException("Error getting user");
+    }
+  }
+
   private void sendMessages(MessageSender messageSender, String targetChannel) {
     try {
       Map<String, String> conversationNamesToIds = new HashMap<>();
       ConversationsListResponse conversationsListResponse =
         Slack.getInstance().methods().conversationsList(ConversationsListRequest.builder()
-          .token(Config.getProperty(Config.Constants.SLACK_TOKEN))
+          .token(Config.getProperty(Config.Constants.SLACK_BOT_TOKEN))
           .types(Arrays.asList(ConversationType.PRIVATE_CHANNEL, ConversationType.PUBLIC_CHANNEL)).build());
       for (Conversation conversation : conversationsListResponse.getChannels()) {
         conversationNamesToIds.put(conversation.getName(), conversation.getId());

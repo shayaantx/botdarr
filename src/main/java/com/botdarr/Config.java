@@ -33,7 +33,7 @@ public class Config {
         !Strings.isBlank(properties.getProperty(Constants.DISCORD_CHANNELS));
 
       boolean configuredSlack =
-        !Strings.isBlank(properties.getProperty(Constants.SLACK_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Constants.SLACK_BOT_TOKEN)) &&
         !Strings.isBlank(properties.getProperty(Constants.SLACK_CHANNELS));
 
       if (!configuredDiscord && !configuredSlack) {
@@ -105,7 +105,12 @@ public class Config {
     /**
      * The slack bot oauth token
      */
-    public static final String SLACK_TOKEN = "slack-token";
+    public static final String SLACK_BOT_TOKEN = "slack-bot-token";
+
+    /**
+     * The slack user oauth token
+     */
+    public static final String SLACK_USER_TOKEN = "slack-user-token";
 
     /**
      * The slack channel(s) to send notifications to

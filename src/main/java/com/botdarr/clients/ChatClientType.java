@@ -12,6 +12,13 @@ import com.botdarr.slack.SlackMessage;
 import com.botdarr.slack.SlackResponse;
 import com.botdarr.slack.SlackResponseBuilder;
 import com.github.seratch.jslack.Slack;
+import com.github.seratch.jslack.api.methods.request.conversations.ConversationsHistoryRequest;
+import com.github.seratch.jslack.api.methods.request.groups.GroupsHistoryRequest;
+import com.github.seratch.jslack.api.model.block.LayoutBlock;
+import com.github.seratch.jslack.api.model.block.SectionBlock;
+import com.github.seratch.jslack.api.model.block.composition.MarkdownTextObject;
+import com.github.seratch.jslack.api.model.block.composition.TextObject;
+import com.github.seratch.jslack.api.rtm.RTMMessageHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -82,7 +89,6 @@ public enum ChatClientType {
 
           @Override
           public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-            //capture/process the command
             handleCommand(event.getJDA(), event.getMessage().getContentStripped(), event.getAuthor().getName(), event.getChannel().getName());
             LogManager.getLogger("DiscordLog").debug(event.getMessage().getContentRaw());
             super.onMessageReceived(event);
@@ -92,6 +98,7 @@ public enum ChatClientType {
             //build chat client
             ChatClient<DiscordResponse> discordChatClient = new DiscordChatClient(jda);
 
+            //capture/process command
             CommandResponse commandResponse = processMessage(
               config.commands,
               message,
@@ -116,28 +123,69 @@ public enum ChatClientType {
     @Override
     public void init() throws Exception {
       JsonParser jsonParser = new JsonParser();
-      SlackChatClient slackChatClient = new SlackChatClient(Slack.getInstance().rtm(Config.getProperty(Config.Constants.SLACK_TOKEN)));
+      SlackChatClient slackChatClient = new SlackChatClient(Slack.getInstance().rtm(Config.getProperty(Config.Constants.SLACK_BOT_TOKEN)));
 
       ChatClientResponseBuilder<SlackResponse> responseChatClientResponseBuilder = new SlackResponseBuilder();
       ApisAndCommandConfig config = buildConfig(responseChatClientResponseBuilder);
 
-      slackChatClient.addMessageHandler((message) -> {
-        JsonObject json = jsonParser.parse(message).getAsJsonObject();
-        SlackMessage slackMessage = new Gson().fromJson(json, SlackMessage.class);
-        if (slackMessage.getType() != null && slackMessage.getType().equalsIgnoreCase("message")) {
+      slackChatClient.addMessageHandler(new RTMMessageHandler() {
+        @Override
+        public void handle(String message) {
+          JsonObject json = jsonParser.parse(message).getAsJsonObject();
+          SlackMessage slackMessage = new Gson().fromJson(json, SlackMessage.class);
+          if (slackMessage.getType() != null) {
+            if (slackMessage.getType().equalsIgnoreCase("message")) {
+              handleCommand(slackMessage.getText(), slackChatClient.getUser(slackMessage.getUserId()).getName(), slackMessage.getChannel());
+            } else if (slackMessage.getType().equalsIgnoreCase("reaction_added") && slackMessage.getReaction().equalsIgnoreCase("+1")) {
+              //thumbsup = +1 in slack for some reason
+              try {
+                //search public channels first
+                List<com.github.seratch.jslack.api.model.Message> conversationMessages = slackChatClient.getPublicMessages(slackMessage);
+                if (conversationMessages == null || conversationMessages.isEmpty()) {
+                  //check private channels if necessary
+                  conversationMessages = slackChatClient.getPrivateMessages(slackMessage);
+                }
+                if (conversationMessages != null) {
+                  conversationMessageLoop:
+                  for (com.github.seratch.jslack.api.model.Message conversationMessage : conversationMessages) {
+                    for (LayoutBlock layoutBlock : conversationMessage.getBlocks()) {
+                      if (layoutBlock.getType().equals("section")) {
+                        SectionBlock sectionBlock = (SectionBlock) layoutBlock;
+                        if (sectionBlock.getText() instanceof MarkdownTextObject) {
+                          String markdownText = ((MarkdownTextObject) sectionBlock.getText()).getText();
+                          if (markdownText != null &&
+                            (markdownText.startsWith(ADD_MOVIE_COMMAND_FIELD_PREFIX) || markdownText.startsWith(ADD_SHOW_COMMAND_FIELD_PREFIX))) {
+                            String postProcessedCommand = markdownText
+                              .replaceAll(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - ", "")
+                              .replaceAll(ADD_SHOW_COMMAND_FIELD_PREFIX + " - ", "");
+                            handleCommand(postProcessedCommand, slackChatClient.getUser(slackMessage.getUserId()).getName(), slackMessage.getItem().getChannel());
+                            break conversationMessageLoop;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch (Exception e) {
+                LogManager.getLogger("SlackLog").error("Error fetching conversation history", e);
+              }
+            }
+          }
+          LogManager.getLogger("SlackLog").debug(json);
+        }
+
+        private void handleCommand(String text, String userId, String channel) {
           //capture/process the command
           CommandResponse commandResponse = processMessage(
             config.commands,
-            slackMessage.getText(),
-            //TODO: map user id to actual username
-            slackMessage.getUserId(),
+            text,
+            userId,
             responseChatClientResponseBuilder);
           if (commandResponse != null) {
             //then send the response
-            slackChatClient.sendMessage(commandResponse, slackMessage.getChannel());
+            slackChatClient.sendMessage(commandResponse, channel);
           }
         }
-        LogManager.getLogger("SlackLog").debug(json);
       });
 
       //start the scheduler threads that send notifications and cache data periodically
