@@ -47,8 +47,10 @@ discord-token=
 # the discord channel(s) you want the bot installed on
 discord-channels=
 
-# your slack bot token (the both user oauth access token, not the oauth access token)
-slack-token=xoxb-*
+# Your slack bot oauth authentication token
+slack-bot-token=
+# Your slack user oauth authentication token
+slack-user-token=
 # the slack channel(s) you want the bot installed on
 slack-channels=
 
