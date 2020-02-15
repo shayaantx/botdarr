@@ -1,26 +1,12 @@
 image: Ubuntu
 
-branches:
-  only:
-  - feature/app-veyor-deployment
-  
-services:
-  - docker
-
 stack: jdk 8
 
 build_script:
 - sh: ./mvnw --no-transfer-progress compile
-- sh: ./mvnw --no-transfer-progress package -DskipTests
 
 test_script:
 - sh: ./mvnw --no-transfer-progress test surefire-report:report-only
-
-on_success:
-- sh: ls -l
-#TODO: change to latest when ready
-- sh: docker build -t shayaantx/botdarr:custom -f DockerfileUpload .
-- sh: docker images
 
 artifacts:
   - path: target/site/surefire-report.html
