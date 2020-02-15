@@ -19,9 +19,9 @@ test_script:
 on_success:
 - sh: ls -l target
 #TODO: change to latest when ready
-- sh: docker build -f DockerfileUpload -t shayaantx/botdarr:custom
+- sh: docker build -t shayaantx/botdarr:custom -f DockerfileUpload
 - sh: docker images
 
 artifacts:
-  - path: site/surefire-report.html
+  - path: target/site/surefire-report.html
     name: Test Results

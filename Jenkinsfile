@@ -91,7 +91,7 @@ node {
       stage('Upload to dockerhub') {
         def dockerFileImage = """
         FROM centos:7
-        RUN yum update; yum clean all; yum -y install java-1.8.0-openjdk-devel-debug.x86_64; yum -y install java-1.8.0-openjdk-src-debug.x86_64;
+        RUN yum update; yum clean all; yum -y install java-1.8.0-openjdk-devel.x86_64;
         ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
         ENV PATH=$PATH:$JAVA_HOME/bin
 
