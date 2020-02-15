@@ -1,0 +1,13 @@
+image: Ubuntu
+
+stack: jdk 8
+
+build_script:
+- sh: ./mvnw --no-transfer-progress compile
+
+test_script:
+- sh: ./mvnw --no-transfer-progress test surefire-report:report-only
+
+artifacts:
+  - path: target/site/surefire-report.html
+    name: Test Results
