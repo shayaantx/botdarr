@@ -3,7 +3,6 @@ image: Ubuntu
 services:
   - docker
 
-language: java
 stack: jdk 8
 
 build_script:
