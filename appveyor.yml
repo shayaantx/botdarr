@@ -1,0 +1,14 @@
+image: Ubuntu
+
+stack: jdk 8
+
+build:
+- sh: ./mvnw --no-transfer-progress compile
+
+test:
+- sh: ./mvnw --no-transfer-progress test
+
+package:
+- sh: ./mvnw --no-transfer-progress package -DskipTests
+
+on_success:
