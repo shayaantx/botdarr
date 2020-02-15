@@ -12,6 +12,7 @@ import com.github.seratch.jslack.api.model.block.SectionBlock;
 import com.github.seratch.jslack.api.model.block.composition.MarkdownTextObject;
 import com.github.seratch.jslack.api.model.block.composition.PlainTextObject;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.util.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -80,10 +81,14 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     slackResponse.addBlock(SectionBlock.builder()
       .text(PlainTextObject.builder().text(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + "show id add " + show.getTitle() + " " + show.getTvdbId()).build())
       .build());
-    slackResponse.addBlock(ImageBlock.builder()
-      .imageUrl(show.getRemotePoster())
-      .altText(show.getTitle() + " poster")
-      .build());
+    if (!Strings.isBlank(show.getRemotePoster())) {
+      //if there is no poster to display, slack will fail to render all the blocks
+      //so make sure there is one before trying to render
+      slackResponse.addBlock(ImageBlock.builder()
+        .imageUrl(show.getRemotePoster())
+        .altText(show.getTitle() + " poster")
+        .build());
+    }
     return slackResponse;
   }
 
@@ -376,10 +381,14 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     slackResponse.addBlock(SectionBlock.builder()
       .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId()).build())
       .build());
-    slackResponse.addBlock(ImageBlock.builder()
-      .imageUrl(radarrMovie.getRemotePoster())
-      .altText(radarrMovie.getTitle() + " poster")
-      .build());
+    if (!Strings.isBlank(radarrMovie.getRemotePoster())) {
+      //if there is no poster to display, slack will fail to render all the blocks
+      //so make sure there is one before trying to render
+      slackResponse.addBlock(ImageBlock.builder()
+        .imageUrl(radarrMovie.getRemotePoster())
+        .altText(radarrMovie.getTitle() + " poster")
+        .build());
+    }
     return slackResponse;
   }
 
