@@ -14,7 +14,14 @@ build_script:
 - sh: ./mvnw --no-transfer-progress package -DskipTests
 
 test_script:
-- sh: ./mvnw --no-transfer-progress test
+- sh: ./mvnw --no-transfer-progress test surefire-report:report-only
 
 on_success:
 - sh: ls -l target
+#TODO: change to latest when ready
+- sh: docker build -f DockerfileUpload -t shayaantx/botdarr:custom
+- sh: docker images
+
+artifacts:
+  - path: site/surefire-report.html
+    name: Test Results
