@@ -1,14 +1,16 @@
 image: Ubuntu
 
+services:
+  - docker
+
+language: java
 stack: jdk 8
 
-build:
+build_script:
 - sh: ./mvnw --no-transfer-progress compile
 
-test:
+test_script:
 - sh: ./mvnw --no-transfer-progress test
 
 package:
 - sh: ./mvnw --no-transfer-progress package -DskipTests
-
-on_success:
