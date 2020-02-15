@@ -1,3 +1,6 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/twce208g6yb18vgl/branch/development?svg=true)](https://ci.appveyor.com/project/shayaantx/botdarr/branch/development)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 # Summary
 
 Made this simple slack/discord bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a multiple slack/discord channels
