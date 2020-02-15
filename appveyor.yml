@@ -1,5 +1,9 @@
 image: Ubuntu
 
+branches:
+  only:
+  - feature/app-veyor-deployment
+  
 services:
   - docker
 
@@ -11,3 +15,6 @@ build_script:
 
 test_script:
 - sh: ./mvnw --no-transfer-progress test
+
+on_success:
+- sh: ls -l target
