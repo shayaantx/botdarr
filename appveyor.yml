@@ -1,5 +1,8 @@
 image: Ubuntu
 
+environment:
+  APPVEYOR_CONSOLE_DISABLE_PTY: true
+
 stack: jdk 8
 
 build_script:
