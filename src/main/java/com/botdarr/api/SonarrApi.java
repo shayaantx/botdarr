@@ -158,7 +158,7 @@ public class SonarrApi implements Api {
   public void sendPeriodicNotifications(ChatClient chatClient) {
     List<ChatClientResponse> downloads = getShowDownloads();
     if (downloads != null && !downloads.isEmpty()) {
-      chatClient.sendMessage(downloads, null);
+      chatClient.sendToConfiguredChannels(downloads);
     } else {
       LOGGER.debug("No show downloads available for sending");
     }

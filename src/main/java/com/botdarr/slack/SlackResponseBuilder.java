@@ -317,7 +317,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       if (existingShow.getSeasons() != null) {
         List<ContextBlockElement> contextBlockElements = new ArrayList<>();
         contextBlockElements.add(PlainTextObject.builder()
-          .text("Number of seasons - name=" + existingShow.getSeasons().size())
+          .text("Number of seasons - " + existingShow.getSeasons().size())
           .build());
         for (SonarrSeason sonarrSeason : existingShow.getSeasons()) {
           contextBlockElements.add(PlainTextObject.builder()

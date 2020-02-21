@@ -267,5 +267,5 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     return new DiscordResponse(embedBuilder.build());
   }
 
-  private static final Logger LOGGER = LogManager.getLogger(DiscordResponseBuilder.class);
+  private static final Logger LOGGER = LogManager.getLogger("DiscordLog");
 }

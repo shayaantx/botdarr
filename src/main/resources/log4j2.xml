@@ -89,6 +89,18 @@
 
             <DefaultRolloverStrategy max="10" />
         </RollingFile>
+        <RollingFile name="TelegramLog">
+            <FileName>logs/telegram.log</FileName>
+            <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
+            <PatternLayout>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="10" />
+        </RollingFile>
     </Appenders>
 
     <Loggers>
@@ -121,6 +133,10 @@
             <AppenderRef ref="DiscordLog" />
         </Logger>
 
+        <Logger name="TelegramLog" level="info" additivity="false">
+            <AppenderRef ref="TelegramLog" />
+        </Logger>
+
         <Root level="all" additivity="false">
             <AppenderRef ref="Console" />
             <AppenderRef ref="BotLog" />
@@ -129,6 +145,7 @@
             <AppenderRef ref="AuditLog" />
             <AppenderRef ref="SlackLog" />
             <AppenderRef ref="DiscordLog" />
+            <AppenderRef ref="TelegramLog" />
         </Root>
     </Loggers>
 </Configuration>
