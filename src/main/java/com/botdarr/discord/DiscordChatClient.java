@@ -16,12 +16,10 @@ public class DiscordChatClient implements ChatClient<DiscordResponse> {
     this.jda = readyEventJda;
   }
 
-  @Override
   public void sendMessage(DiscordResponse chatClientResponse, String channelName) {
     sendMessages(channel -> channel.sendMessage(chatClientResponse.getMessage()).queue(), channelName);
   }
 
-  @Override
   public void sendMessage(List<DiscordResponse> chatClientResponses, String channelName) {
     sendMessages(channel -> {
       for (DiscordResponse discordResponse : chatClientResponses) {
@@ -30,7 +28,6 @@ public class DiscordChatClient implements ChatClient<DiscordResponse> {
     }, channelName);
   }
 
-  @Override
   public void sendMessage(CommandResponse<DiscordResponse> commandResponse, String targetChannel) {
     if (commandResponse.getSingleChatClientResponse() != null) {
       sendMessage(commandResponse.getSingleChatClientResponse(), targetChannel);
@@ -52,6 +49,11 @@ public class DiscordChatClient implements ChatClient<DiscordResponse> {
       }
       messageSender.send(textChannel);
     }
+  }
+
+  @Override
+  public void sendToConfiguredChannels(List<DiscordResponse> chatClientResponses) {
+    sendMessage(chatClientResponses, null);
   }
 
   private interface MessageSender {

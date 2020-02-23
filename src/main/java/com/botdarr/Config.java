@@ -7,7 +7,10 @@ import org.apache.logging.log4j.util.Strings;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class Config {
   private static volatile Config instance;
@@ -28,26 +31,22 @@ public class Config {
       properties = new Properties();
       properties.load(input);
 
-      boolean configuredDiscord =
-        !Strings.isBlank(properties.getProperty(Constants.DISCORD_TOKEN)) &&
-        !Strings.isBlank(properties.getProperty(Constants.DISCORD_CHANNELS));
-
-      boolean configuredSlack =
-        !Strings.isBlank(properties.getProperty(Constants.SLACK_BOT_TOKEN)) &&
-        !Strings.isBlank(properties.getProperty(Constants.SLACK_CHANNELS));
-
-      if (!configuredDiscord && !configuredSlack) {
-        throw new RuntimeException("You don't have discord or slack configured, please configure one");
+      for (ChatClientType possibleChatClientType : ChatClientType.values()) {
+        if (possibleChatClientType.isConfigured(properties) && chatClientType != null) {
+          throw new RuntimeException("You cannot configure more than one chat client");
+        }
+        if (possibleChatClientType.isConfigured(properties)) {
+          chatClientType = possibleChatClientType;
+        }
       }
 
-      if (configuredDiscord && configuredSlack) {
-        throw new RuntimeException("You have both discord and slack configured, you can only use one at a time");
-      }
-
-      if (configuredDiscord) {
-        chatClientType = ChatClientType.DISCORD;
-      } else {
-        chatClientType = ChatClientType.SLACK;
+      if (chatClientType == null) {
+        String allChatClientTypes = Arrays.asList(ChatClientType.values())
+          .stream()
+          .sorted(Comparator.comparing(ChatClientType::getReadableName))
+          .map(ChatClientType::getReadableName)
+          .collect(Collectors.joining(", "));
+        throw new RuntimeException("You don't have " + allChatClientTypes + " configured, please configure one");
       }
 
       this.isRaddarrEnabled =
@@ -92,6 +91,16 @@ public class Config {
   }
 
   public static final class Constants {
+    /**
+     * The telegram auth token
+     */
+    public static final String TELEGRAM_TOKEN = "telegram-token";
+
+    /**
+     * The telegram private channel(s) to send notifications to
+     */
+    public static final String TELEGRAM_PRIVATE_CHANNELS = "telegram-private-channels";
+
     /**
      * The discord bot token
      */
@@ -177,6 +186,6 @@ public class Config {
   private final Properties properties;
   private final boolean isRaddarrEnabled;
   private final boolean isSonarrEnabled;
-  private final ChatClientType chatClientType;
+  private ChatClientType chatClientType = null;
   private static final Logger LOGGER = LogManager.getLogger();
 }

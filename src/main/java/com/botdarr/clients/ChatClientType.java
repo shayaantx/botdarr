@@ -11,17 +11,19 @@ import com.botdarr.slack.SlackChatClient;
 import com.botdarr.slack.SlackMessage;
 import com.botdarr.slack.SlackResponse;
 import com.botdarr.slack.SlackResponseBuilder;
+import com.botdarr.telegram.TelegramChatClient;
+import com.botdarr.telegram.TelegramResponse;
+import com.botdarr.telegram.TelegramResponseBuilder;
 import com.github.seratch.jslack.Slack;
-import com.github.seratch.jslack.api.methods.request.conversations.ConversationsHistoryRequest;
-import com.github.seratch.jslack.api.methods.request.groups.GroupsHistoryRequest;
 import com.github.seratch.jslack.api.model.block.LayoutBlock;
 import com.github.seratch.jslack.api.model.block.SectionBlock;
 import com.github.seratch.jslack.api.model.block.composition.MarkdownTextObject;
-import com.github.seratch.jslack.api.model.block.composition.TextObject;
 import com.github.seratch.jslack.api.rtm.RTMMessageHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Update;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -34,6 +36,7 @@ import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEve
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -42,6 +45,49 @@ import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 
 public enum ChatClientType {
+  TELEGRAM() {
+    @Override
+    public void init() throws Exception {
+      ChatClientResponseBuilder<TelegramResponse> responseChatClientResponseBuilder = new TelegramResponseBuilder();
+      ApisAndCommandConfig config = buildConfig(responseChatClientResponseBuilder);
+      TelegramChatClient telegramChatClient = new TelegramChatClient();
+
+      initScheduling(telegramChatClient, config.apis);
+      telegramChatClient.addUpdateListener(list -> {
+        try {
+          for (Update update : list) {
+            com.pengrad.telegrambot.model.Message message = update.channelPost();
+            if (message != null) {
+              String text = message.text();
+              //TODO: the telegram api doesn't seem return "from" field in channel posts for some reason
+              //for now we leave the author as "telegram" till a better solution arises
+              String author = "telegram";
+              CommandResponse commandResponse =
+                processMessage(config.commands, text, author, responseChatClientResponseBuilder);
+              if (commandResponse != null) {
+                telegramChatClient.sendMessage(commandResponse, message.chat());
+              }
+            }
+          }
+        } catch (Throwable t) {
+          LOGGER.error("Error during telegram updates", t);
+        }
+        return UpdatesListener.CONFIRMED_UPDATES_ALL;
+      });
+    }
+
+    @Override
+    public boolean isConfigured(Properties properties) {
+      return
+        !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_PRIVATE_CHANNELS));
+    }
+
+    @Override
+    public String getReadableName() {
+      return "Telegram";
+    }
+  },
   DISCORD() {
     @Override
     public void init() throws Exception {
@@ -96,7 +142,7 @@ public enum ChatClientType {
 
           private void handleCommand(JDA jda, String message, String author, String channelName) {
             //build chat client
-            ChatClient<DiscordResponse> discordChatClient = new DiscordChatClient(jda);
+            DiscordChatClient discordChatClient = new DiscordChatClient(jda);
 
             //capture/process command
             CommandResponse commandResponse = processMessage(
@@ -117,6 +163,18 @@ public enum ChatClientType {
         LogManager.getLogger("DiscordLog").error("Error caught during main", e);
         throw e;
       }
+    }
+
+    @Override
+    public boolean isConfigured(Properties properties) {
+      return
+        !Strings.isBlank(properties.getProperty(Config.Constants.DISCORD_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Config.Constants.DISCORD_CHANNELS));
+    }
+
+    @Override
+    public String getReadableName() {
+      return "Discord";
     }
   },
   SLACK() {
@@ -193,6 +251,18 @@ public enum ChatClientType {
 
       slackChatClient.connect();
     }
+
+    @Override
+    public boolean isConfigured(Properties properties) {
+      return
+        !Strings.isBlank(properties.getProperty(Config.Constants.SLACK_BOT_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Config.Constants.SLACK_CHANNELS));
+    }
+
+    @Override
+    public String getReadableName() {
+      return "Slack";
+    }
   };
 
   void initScheduling(ChatClient chatClient, List<Api> apis) {
@@ -227,6 +297,8 @@ public enum ChatClientType {
   }
 
   public abstract void init() throws Exception;
+  public abstract boolean isConfigured(Properties properties);
+  public abstract String getReadableName();
 
   private static <T extends ChatClientResponse> ApisAndCommandConfig buildConfig(ChatClientResponseBuilder<T> responseChatClientResponseBuilder) {
     RadarrApi radarrApi = new RadarrApi(responseChatClientResponseBuilder);

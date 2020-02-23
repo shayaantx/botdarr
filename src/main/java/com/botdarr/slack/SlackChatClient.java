@@ -59,7 +59,6 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
     }
   }
 
-  @Override
   public void sendMessage(SlackResponse chatClientResponse, String channel) {
     sendMessages(channelId -> {
       try {
@@ -73,7 +72,6 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
     }, channel);
   }
 
-  @Override
   public void sendMessage(List<SlackResponse> chatClientResponses, String channel) {
     sendMessages(channelId -> {
       for (SlackResponse slackResponse : chatClientResponses) {
@@ -92,7 +90,6 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
     }, channel);
   }
 
-  @Override
   public void sendMessage(CommandResponse<SlackResponse> commandResponse, String targetChannel) {
     if (commandResponse.getSingleChatClientResponse() != null) {
       sendMessage(commandResponse.getSingleChatClientResponse(), targetChannel);
@@ -159,6 +156,11 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
     } catch (Exception e) {
       LOGGER.error("Error sending slack messages", e);
     }
+  }
+
+  @Override
+  public void sendToConfiguredChannels(List<SlackResponse> chatClientResponses) {
+    sendMessage(chatClientResponses, null);
   }
 
   private interface MessageSender {

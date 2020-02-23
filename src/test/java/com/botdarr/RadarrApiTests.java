@@ -39,6 +39,8 @@ public class RadarrApiTests {
     try (FileOutputStream fos = new FileOutputStream(propertiesFile)) {
       properties.store(fos, "");
     }
+
+    Deencapsulation.setField(Config.class, "instance", null);
   }
 
   @After

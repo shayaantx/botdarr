@@ -219,7 +219,7 @@ public class RadarrApi implements Api {
   public void sendPeriodicNotifications(ChatClient chatClient) {
     List<ChatClientResponse> downloads = getMovieDownloads();
     if (downloads != null && !downloads.isEmpty()) {
-      chatClient.sendMessage(downloads, null);
+      chatClient.sendToConfiguredChannels(downloads);
     } else {
       LOGGER.debug("No movie downloads available for sending");
     }

@@ -3,7 +3,7 @@
 
 # Summary
 
-Made this simple slack/discord bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a multiple slack/discord channels
+Made this simple slack/discord/telegram bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a multiple slack/discord/telegram channels
 
 <br/>
 
@@ -15,15 +15,11 @@ Made this simple slack/discord bot so I could access radarr, sonarr, and lidarr 
 - [x] Sonarr (v3)
 - [ ] Lidarr
 
-<br/>
-
 ## Currently Supported Chat Client's
 
 - [x] Discord
 - [x] Slack
-- [ ] Telegram
-
-<br/>
+- [x] Telegram
 
 ## Discord Bot Installation
 
@@ -32,6 +28,10 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Discord-Bot
 ## Slack Bot Installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Slack-Bot
+
+## Telegram bot installation
+
+See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
 
 ## Jar installation/Configuration
 
@@ -56,6 +56,16 @@ slack-bot-token=
 slack-user-token=
 # the slack channel(s) you want the bot installed on
 slack-channels=
+
+# Your telegram bot token
+telegram-token=
+# Your actual telegram channels your bot can respond in
+# this should be a list containing the name and id of the channel, i.e., CHANNEL_NAME:CHANNEL_ID
+# to get the channel id, right click any post in private channel and copy post link
+# you should see something like this, https://t.me/c/1408146664/63
+# the id is between c/<id>/<postId>
+# example: plex-channel1:id1,plex-channel2:id2
+telegram-private-channels=
 
 # your radarr url (i.e., http://SOME-IP:SOME-PORT)
 radarr-url=

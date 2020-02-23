@@ -1,4 +1,4 @@
 package com.botdarr.clients;
 
-public interface ChatClientResponse {
-}
+//marker interface for different type of responses
+public interface ChatClientResponse {}
