@@ -1,23 +1,21 @@
 package com.botdarr.telegram;
 
 import com.botdarr.Config;
-import com.botdarr.api.radarr.RadarrMovie;
-import com.botdarr.api.radarr.RadarrProfile;
-import com.botdarr.api.radarr.RadarrQueue;
-import com.botdarr.api.radarr.RadarrTorrent;
-import com.botdarr.api.sonarr.SonarrProfile;
-import com.botdarr.api.sonarr.SonarrQueue;
-import com.botdarr.api.sonarr.SonarrSeason;
-import com.botdarr.api.sonarr.SonarrShow;
+import com.botdarr.api.radarr.*;
+import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.Command;
 import j2html.tags.DomContent;
+import org.apache.commons.io.FileUtils;
 
+import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static j2html.TagCreator.*;
+import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 public class TelegramResponseBuilder implements ChatClientResponseBuilder<TelegramResponse> {
@@ -65,43 +63,136 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
   }
 
   @Override
-  public TelegramResponse getShowDownloadResponses(SonarrQueue sonarrShow) {
-    return null;
+  public TelegramResponse getShowDownloadResponses(SonarrQueue showQueue) {
+    SonarQueueEpisode episode = showQueue.getEpisode();
+
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b(showQueue.getSonarrQueueShow().getTitle()));
+    StringBuilder queueDetails = new StringBuilder();
+    queueDetails.append("Season/Episode - " + "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber() + "\n");
+    queueDetails.append("Quality - " + showQueue.getQuality().getQuality().getName() + "\n");
+    queueDetails.append("Status - " + showQueue.getStatus() + "\n");
+    queueDetails.append("Time Left - " + (showQueue.getTimeleft() == null ? "unknown" : showQueue.getTimeleft()) + "\n");
+    domContents.add(code(queueDetails.toString()));
+
+    String overview = episode.getTitle() + ": " + episode.getOverview();
+    if (overview.length() > VALUE_MAX_LENGTH) {
+      overview = overview.substring(0, VALUE_MAX_LENGTH);
+    }
+    domContents.add(b("Overview - " + overview));
+    if (showQueue.getStatusMessages() != null) {
+      StringBuilder statusMessageBuilder = new StringBuilder();
+      for (SonarrQueueStatusMessages statusMessage : showQueue.getStatusMessages()) {
+        for (String message : statusMessage.getMessages()) {
+          statusMessageBuilder.append("Download Message - " + message + "\n");
+        }
+      }
+      domContents.add(code(statusMessageBuilder.toString()));
+    }
+    domContents.add(b("Cancel download command - " + "show cancel download " + showQueue.getId()));
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse getMovieDownloadResponses(RadarrQueue radarrQueue) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b(radarrQueue.getRadarrQueueMovie().getTitle()));
+    StringBuilder details = new StringBuilder();
+    details.append("Quality - " + radarrQueue.getQuality().getQuality().getName() + "\n");
+    details.append("Status - " + radarrQueue.getStatus() + "\n");
+    details.append("Time Left - " + radarrQueue.getTimeleft() == null ? "unknown" : radarrQueue.getTimeleft() + "\n");
+    if (radarrQueue.getStatusMessages() != null) {
+      for (RadarrQueueStatusMessages statusMessage : radarrQueue.getStatusMessages()) {
+        for (String message : statusMessage.getMessages()) {
+          details.append("Download message - " + message + "\n");
+        }
+      }
+    }
+    domContents.add(code(details.toString()));
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse createErrorMessage(String message) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b("Success! - " + message));
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse createInfoMessage(String message) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b("Info! - " + message));
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse createSuccessMessage(String message) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(u(b("Error! - " + message)));
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse getTorrentResponses(RadarrTorrent radarrTorrent, String movieTitle) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b("Title - " + radarrTorrent.getTitle()));
+    domContents.add(text("Torrent - " + radarrTorrent.getGuid()));
+    domContents.add(text("Quality - " + radarrTorrent.getQuality().getQuality().getName()));
+    domContents.add(text("Indexer - " + radarrTorrent.getIndexer()));
+    domContents.add(text("Seeders - " + radarrTorrent.getSeeders()));
+    domContents.add(text("Leechers - " + radarrTorrent.getLeechers()));
+    domContents.add(text("Size - " + FileUtils.byteCountToDisplaySize(radarrTorrent.getSize())));
+    String[] rejections = radarrTorrent.getRejections();
+    if (rejections != null) {
+      StringBuilder rejectionReasons = new StringBuilder();
+      for (String rejection : rejections) {
+        rejectionReasons.append("Rejection Reason - " + rejection + "\n");
+      }
+      domContents.add(code(rejectionReasons.toString()));
+    }
+    String key = radarrTorrent.getGuid() + ":title=" + movieTitle;
+    byte[] encodedBytes = Base64.getEncoder().encode(key.getBytes());
+    domContents.add(u(b("Download hash command - " + "movie hash download " + new String(encodedBytes))));
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse getShowProfile(SonarrProfile sonarrProfile) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b("Profile"));
+    domContents.add(text("Name - " + sonarrProfile.getName()));
+    domContents.add(text("Cutoff - " + sonarrProfile.getCutoff().getName()));
+    if (sonarrProfile.getItems() != null) {
+      StringBuilder qualityItems = new StringBuilder();
+      for (int k = 0; k < sonarrProfile.getItems().size(); k++) {
+        SonarrProfileQualityItem sonarrProfileQualityItem = sonarrProfile.getItems().get(k);
+        if (sonarrProfileQualityItem.isAllowed()) {
+          qualityItems.append("Quality - name=" + sonarrProfileQualityItem.getQuality().getName() + ", resolution=" + sonarrProfileQualityItem.getQuality().getResolution() + "\n");
+        }
+      }
+      domContents.add(code(qualityItems.toString()));
+    }
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse getMovieProfile(RadarrProfile radarrProfile) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b("Profile"));
+    domContents.add(text("Name - " + radarrProfile.getName()));
+    domContents.add(text("Cutoff - " + radarrProfile.getCutoff().getName()));
+    if (radarrProfile.getItems() != null) {
+      StringBuilder qualityItems = new StringBuilder();
+      for (int k = 0; k < radarrProfile.getItems().size(); k++) {
+        RadarrProfileQualityItem radarrProfileQualityItem = radarrProfile.getItems().get(k);
+        if (radarrProfileQualityItem.isAllowed()) {
+          qualityItems.append("Quality - name=" + radarrProfileQualityItem.getQuality().getName() + ", resolution=" + radarrProfileQualityItem.getQuality().getResolution() + "\n");
+        }
+      }
+      domContents.add(code(qualityItems.toString()));
+    }
+    return new TelegramResponse(domContents);
   }
 
   @Override
@@ -126,17 +217,34 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
 
   @Override
   public TelegramResponse getNewOrExistingMovie(RadarrMovie lookupMovie, RadarrMovie existingMovie, boolean findNew) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b(lookupMovie.getTitle()));
+    if (findNew) {
+      domContents.add(u(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + lookupMovie.getTitle() + " " + lookupMovie.getTmdbId()));
+    } else {
+      StringBuilder existingDetails = new StringBuilder();
+      existingDetails.append("Id - " + existingMovie.getId() + "\n");
+      existingDetails.append("Downloaded - " + existingMovie.isDownloaded() + "\n");
+      existingDetails.append("Has File - " + existingMovie.isHasFile() + "\n");
+      domContents.add(code(existingDetails.toString()));
+    }
+    domContents.add(a(lookupMovie.getRemotePoster()));
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse getMovie(RadarrMovie radarrMovie) {
-    return null;
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b(radarrMovie.getTitle()));
+    domContents.add(text("TmdbId - " + radarrMovie.getTmdbId()));
+    domContents.add(u(b(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId())));
+    domContents.add(a(radarrMovie.getRemotePoster()));
+    return new TelegramResponse(domContents);
   }
 
   @Override
   public TelegramResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
-    return null;
+    return getMovie(radarrMovie);
   }
 
   private List<DomContent> getListOfCommands(List<Command> commands) {

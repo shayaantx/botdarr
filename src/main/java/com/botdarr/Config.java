@@ -97,9 +97,9 @@ public class Config {
     public static final String TELEGRAM_TOKEN = "telegram-token";
 
     /**
-     * The telegram channel(s) to send notifications to
+     * The telegram private channel(s) to send notifications to
      */
-    public static final String TELEGRAM_CHANNELS = "telegram-channels";
+    public static final String TELEGRAM_PRIVATE_CHANNELS = "telegram-private-channels";
 
     /**
      * The discord bot token

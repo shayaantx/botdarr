@@ -9,12 +9,15 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.request.ParseMode;
+import com.pengrad.telegrambot.request.GetChat;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.SendResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class TelegramChatClient implements ChatClient<TelegramResponse> {
@@ -61,23 +64,33 @@ public class TelegramChatClient implements ChatClient<TelegramResponse> {
   }
 
   private void sendMessages(MessageSender messageSender, Chat chat) {
-    Set<String> supportedTelegramChannels = Sets.newHashSet(Splitter.on(',').trimResults().split(Config.getProperty(Config.Constants.TELEGRAM_CHANNELS)));
-    String telegramChannel = chat.title();
-    if (!supportedTelegramChannels.contains(telegramChannel)) {
-      return;
+    Set<String> configTelegramChannels = Sets.newHashSet(Splitter.on(',').trimResults().split(Config.getProperty(Config.Constants.TELEGRAM_PRIVATE_CHANNELS)));
+    Map<String, String> supportedTelegramChannels = new HashMap<>();
+    for (String channel : configTelegramChannels) {
+      String[] fields = channel.split(":");
+      if (fields == null || fields.length == 0) {
+        throw new RuntimeException("Configured telegram channels not in correct format. i.e., CHANNEL_NAME:ID,CHANNEL_NAME2:ID2");
+      }
+      supportedTelegramChannels.put(fields[0], fields[1]);
     }
-    messageSender.send(chat);
-  }
-
-  @Override
-  public void sendToConfiguredChannels(TelegramResponse chatClientResponse) {
-    //TODO: need to get channel id
-    //https://github.com/pengrad/java-telegram-bot-api/issues/15 implies you can use @CHANNEL-NAME
+    if (chat != null) {
+      String telegramChannel = chat.title();
+      if (!supportedTelegramChannels.containsKey(telegramChannel)) {
+        LOGGER.warn("Channel " + telegramChannel + " not allowed, check properties file");
+        return;
+      }
+      messageSender.send(chat);
+    } else {
+      for (Map.Entry<String, String> supportedTelegramChannel : supportedTelegramChannels.entrySet()) {
+        Chat validChat = this.bot.execute(new GetChat("-100" + supportedTelegramChannel.getValue())).chat();
+        messageSender.send(validChat);
+      }
+    }
   }
 
   @Override
   public void sendToConfiguredChannels(List<TelegramResponse> chatClientResponses) {
-    //TODO:
+    sendMessage(chatClientResponses, null);
   }
 
   private interface MessageSender {

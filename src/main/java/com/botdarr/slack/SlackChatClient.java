@@ -159,11 +159,6 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
   }
 
   @Override
-  public void sendToConfiguredChannels(SlackResponse chatClientResponse) {
-    sendMessage(chatClientResponse, null);
-  }
-
-  @Override
   public void sendToConfiguredChannels(List<SlackResponse> chatClientResponses) {
     sendMessage(chatClientResponses, null);
   }

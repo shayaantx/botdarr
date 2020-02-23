@@ -25,6 +25,7 @@ public class ConfigTests {
     properties.put("discord-token", "#$F#$#");
     properties.put("discord-channels", "channel1");
     properties.put("telegram-token", "%H$$54j45i");
+    properties.put("telegram-channels", "channel1");
     writeFakePropertiesFile(properties);
     expectedException.expect(RuntimeException.class);
     expectedException.expectMessage("You cannot configure more than one chat client");

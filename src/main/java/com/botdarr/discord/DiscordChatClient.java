@@ -52,11 +52,6 @@ public class DiscordChatClient implements ChatClient<DiscordResponse> {
   }
 
   @Override
-  public void sendToConfiguredChannels(DiscordResponse chatClientResponse) {
-    sendMessage(chatClientResponse, null);
-  }
-
-  @Override
   public void sendToConfiguredChannels(List<DiscordResponse> chatClientResponses) {
     sendMessage(chatClientResponses, null);
   }

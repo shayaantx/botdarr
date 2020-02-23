@@ -22,7 +22,6 @@ import com.github.seratch.jslack.api.rtm.RTMMessageHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
 import net.dv8tion.jda.api.JDA;
@@ -81,7 +80,7 @@ public enum ChatClientType {
     public boolean isConfigured(Properties properties) {
       return
         !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_TOKEN)) &&
-        !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_CHANNELS));
+        !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_PRIVATE_CHANNELS));
     }
 
     @Override
