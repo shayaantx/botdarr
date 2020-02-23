@@ -3,7 +3,7 @@
 
 # Summary
 
-Made this simple slack/discord/telegram bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a multiple slack/discord channels
+Made this simple slack/discord/telegram bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a multiple slack/discord/telegram channels
 
 <br/>
 
@@ -15,15 +15,11 @@ Made this simple slack/discord/telegram bot so I could access radarr, sonarr, an
 - [x] Sonarr (v3)
 - [ ] Lidarr
 
-<br/>
-
 ## Currently Supported Chat Client's
 
 - [x] Discord
 - [x] Slack
 - [x] Telegram
-
-<br/>
 
 ## Discord Bot Installation
 
@@ -32,6 +28,10 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Discord-Bot
 ## Slack Bot Installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Slack-Bot
+
+## Telegram bot installation
+
+See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
 
 ## Jar installation/Configuration
 
