@@ -1,6 +1,7 @@
 package com.botdarr;
 
 import mockit.Deencapsulation;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -11,6 +12,11 @@ import java.io.FileOutputStream;
 import java.util.Properties;
 
 public class ConfigTests {
+  @Before
+  public void beforeEachTest() {
+    Deencapsulation.setField(Config.class, "instance", null);
+  }
+
   @Test
   public void getConfig_noChatClientsConfigured() throws Exception {
     writeFakePropertiesFile(new Properties());
