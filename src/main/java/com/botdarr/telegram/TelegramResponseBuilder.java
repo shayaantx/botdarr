@@ -115,7 +115,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
   @Override
   public TelegramResponse createErrorMessage(String message) {
     List<DomContent> domContents = new ArrayList<>();
-    domContents.add(b("Success! - " + message));
+    domContents.add(b("Error! - " + message));
     return new TelegramResponse(domContents);
   }
 
@@ -129,7 +129,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
   @Override
   public TelegramResponse createSuccessMessage(String message) {
     List<DomContent> domContents = new ArrayList<>();
-    domContents.add(u(b("Error! - " + message)));
+    domContents.add(u(b("Success! - " + message)));
     return new TelegramResponse(domContents);
   }
 
