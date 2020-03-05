@@ -231,6 +231,12 @@ public class SonarrApi implements Api {
       return chatClientResponseBuilder.createErrorMessage("Could not find sonarr profile for default " + sonarrProfile);
     }
     sonarrShow.setQualityProfileId((int) sonarrProfile.getId());
+    String username = CommandContext.getConfig().getUsername();
+    ApiRequests apiRequests = new ApiRequests();
+    if (apiRequests.checkRequestLimits() && !apiRequests.canMakeRequests(username)) {
+      ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
+      return chatClientResponseBuilder.createErrorMessage("Could not add show, user " + username + " has exceeded max requests for " + requestThreshold.getReadableName());
+    }
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl("series"));
 
@@ -242,7 +248,8 @@ public class SonarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return chatClientResponseBuilder.createErrorMessage("Could not add show, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
-        LogManager.getLogger("AuditLog").info("User " + CommandContext.getConfig().getUsername() + " added " + title);
+        LogManager.getLogger("AuditLog").info("User " + username + " added " + title);
+        apiRequests.auditRequest(username, title);
         return chatClientResponseBuilder.createSuccessMessage("Show " + title + " added, sonarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
