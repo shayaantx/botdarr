@@ -11,6 +11,10 @@ public class DatabaseHelper {
   }
 
   public File getDatabaseFile() {
-    return new File(System.getProperty("user.dir"), Config.Constants.DATABASE_NAME);
+    File databaseFile = new File("database", Config.Constants.DATABASE_NAME);
+    if (!databaseFile.getParentFile().exists()) {
+      databaseFile.getParentFile().mkdir();
+    }
+    return databaseFile;
   }
 }
