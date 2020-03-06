@@ -33,3 +33,4 @@ properties*
 *.log
 dependency-reduced-pom.xml
 *.jar
+*.db

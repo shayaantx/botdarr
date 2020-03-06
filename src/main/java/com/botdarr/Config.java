@@ -180,6 +180,21 @@ public class Config {
 
     //TODO: implement
     public static final String LIDARR_URL = "lidar-url";
+
+    /**
+     * The database name
+     */
+    public static final String DATABASE_NAME = "botdarr.db";
+
+    /**
+     * The max amount of requests per user per configured threshold
+     */
+    public static final String MAX_REQUESTS_PER_USER = "max-requests-per-user";
+
+    /**
+     * The max amount of requests per user per configured threshold
+     */
+    public static final String MAX_REQUESTS_THRESHOLD = "max-requests-threshold";
   }
 
   private static String propertiesPath = "config/properties";

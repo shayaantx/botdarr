@@ -88,6 +88,14 @@ sonarr-path=
 sonarr-default-profile=any
 # leave empty if you never changed this in sonarr
 sonarr-url-base=
+
+# If you don't want to limit user requests, don't set these properties
+# The max number of requests per user per month
+#max-requests-per-user=
+# The threshold type for max requests
+# WEEK, MONTH, DAY
+# WEEK is from monday to sunday
+#max-requests-threshold=
 ```
 
 1. Run the jar using java
@@ -102,14 +110,15 @@ nohup java -jar botdarr-release.jar &
 1. Create a folder on your host called "botdarr"
 1. Create a logs folder in the botdarr folder
 1. Put your properties file in botdarr folder inside a folder named "config"
+1. Create a folder called "database" in the botdarr folder
 1. Then run below command (replace BOTDARR_HOME variables)
 ```
 # for latest
-docker run -d --name botdarr -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:latest &
+docker run -d --name botdarr -v /BOTDARR_HOME/database:/home/botdarr/database -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:latest &
 
 # for stable
 
-docker run -d --name botdarr -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:stable &
+docker run -d --name botdarr -v /BOTDARR_HOME/database:/home/botdarr/database -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:stable &
 ```
 
 Or if you want to use docker-compose
@@ -122,6 +131,7 @@ botdarr:
     volumes:
        - /BOTDARR_HOME/properties:/home/botdarr/config/properties
        - /BOTDARR_HOME/logs:/home/botdarr/logs
+       - /BOTDARR_HOME/database:/home/botdarr/database
 ```
 
 

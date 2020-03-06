@@ -429,6 +429,8 @@ public class RadarrApiTests {
     Assert.assertEquals("Too many movies found, please narrow search", testResponses.get(0).responseMessage);
   }
 
+
+
   private static class TestResponse implements ChatClientResponse {
     private TestResponse() {}
     private TestResponse(RadarrMovie radarrMovie) {

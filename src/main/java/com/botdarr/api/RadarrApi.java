@@ -323,6 +323,12 @@ public class RadarrApi implements Api {
         LOGGER.debug("Client data=" + (json));
       }
 
+      String username = CommandContext.getConfig().getUsername();
+      ApiRequests apiRequests = new ApiRequests();
+      if (apiRequests.checkRequestLimits() && !apiRequests.canMakeRequests(username)) {
+        ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
+        return chatClientResponseBuilder.createErrorMessage("Could not add movie, user " + username + " has exceeded max requests for " + requestThreshold.getReadableName());
+      }
       try (CloseableHttpResponse response = client.execute(post)) {
         if (LOGGER.isDebugEnabled()) {
           LOGGER.debug("Respone=" + response.toString());
@@ -333,7 +339,8 @@ public class RadarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return chatClientResponseBuilder.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
-        LogManager.getLogger("AuditLog").info("User " + CommandContext.getConfig().getUsername() + " added " + radarrMovie.getTitle());
+        LogManager.getLogger("AuditLog").info("User " + username + " added " + radarrMovie.getTitle());
+        apiRequests.auditRequest(username, radarrMovie.getTitle());
         return chatClientResponseBuilder.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {

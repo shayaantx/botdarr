@@ -1,0 +1,1 @@
+create table user_requests (id integer primary key autoincrement not null, user varchar(128) not null, title text not null, dt date not null);
