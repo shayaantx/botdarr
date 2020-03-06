@@ -7,8 +7,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -38,7 +36,7 @@ public class ApiRequests {
         .sorted(Comparator.comparing(ApiRequestThreshold::getReadableName))
         .map(ApiRequestThreshold::getReadableName)
         .collect(Collectors.joining(", "));
-      LOGGER.error("Invalid threshold option: " + allRequestThresholds, e);
+      LOGGER.error("Invalid threshold option, valid options: " + allRequestThresholds, e);
       return false;
     }
     return true;
@@ -47,7 +45,7 @@ public class ApiRequests {
   public boolean canMakeRequests(String username) {
     ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
     int maxRequestsPerUser = Integer.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_PER_USER));
-    String url = DatabaseHelper.getJdbcUrl();
+    String url = databaseHelper.getJdbcUrl();
     try (Connection conn = DriverManager.getConnection(url)) {
       ResultSet rs = requestThreshold.getThresholdQuery(conn, username).executeQuery();
       while (rs.next()) {
@@ -61,7 +59,7 @@ public class ApiRequests {
   }
 
   public void auditRequest(String username, String title) {
-    try (Connection conn = DriverManager.getConnection(DatabaseHelper.getJdbcUrl())) {
+    try (Connection conn = DriverManager.getConnection(databaseHelper.getJdbcUrl())) {
       PreparedStatement preparedStatement = conn.prepareStatement("insert into user_requests (user, title, dt) values (?, ?, ?)");
       preparedStatement.setString(1, username.toLowerCase());
       preparedStatement.setString(2, title);
@@ -72,5 +70,6 @@ public class ApiRequests {
     }
   }
 
+  private final DatabaseHelper databaseHelper = new DatabaseHelper();
   private static final Logger LOGGER = LogManager.getLogger();
 }
