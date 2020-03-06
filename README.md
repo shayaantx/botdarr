@@ -37,9 +37,10 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
 
 1. Get latest copy of botdarr botdarr-release.jar
 1. Make sure you have openjdk 8 or oracle java 8 installed on your machine
+1. Create a folder called "database" in same folder you run jar in
 1. Create a file called "properties" (without double quotes) in same folder as the jar
 1. Fill it with the following properties (you can omit sonarr properties if you aren't using it, same with radarr, however everything else listed below is required)
-1. You can only configure discord or slack token/channels, otherwise you will get an error during startup
+1. You can only configure discord or slack or telegram token/channels, otherwise you will get an error during startup
 1. There are is an available option for url base for both radarr/sonarr. If you have a url base and use radarr WITHOUT configuring the url base here, 
 I've found radarr will execute most api requests normally, but /api/movie POST requests wont (assume this is a bug but haven't had time to investigate yet). 
 Radarr seems to return a 200 http code, not actually add the movie, and return json as if you are calling /api/movie as a GET request, unless you prefix 
