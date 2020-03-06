@@ -110,6 +110,7 @@ nohup java -jar botdarr-release.jar &
 1. Create a folder on your host called "botdarr"
 1. Create a logs folder in the botdarr folder
 1. Put your properties file in botdarr folder inside a folder named "config"
+1. Create a folder called "database" in the botdarr folder
 1. Then run below command (replace BOTDARR_HOME variables)
 ```
 # for latest
