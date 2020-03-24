@@ -13,6 +13,30 @@ import java.util.Comparator;
 import java.util.stream.Collectors;
 
 public class ApiRequests {
+  public int getMaxDownloadsToShow() {
+    String maxDownloadsToShow = Config.getProperty(Config.Constants.MAX_DOWNLOADS_TO_SHOW);
+    if (!Strings.isEmpty(maxDownloadsToShow)) {
+      try {
+        return Integer.valueOf(maxDownloadsToShow);
+      } catch (NumberFormatException e) {
+        LOGGER.error("Invalid max downloads to show configuration", e);
+      }
+    }
+    return 20;
+  }
+
+  public int getMaxResultsToShow() {
+    String maxResultsToShow = Config.getProperty(Config.Constants.MAX_RESULTS_TO_SHOW);
+    if (!Strings.isEmpty(maxResultsToShow)) {
+      try {
+        return Integer.valueOf(maxResultsToShow);
+      } catch (NumberFormatException e) {
+        LOGGER.error("Invalid max results to show configuration", e);
+      }
+    }
+    return 20;
+  }
+
   public boolean checkRequestLimits() {
     String maxRequestsPerUser = Config.getProperty(Config.Constants.MAX_REQUESTS_PER_USER);
     String maxRequestsThreshold = Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD);

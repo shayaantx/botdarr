@@ -20,27 +20,15 @@ import org.mockserver.model.MediaType;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 public class RadarrApiTests {
   @Before
-  public void beforeEachTest() throws Exception {
-    File propertiesFile = new File(temporaryFolder.getRoot(), "properties");
-    Deencapsulation.setField(Config.class, "propertiesPath", propertiesFile.getPath());
-    Properties properties = new Properties();
-    properties.setProperty("discord-token", "G$K$GK");
-    properties.setProperty("discord-channels", "plex-testing2");
-    properties.setProperty("radarr-url", "http://localhost:" + mockServerRule.getPort());
-    properties.setProperty("radarr-token", "FSJDkjmf#$Kf3");
-    properties.setProperty("radarr-path", "/movies");
-    properties.setProperty("radarr-default-profile", "any");
-    try (FileOutputStream fos = new FileOutputStream(propertiesFile)) {
-      properties.store(fos, "");
-    }
-
-    Deencapsulation.setField(Config.class, "instance", null);
+  public void beforeEachTest() {
+    writeFakePropertiesFile(getDefaultProperties());
   }
 
   @After
@@ -429,7 +417,21 @@ public class RadarrApiTests {
     Assert.assertEquals("Too many movies found, please narrow search", testResponses.get(0).responseMessage);
   }
 
+  @Test
+  public <T extends TestResponse> void downloads_downloadsFoundButConfiguredToShowNone() {
+    Properties properties = getDefaultProperties();
+    properties.put("max-downloads-to-show", "0");
+    writeFakePropertiesFile(properties);
+    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
 
+    //trigger api
+    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.downloads());
+
+    //verify response data
+    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
+    //only movie is downloading, but our config explicitly states no downloads should be shown
+    Assert.assertEquals(0, testResponses.size());
+  }
 
   private static class TestResponse implements ChatClientResponse {
     private TestResponse() {}
@@ -528,6 +530,33 @@ public class RadarrApiTests {
     @Override
     public TestResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
       return new TestResponse(radarrMovie);
+    }
+  }
+
+  private Properties getDefaultProperties() {
+    Properties properties = new Properties();
+    properties.setProperty("discord-token", "G$K$GK");
+    properties.setProperty("discord-channels", "plex-testing2");
+    properties.setProperty("radarr-url", "http://localhost:" + mockServerRule.getPort());
+    properties.setProperty("radarr-token", "FSJDkjmf#$Kf3");
+    properties.setProperty("radarr-path", "/movies");
+    properties.setProperty("radarr-default-profile", "any");
+    return properties;
+  }
+
+  private void writeFakePropertiesFile(Properties properties) {
+    File propertiesFile = null;
+    try {
+      new File(temporaryFolder.getRoot(), "properties").delete();
+      propertiesFile = temporaryFolder.newFile("properties");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    Deencapsulation.setField(Config.class, "propertiesPath", propertiesFile.getPath());
+    try (FileOutputStream fos = new FileOutputStream(propertiesFile)) {
+      properties.store(fos, "");
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 

@@ -18,6 +18,7 @@ import java.util.Properties;
 public class ApiRequestsTests {
   @Before
   public void beforeEachTest() {
+    //reset config singleton
     Deencapsulation.setField(Config.class, "instance", null);
   }
 
