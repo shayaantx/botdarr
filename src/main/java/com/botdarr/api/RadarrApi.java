@@ -430,7 +430,7 @@ public class RadarrApi implements Api {
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final RadarrCache RADARR_CACHE = new RadarrCache();
-  private static final int MAX_RESULTS_TO_SHOW = new ApiRequests().getMaxResultsToShow();
-  private static final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
+  private final int MAX_RESULTS_TO_SHOW = new ApiRequests().getMaxResultsToShow();
+  private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
   public static final String ADD_MOVIE_COMMAND_FIELD_PREFIX = "Add movie command";
 }
