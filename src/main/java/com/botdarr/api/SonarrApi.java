@@ -17,10 +17,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class SonarrApi implements Api {
   public SonarrApi(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
@@ -39,6 +36,9 @@ public class SonarrApi implements Api {
 
   @Override
   public List<ChatClientResponse> downloads() {
+    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
+      return Collections.emptyList();
+    }
     List<ChatClientResponse> chatClientResponses = getShowDownloads();
     if (chatClientResponses.isEmpty()) {
       chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No shows downloading"));
@@ -91,7 +91,7 @@ public class SonarrApi implements Api {
       if (restOfShows.size() == 0) {
         return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No new shows found, check existing movies"));
       }
-      return subList(restOfShows);
+      return subList(restOfShows, MAX_RESULTS_TO_SHOW);
     } catch (Exception e) {
       LOGGER.error("Error found trying to add show=" + searchText, e);
       return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error trying to add show " + searchText + ", e=" + e.getMessage()));
@@ -116,7 +116,7 @@ public class SonarrApi implements Api {
         return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " shows for search term=" + search));
       }
       if (responses.size() > MAX_RESULTS_TO_SHOW) {
-        responses = subList(responses);
+        responses = subList(responses, MAX_RESULTS_TO_SHOW);
         responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many shows found, limiting results to " + MAX_RESULTS_TO_SHOW));
       }
       return responses;
@@ -156,6 +156,10 @@ public class SonarrApi implements Api {
 
   @Override
   public void sendPeriodicNotifications(ChatClient chatClient) {
+    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
+      LOGGER.debug("Bot configured to show no downloads");
+      return;
+    }
     List<ChatClientResponse> downloads = getShowDownloads();
     if (downloads != null && !downloads.isEmpty()) {
       chatClient.sendToConfiguredChannels(downloads);
@@ -207,9 +211,9 @@ public class SonarrApi implements Api {
           }
           responses.add(chatClientResponseBuilder.getShowDownloadResponses(showQueue));
         }
-        if (json.size() >= MAX_RESULTS_TO_SHOW) {
-          responses = subList(responses);
-          responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_RESULTS_TO_SHOW));
+        if (json.size() >= MAX_DOWNLOADS_TO_SHOW) {
+          responses = subList(responses, MAX_DOWNLOADS_TO_SHOW);
+          responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_DOWNLOADS_TO_SHOW));
         }
         return responses;
       }
@@ -302,12 +306,9 @@ public class SonarrApi implements Api {
     }
   };
 
-  private List<ChatClientResponse> subList(List<ChatClientResponse> responses) {
-    return responses.subList(0, responses.size() > MAX_RESULTS_TO_SHOW ? MAX_RESULTS_TO_SHOW - 1 : responses.size());
-  }
-
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
-  private static final int MAX_RESULTS_TO_SHOW = 20;
+  private final int MAX_RESULTS_TO_SHOW = new ApiRequests().getMaxResultsToShow();
+  private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
   public static final String ADD_SHOW_COMMAND_FIELD_PREFIX = "Add show command";
 }

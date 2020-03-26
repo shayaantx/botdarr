@@ -20,6 +20,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
@@ -68,6 +69,9 @@ public class RadarrApi implements Api {
 
   @Override
   public List<ChatClientResponse> downloads() {
+    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
+      return Collections.emptyList();
+    }
     List<ChatClientResponse> chatClientResponses = getMovieDownloads();
     if (chatClientResponses.isEmpty()) {
       chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No movies downloading"));
@@ -98,7 +102,7 @@ public class RadarrApi implements Api {
         restOfMovies.add(chatClientResponseBuilder.getMovie(radarrMovie));
       }
       if (restOfMovies.size() > 1) {
-        restOfMovies = subList(restOfMovies);
+        restOfMovies = subList(restOfMovies, MAX_RESULTS_TO_SHOW);
         restOfMovies.add(0, chatClientResponseBuilder.createInfoMessage("Too many movies found, please narrow search"));
       }
       if (restOfMovies.size() == 0) {
@@ -217,6 +221,10 @@ public class RadarrApi implements Api {
 
   @Override
   public void sendPeriodicNotifications(ChatClient chatClient) {
+    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
+      LOGGER.debug("Bot configured to show no downloads");
+      return;
+    }
     List<ChatClientResponse> downloads = getMovieDownloads();
     if (downloads != null && !downloads.isEmpty()) {
       chatClient.sendToConfiguredChannels(downloads);
@@ -284,14 +292,14 @@ public class RadarrApi implements Api {
         List<ChatClientResponse> chatClientResponses = new ArrayList<>();
         JsonParser parser = new JsonParser();
         JsonArray json = parser.parse(response).getAsJsonArray();
-        boolean tooManyDownloads = json.size() >= MAX_RESULTS_TO_SHOW;
+        boolean tooManyDownloads = json.size() >= MAX_DOWNLOADS_TO_SHOW;
         for (int i = 0; i < json.size(); i++) {
           RadarrQueue radarrQueue = new Gson().fromJson(json.get(i), RadarrQueue.class);
           chatClientResponses.add(chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue));
         }
         if (tooManyDownloads) {
-          chatClientResponses = subList(chatClientResponses);
-          chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_RESULTS_TO_SHOW));
+          chatClientResponses = subList(chatClientResponses, MAX_DOWNLOADS_TO_SHOW);
+          chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_DOWNLOADS_TO_SHOW));
         }
         return chatClientResponses;
       }
@@ -420,12 +428,9 @@ public class RadarrApi implements Api {
     });
   }
 
-  private List<ChatClientResponse> subList(List<ChatClientResponse> responses) {
-    return responses.subList(0, responses.size() > MAX_RESULTS_TO_SHOW ? MAX_RESULTS_TO_SHOW - 1 : responses.size());
-  }
-
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final RadarrCache RADARR_CACHE = new RadarrCache();
-  private static final int MAX_RESULTS_TO_SHOW = 20;
+  private final int MAX_RESULTS_TO_SHOW = new ApiRequests().getMaxResultsToShow();
+  private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
   public static final String ADD_MOVIE_COMMAND_FIELD_PREFIX = "Add movie command";
 }

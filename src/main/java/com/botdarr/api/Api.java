@@ -53,5 +53,9 @@ public interface Api {
     }
   }
 
+  default List<ChatClientResponse> subList(List<ChatClientResponse> responses, int max) {
+    return responses.subList(0, responses.size() > max ? max - 1 : responses.size());
+  }
+
   static final Logger LOGGER = LogManager.getLogger();
 }

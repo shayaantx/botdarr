@@ -97,6 +97,14 @@ sonarr-url-base=
 # WEEK, MONTH, DAY
 # WEEK is from monday to sunday
 #max-requests-threshold=
+
+# The max number of downloads to show (default is 20)
+# If you set this to any value less than or equal to 0, no downloads will show
+#max-downloads-to-show=20
+
+# The max number of results to show per search command (default is 20)
+# If you set this to any value less than 0, the bot won't startup
+#max-results-to-show=20
 ```
 
 1. Run the jar using java
