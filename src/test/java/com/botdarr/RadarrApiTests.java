@@ -545,6 +545,7 @@ public class RadarrApiTests {
   }
 
   private void writeFakePropertiesFile(Properties properties) {
+    Deencapsulation.setField(Config.class, "instance", null);
     File propertiesFile = null;
     try {
       new File(temporaryFolder.getRoot(), "properties").delete();
