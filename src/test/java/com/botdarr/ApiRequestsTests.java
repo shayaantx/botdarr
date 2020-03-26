@@ -105,6 +105,67 @@ public class ApiRequestsTests {
     testRequestThreshold(1, 2, "MONTH", false);
   }
 
+  @Test
+  public void getMaxDownloadsToShow_notConfiguredDefaultReturned() {
+    writeFakePropertiesFile(getDefaultProperties());
+    //20 is the default when max-downloads-to-show is not configured
+    Assert.assertEquals(20, new ApiRequests().getMaxDownloadsToShow());
+  }
+
+  @Test
+  public void getMaxDownloadsToShow_configuredValueNotANumber() {
+    MockedLogger mockedLogger = new MockedLogger(
+      "Invalid max downloads to show configuration",
+      new NumberFormatException("For input string: \"25x\""));
+    Properties properties = getDefaultProperties();
+    properties.put("max-downloads-to-show", "25x");
+    writeFakePropertiesFile(properties);
+
+    //even when the configured max-downloads-to-show incorrectly, the default is 20
+    Assert.assertEquals(20, new ApiRequests().getMaxDownloadsToShow());
+    mockedLogger.validate();
+  }
+
+  @Test
+  public void getMaxDownloadsToShow_configuredValueReturned() {
+    Properties properties = getDefaultProperties();
+    properties.put("max-downloads-to-show", "25");
+    writeFakePropertiesFile(properties);
+
+    Assert.assertEquals(25, new ApiRequests().getMaxDownloadsToShow());
+  }
+
+
+  @Test
+  public void getMaxResultsToShow_notConfiguredDefaultReturned() {
+    writeFakePropertiesFile(getDefaultProperties());
+    //20 is the default when max-results-to-show is not configured
+    Assert.assertEquals(20, new ApiRequests().getMaxResultsToShow());
+  }
+
+  @Test
+  public void getMaxResultsToShow_configuredValueNotANumber() {
+    MockedLogger mockedLogger = new MockedLogger(
+      "Invalid max results to show configuration",
+      new NumberFormatException("For input string: \"25x\""));
+    Properties properties = getDefaultProperties();
+    properties.put("max-results-to-show", "25x");
+    writeFakePropertiesFile(properties);
+
+    //even when the configured max-results-to-show incorrectly, the default is 20
+    Assert.assertEquals(20, new ApiRequests().getMaxResultsToShow());
+    mockedLogger.validate();
+  }
+
+  @Test
+  public void getMaxResultsToShow_configuredValueReturned() {
+    Properties properties = getDefaultProperties();
+    properties.put("max-results-to-show", "25");
+    writeFakePropertiesFile(properties);
+
+    Assert.assertEquals(25, new ApiRequests().getMaxResultsToShow());
+  }
+
   private void testRequestThreshold(int maxRequestsToAdd, int maxRequestsAllowed, String threshold, boolean expectExceedsThreshold) throws Exception {
     //create temporary database
     new MockedDatabase(temporaryFolder.newFile());
