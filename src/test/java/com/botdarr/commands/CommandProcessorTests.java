@@ -4,9 +4,7 @@ import com.botdarr.TestResponse;
 import com.botdarr.TestResponseBuilder;
 import com.botdarr.api.RadarrApi;
 import com.botdarr.api.SonarrApi;
-import mockit.Injectable;
-import mockit.Mock;
-import mockit.MockUp;
+import mockit.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,8 +62,70 @@ public class CommandProcessorTests {
   }
 
   @Test
-  public void processMessage_missingMovieTitleAddCommand() {
-    validateInvalidCommand("!movie id add 541515", "");
+  public void processMessage_missingMovieTitleAndIdForAddCommand() {
+    validateInvalidCommand("!movie id add",
+      "Error trying to parse command !movie id add, " +
+        "error=Missing expected arguments - usage: movie id add MOVIE_TITLE_HERE MOVIE_ID_HERE");
+  }
+
+  @Test
+  public void processMessage_missingMovieTitleForAddCommand() {
+    validateInvalidCommand("!movie id add 541515",
+      "Error trying to parse command !movie id add 541515, " +
+      "error=Missing expected arguments - usage: movie id add MOVIE_TITLE_HERE MOVIE_ID_HERE");
+  }
+
+  @Test
+  public void processMessage_missingMovieIdForAddCommand() {
+    validateInvalidCommand("!movie id add Princess5",
+      "Error trying to parse command !movie id add Princess5, " +
+        "error=Missing expected arguments - usage: movie id add MOVIE_TITLE_HERE MOVIE_ID_HERE");
+  }
+
+  @Test
+  public void processMessage_invalidMovieIdForAddCommand() {
+    validateInvalidCommand("!movie id add Princess5 4647x5",
+      "Error trying to parse command !movie id add Princess5 4647x5, " +
+        "error=Movie id is not a number");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleAndIdForAddCommand() {
+    new Expectations() {{
+      radarrApi.addWithId("princess5", "46475"); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie id add Princess5 46475");
+  }
+
+  @Test
+  public void processMessage_validMovieWithSpacesInTitleForAddCommand() {
+    new Expectations() {{
+      radarrApi.addWithId("princess 5", "46475"); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie id add Princess 5 46475");
+  }
+
+  @Test
+  public void processMessage_invalidMovieTitleForAddCommand() {
+    validateInvalidCommand("!movie title add",
+      "Error trying to parse command !movie title add, " +
+        "error=Movie title is missing");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleForAddCommand() {
+    new Expectations() {{
+      radarrApi.addWithTitle("princess5"); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie title add Princess5");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleWithSpacesForAddCommand() {
+    new Expectations() {{
+      radarrApi.addWithTitle("princess 5"); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie title add Princess 5");
   }
 
   private void validateNoArgCommands(String command) {
@@ -74,21 +134,21 @@ public class CommandProcessorTests {
     //validate an extra space around the extra character after the command is invalid
     validateInvalidCommandIdentifier(command + " x ");
     //validate an extra space after the command is trimmed and the command is still valid
-    validateValidCommandIdentifier(command + " ");
+    validateValidCommand(command + " ");
     //validate the command itself is valid
-    validateValidCommandIdentifier(command);
+    validateValidCommand(command);
   }
 
   private void validateInvalidCommandIdentifier(String invalidCommand) {
     validateInvalidCommand(invalidCommand, "Invalid command - type !help for command usage");
   }
 
-  private void validateValidCommandIdentifier(String validCommand) {
+  private void validateValidCommand(String validCommand) {
     CommandProcessor commandProcessor = new CommandProcessor();
     CommandResponse<TestResponse> commandResponse =
       commandProcessor.processMessage(getCommandsToTest(), validCommand, "user1", responseBuilder);
     //we are just making sure no response is returned as another tests validates that part of the command/api
-    if (commandResponse.getSingleChatClientResponse() != null) {
+    if (commandResponse.getSingleChatClientResponse() != null && commandResponse.getSingleChatClientResponse() instanceof TestResponse) {
       Assert.assertNull(commandResponse.getSingleChatClientResponse().getResponseMessage());
     }
   }

@@ -26,7 +26,7 @@ public class CommandProcessor {
           String command = apiCommand.getIdentifier().toLowerCase();
           boolean foundCommand = apiCommand.hasArguments() ? rawMessageWithoutPrefix.startsWith(command) : rawMessageWithoutPrefix.equalsIgnoreCase(command);
           if (foundCommand) {
-            String commandOperation = rawMessage.replaceAll(command, "");
+            String commandOperation = rawMessageWithoutPrefix.replaceAll(command, "");
             try {
               CommandContext
                 .start()
