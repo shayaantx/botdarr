@@ -63,7 +63,7 @@ public enum ChatClientType {
               //for now we leave the author as "telegram" till a better solution arises
               String author = "telegram";
               CommandResponse commandResponse =
-                processMessage(config.commands, text, author, responseChatClientResponseBuilder);
+                commandProcessor.processMessage(config.commands, text, author, responseChatClientResponseBuilder);
               if (commandResponse != null) {
                 telegramChatClient.sendMessage(commandResponse, message.chat());
               }
@@ -145,7 +145,7 @@ public enum ChatClientType {
             DiscordChatClient discordChatClient = new DiscordChatClient(jda);
 
             //capture/process command
-            CommandResponse commandResponse = processMessage(
+            CommandResponse commandResponse = commandProcessor.processMessage(
               config.commands,
               message,
               author,
@@ -234,7 +234,7 @@ public enum ChatClientType {
 
         private void handleCommand(String text, String userId, String channel) {
           //capture/process the command
-          CommandResponse commandResponse = processMessage(
+          CommandResponse commandResponse = commandProcessor.processMessage(
             config.commands,
             text,
             userId,
@@ -271,31 +271,6 @@ public enum ChatClientType {
     scheduler.initApiCaching(apis);
   }
 
-  <T extends ChatClientResponse, Z extends Api> CommandResponse processMessage(List<Command> apiCommands,
-                                                                              String strippedMessage,
-                                                                              String name,
-                                                                              ChatClientResponseBuilder<T> chatClientResponseBuilder) {
-    try {
-      for (Command apiCommand : apiCommands) {
-        if (strippedMessage.startsWith(apiCommand.getIdentifier())) {
-          String commandOperation = strippedMessage.replaceAll(apiCommand.getIdentifier().toLowerCase(), "");
-          try {
-            CommandContext
-              .start()
-              .setUsername(name);
-            return apiCommand.execute(commandOperation.trim());
-          } finally {
-            CommandContext.end();
-          }
-        }
-      }
-    } catch (Exception e) {
-      LOGGER.error("Error trying to execute command " + strippedMessage, e);
-      return new CommandResponse(chatClientResponseBuilder.createErrorMessage("Error trying to parse command " + strippedMessage));
-    }
-    return null;
-  }
-
   public abstract void init() throws Exception;
   public abstract boolean isConfigured(Properties properties);
   public abstract String getReadableName();
@@ -330,5 +305,6 @@ public enum ChatClientType {
     private final List<Command> commands;
   }
 
+  private static CommandProcessor commandProcessor = new CommandProcessor();
   private static final Logger LOGGER = LogManager.getLogger(ChatClientType.class);
 }

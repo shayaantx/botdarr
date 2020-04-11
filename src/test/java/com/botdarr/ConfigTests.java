@@ -18,6 +18,18 @@ public class ConfigTests {
   }
 
   @Test
+  public void getConfig_invalidCommandPrefixConfigured() throws Exception {
+  Properties properties = new Properties();
+    properties.put("discord-token", "#$F#$#");
+    properties.put("discord-channels", "channel1");
+    properties.put("command-prefix", "//");
+    writeFakePropertiesFile(properties);
+    expectedException.expect(RuntimeException.class);
+    expectedException.expectMessage("Command prefix must be a single character");
+    Config.getProperty("");
+  }
+
+  @Test
   public void getConfig_noChatClientsConfigured() throws Exception {
     writeFakePropertiesFile(new Properties());
     expectedException.expect(RuntimeException.class);

@@ -11,24 +11,36 @@ public class HelpCommands {
                                           List<Command> radarrCommands,
                                           List<Command> sonarrCommands) {
     return new ArrayList<Command>() {{
-      add(new BaseCommand("help", "") {
+      add(new BaseHelpCommand("help", "") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           return new CommandResponse(chatClientResponseBuilder.getHelpResponse());
         }
       });
-      add(new BaseCommand("movies help", "") {
+      add(new BaseHelpCommand("movies help", "") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           return new CommandResponse(chatClientResponseBuilder.getMoviesHelpResponse(radarrCommands));
         }
       });
-      add(new BaseCommand("shows help", "") {
+      add(new BaseHelpCommand("shows help", "") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           return new CommandResponse(chatClientResponseBuilder.getShowsHelpResponse(sonarrCommands));
         }
       });
     }};
+  }
+
+  private static abstract class BaseHelpCommand extends BaseCommand {
+
+    public BaseHelpCommand(String commandText, String description) {
+      super(commandText, description);
+    }
+
+    @Override
+    public boolean hasArguments() {
+      return false;
+    }
   }
 }

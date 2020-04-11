@@ -28,11 +28,21 @@ public class SonarrCommands {
       });
       add(new BaseCommand("show downloads", "Shows all the active shows downloading in sonarr") {
         @Override
+        public boolean hasArguments() {
+          return false;
+        }
+
+        @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           return new CommandResponse(sonarrApi.downloads());
         }
       });
       add(new BaseCommand("show profiles", "Displays all the profiles available to search for shows under (i.e., show add ANY)") {
+        @Override
+        public boolean hasArguments() {
+          return false;
+        }
+
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           return new CommandResponse(sonarrApi.getProfiles());

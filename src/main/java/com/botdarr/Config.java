@@ -68,6 +68,11 @@ public class Config {
       if (!this.isSonarrEnabled) {
         LOGGER.warn("Sonarr commands are not enabled, make sure you set the sonarr url, path, token, default profile");
       }
+
+      String configuredPrefix = properties.getProperty(Config.Constants.COMMAND_PREFIX);
+      if (!Strings.isEmpty(configuredPrefix)  && configuredPrefix.length() > 1) {
+        throw new RuntimeException("Command prefix must be a single character");
+      }
     } catch (Exception ex) {
       LOGGER.error("Error loading properties file", ex);
       throw new RuntimeException(ex);
@@ -205,6 +210,11 @@ public class Config {
      * The max number of results to show per search command
      */
     public static final String MAX_RESULTS_TO_SHOW = "max-results-to-show";
+
+    /**
+     * The prefix for all commands
+     */
+    public static final String COMMAND_PREFIX = "command-prefix";
   }
 
   private static String propertiesPath = "config/properties";
