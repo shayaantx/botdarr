@@ -219,7 +219,112 @@ public class CommandProcessorTests {
     }};
     validateValidCommand("!movie find all downloads Princess 5");
   }
-  
+
+  @Test
+  public void processMessage_missingShowTitleAndIdForAddCommand() {
+    validateInvalidCommand("!show id add",
+      "Error trying to parse command !show id add, " +
+        "error=Missing expected arguments - usage: show id add SHOW_TITLE_HERE SHOW_ID_HERE");
+  }
+
+  @Test
+  public void processMessage_missingShowTitleForAddCommand() {
+    validateInvalidCommand("!show id add 541515",
+      "Error trying to parse command !show id add 541515, " +
+        "error=Missing expected arguments - usage: show id add SHOW_TITLE_HERE SHOW_ID_HERE");
+  }
+
+  @Test
+  public void processMessage_missingShowIdForAddCommand() {
+    validateInvalidCommand("!show id add Princess5",
+      "Error trying to parse command !show id add Princess5, " +
+        "error=Missing expected arguments - usage: show id add SHOW_TITLE_HERE SHOW_ID_HERE");
+  }
+
+  @Test
+  public void processMessage_invalidShowIdForAddCommand() {
+    validateInvalidCommand("!show id add Princess5 4647x5",
+      "Error trying to parse command !show id add Princess5 4647x5, " +
+        "error=Show id is not a number");
+  }
+
+  @Test
+  public void processMessage_validShowTitleAndIdForAddCommand() {
+    new Expectations() {{
+      sonarrApi.addWithId("princess5", "46475"); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!show id add Princess5 46475");
+  }
+
+  @Test
+  public void processMessage_invalidShowTitleForAddCommand() {
+    validateInvalidCommand("!show title add",
+      "Error trying to parse command !show title add, " +
+        "error=Show title is missing");
+  }
+
+  @Test
+  public void processMessage_validShowTitleForAddCommand() {
+    new Expectations() {{
+      sonarrApi.addWithTitle("princess5"); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!show title add Princess5");
+  }
+
+  @Test
+  public void processMessage_validShowTitleWithSpacesForAddCommand() {
+    new Expectations() {{
+      sonarrApi.addWithTitle("princess 5"); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!show title add Princess 5");
+  }
+
+  @Test
+  public void processMessage_invalidShowTitleForFindNewShowCommand() {
+    validateInvalidCommand("!show find new",
+      "Error trying to parse command !show find new, " +
+        "error=Show title is missing");
+  }
+
+  @Test
+  public void processMessage_validShowTitleForFindNewShowCommand() {
+    new Expectations() {{
+      sonarrApi.lookup("princess5", true); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!show find new Princess5");
+  }
+
+  @Test
+  public void processMessage_validShowTitleWithSpacesForFindNewShowCommand() {
+    new Expectations() {{
+      sonarrApi.lookup("princess 5", true); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!show find new Princess 5");
+  }
+
+  @Test
+  public void processMessage_invalidShowTitleForFindExistingShowCommand() {
+    validateInvalidCommand("!show find existing",
+      "Error trying to parse command !show find existing, " +
+        "error=Show title is missing");
+  }
+
+  @Test
+  public void processMessage_validShowTitleForFindExistingShowCommand() {
+    new Expectations() {{
+      sonarrApi.lookup("princess5", false); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!show find existing Princess5");
+  }
+
+  @Test
+  public void processMessage_validShowTitleWithSpacesForFindExistingShowCommand() {
+    new Expectations() {{
+      sonarrApi.lookup("princess 5", false); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!show find existing Princess 5");
+  }
+
   private void validateNoArgCommands(String command) {
     //validate an extra character after the command is invalid
     validateInvalidCommandIdentifier(command + "x");
