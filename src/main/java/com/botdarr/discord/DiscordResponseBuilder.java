@@ -5,6 +5,8 @@ import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.api.radarr.*;
 import com.botdarr.commands.Command;
+import com.botdarr.commands.RadarrCommands;
+import com.botdarr.commands.SonarrCommands;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.apache.commons.io.FileUtils;
@@ -61,7 +63,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle(show.getTitle());
     embedBuilder.addField("TvdbId", "" + show.getTvdbId(), false);
-    embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, "show id add " + show.getTitle() + " " + show.getTvdbId(), false);
+    embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, SonarrCommands.getAddShowCommandStr(show.getTitle(), show.getTvdbId()), false);
     embedBuilder.setImage(show.getRemotePoster());
     return new DiscordResponse(embedBuilder.build());
   }
@@ -176,7 +178,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle(sonarrShow.getTitle());
     embedBuilder.addField("TvdbId", "" + sonarrShow.getTvdbId(), true);
     if (findNew) {
-      embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, "show id add " + sonarrShow.getTitle() + " " + sonarrShow.getTvdbId(), false);
+      embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId()), false);
     } else {
       embedBuilder.addField("Id", "" + existingShow.getId(), true);
       if (existingShow.getSeasons() != null) {
@@ -198,7 +200,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle(radarrMovie.getTitle());
     embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
     if (findNew) {
-      embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+      embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()), false);
     } else {
       embedBuilder.addField("Id", "" + existingMovie.getId(), false);
       embedBuilder.addField("Downloaded", existingMovie.isDownloaded() + "", false);
@@ -213,7 +215,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle(radarrMovie.getTitle());
     embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
-    embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId(), false);
+    embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()), false);
     embedBuilder.setImage(radarrMovie.getRemotePoster());
     return new DiscordResponse(embedBuilder.build());
   }

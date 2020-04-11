@@ -5,6 +5,8 @@ import com.botdarr.api.radarr.*;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.Command;
+import com.botdarr.commands.RadarrCommands;
+import com.botdarr.commands.SonarrCommands;
 import j2html.tags.DomContent;
 import org.apache.commons.io.FileUtils;
 
@@ -201,7 +203,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     domContents.add(b("*Title* - " + sonarrShow.getTitle()));
     domContents.add(code("TvdbId - " + sonarrShow.getTvdbId()));
     if (findNew) {
-      domContents.add(u(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + "show id add " + sonarrShow.getTitle() + " " + sonarrShow.getTvdbId()));
+      domContents.add(u(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId())));
     } else {
       StringBuilder existingShowDetails = new StringBuilder();
       existingShowDetails.append("Number of seasons - " + existingShow.getSeasons().size() + "\n");
@@ -220,7 +222,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b(lookupMovie.getTitle()));
     if (findNew) {
-      domContents.add(u(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + lookupMovie.getTitle() + " " + lookupMovie.getTmdbId()));
+      domContents.add(u(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + RadarrCommands.getAddMovieCommandStr(lookupMovie.getTitle(), lookupMovie.getTmdbId())));
     } else {
       StringBuilder existingDetails = new StringBuilder();
       existingDetails.append("Id - " + existingMovie.getId() + "\n");
@@ -237,7 +239,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b(radarrMovie.getTitle()));
     domContents.add(text("TmdbId - " + radarrMovie.getTmdbId()));
-    domContents.add(u(b(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId())));
+    domContents.add(u(b(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()))));
     domContents.add(a(radarrMovie.getRemotePoster()));
     return new TelegramResponse(domContents);
   }
