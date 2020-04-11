@@ -128,6 +128,98 @@ public class CommandProcessorTests {
     validateValidCommand("!movie title add Princess 5");
   }
 
+  @Test
+  public void processMessage_invalidMovieTitleForFindNewMovieCommand() {
+    validateInvalidCommand("!movie find new",
+      "Error trying to parse command !movie find new, " +
+      "error=Movie title is missing");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleForFindNewMovieCommand() {
+    new Expectations() {{
+      radarrApi.lookup("princess5", true); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie find new Princess5");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleWithSpacesForFindNewMovieCommand() {
+    new Expectations() {{
+      radarrApi.lookup("princess 5", true); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie find new Princess 5");
+  }
+
+  @Test
+  public void processMessage_invalidMovieTitleForFindExistingMovieCommand() {
+    validateInvalidCommand("!movie find existing",
+      "Error trying to parse command !movie find existing, " +
+        "error=Movie title is missing");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleForFindExistingMovieCommand() {
+    new Expectations() {{
+      radarrApi.lookup("princess5", false); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie find existing Princess5");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleWithSpacesForFindExistingMovieCommand() {
+    new Expectations() {{
+      radarrApi.lookup("princess 5", false); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie find existing Princess 5");
+  }
+
+  @Test
+  public void processMessage_invalidMovieTitleForFindDownloadsCommand() {
+    validateInvalidCommand("!movie find downloads",
+      "Error trying to parse command !movie find downloads, " +
+        "error=Movie title is missing");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleForFindDownloadsCommand() {
+    new Expectations() {{
+      radarrApi.lookupTorrents("princess5", false); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie find downloads Princess5");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleWithSpacesForFindDownloadsCommand() {
+    new Expectations() {{
+      radarrApi.lookupTorrents("princess 5", false); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie find downloads Princess 5");
+  }
+
+  @Test
+  public void processMessage_invalidMovieTitleForFindAllDownloadsCommand() {
+    validateInvalidCommand("!movie find all downloads",
+      "Error trying to parse command !movie find all downloads, " +
+        "error=Movie title is missing");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleForFindAllDownloadsCommand() {
+    new Expectations() {{
+      radarrApi.lookupTorrents("princess5", true); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie find all downloads Princess5");
+  }
+
+  @Test
+  public void processMessage_validMovieTitleWithSpacesForFindAllDownloadsCommand() {
+    new Expectations() {{
+      radarrApi.lookupTorrents("princess 5", true); times = 1; result = new TestResponse();
+    }};
+    validateValidCommand("!movie find all downloads Princess 5");
+  }
+  
   private void validateNoArgCommands(String command) {
     //validate an extra character after the command is invalid
     validateInvalidCommandIdentifier(command + "x");
