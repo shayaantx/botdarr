@@ -152,9 +152,9 @@ botdarr:
 
 ## Usage
 
-* Type help in discord to get information about commands and what is supported
-* Type movies help in discord to get information about movie commands
-* Every minute notifications will appear indicating the current downloads, their status, and their time remaining.
+* Type /help in discord to get information about commands and what is supported
+* Type /movies help in discord to get information about movie commands
+* Notifications will appear indicating the current downloads (based on your configuration for max downloads), their status, and their time remaining.
 * (discord only for now) When you react to movie/show results with add commands in the result with a "thumbs up" the content will be added.
 
 <br/>
@@ -169,21 +169,21 @@ botdarr:
    - Although this functionality is not complete yet, as movies with similar titles will conflict and not show you downloads.
    - I also need to somehow add functionality to let you force specific downloads as well.
 
-2. movie title add
+2. /movie title add
    - This command will specifically try to add a movie based on title alone. Sometimes there are movies that have same titles or very similar titles
    - When the title cannot be added by title alone, multiple movies will be returned. Embedded in the results is a command to add the movie with an id
    - The command will look something "movie add John Wick: Chapter 4 603692". This command uses the movie title plus the TMDBID to add the movie
 
-3. movie profiles
+3. /movie profiles
    - and this profile is used when identifying downloads.
    - This command shows you all the profiles available in radarr, it does NOT tell you which is the default profile. The default profile is configured by the bot admin
    - and this profile is used when identifying downloads.
 
-4. movie find new
+4. /movie find new
    - This command uses radarr search api to identify new films.
    - Embedded in the results are commands to add the films directly, like "movie add Ad Astra 570820"
 
-5. movie find existing
+5. /movie find existing
    - This command finds any existing films and gives you information about them.
    - It will tell you if the movie has been downloaded and if the radarr has the file.
 
