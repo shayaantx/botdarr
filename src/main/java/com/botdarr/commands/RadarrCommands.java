@@ -26,27 +26,22 @@ public class RadarrCommands {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           int lastSpace = command.lastIndexOf(" ");
+          if (lastSpace == -1) {
+            throw new RuntimeException("Missing expected arguments - usage: movie id add MOVIE_TITLE_HERE MOVIE_ID_HERE");
+          }
           String searchText = command.substring(0, lastSpace);
           String id = command.substring(lastSpace + 1);
-          if (Strings.isEmpty(searchText)) {
-            throw new IllegalArgumentException("Movie title is missing");
-          }
-          if (Strings.isEmpty(id)) {
-            throw new IllegalArgumentException("Movie id is missing");
-          }
-          try {
-            Integer.valueOf(id);
-          } catch (NumberFormatException e) {
-            throw new RuntimeException("Movie id is not a number");
-          }
+          validateMovieTitle(searchText);
+          validateMovieId(id);
           return new CommandResponse(radarrApi.addWithId(searchText, id));
         }
       });
       add(new BaseCommand("movie title add", "Adds a movie with just a title. Since many movies can have same title or very similar titles, the trakt" +
         " search can return multiple movies, if we detect multiple new films, we will return those films, otherwise we will add the single film.") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse(radarrApi.addWithTitle(command));
+        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
+          validateMovieTitle(searchText);
+          return new CommandResponse(radarrApi.addWithTitle(searchText));
         }
       });
       add(new BaseCommand("movie profiles", "Displays all the profiles available to search for movies under (i.e., movie title add MOVIE_TITLE_HERE)") {
@@ -62,14 +57,16 @@ public class RadarrCommands {
       });
       add(new BaseCommand("movie find new", "Finds a new movie using radarr (i.e., movie find new John Wick)") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse(radarrApi.lookup(command, true));
+        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
+          validateMovieTitle(searchText);
+          return new CommandResponse(radarrApi.lookup(searchText, true));
         }
       });
       add(new BaseCommand("movie find existing", "Finds an existing movie using radarr (i.e., movie find existing Princess Fudgecake)") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse(radarrApi.lookup(command, false));
+        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
+          validateMovieTitle(searchText);
+          return new CommandResponse(radarrApi.lookup(searchText, false));
         }
       });
       add(new BaseCommand("movie find downloads", "Lists all the available (not rejected) torrents for a movie (i.e., movie find downloads TITLE OF MOVIE). " +
@@ -77,14 +74,16 @@ public class RadarrCommands {
         " in your Radarr settings and particularly how fast each indexer is. Also these are torrents that have not been marked as rejected based" +
         " on whatever quality/profile settings are configured in Radarr") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse(radarrApi.lookupTorrents(command, false));
+        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
+          validateMovieTitle(searchText);
+          return new CommandResponse(radarrApi.lookupTorrents(searchText, false));
         }
       });
       add(new BaseCommand("movie find all downloads", "List all the available torrents for a movie whether they are rejected by radarr or not") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse(radarrApi.lookupTorrents(command, true));
+        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
+          validateMovieTitle(searchText);
+          return new CommandResponse(radarrApi.lookupTorrents(searchText, true));
         }
       });
       add(new BaseCommand("movie hash download", "Force downloads a movie using a hash string, you can only get from the command 'movie find all downloads'") {
@@ -111,5 +110,22 @@ public class RadarrCommands {
         }
       });
     }};
+  }
+
+  private static void validateMovieTitle(String movieTitle) {
+    if (Strings.isEmpty(movieTitle)) {
+      throw new IllegalArgumentException("Movie title is missing");
+    }
+  }
+
+  private static void validateMovieId(String id) {
+    if (Strings.isEmpty(id)) {
+      throw new IllegalArgumentException("Movie id is missing");
+    }
+    try {
+      Integer.valueOf(id);
+    } catch (NumberFormatException e) {
+      throw new RuntimeException("Movie id is not a number");
+    }
   }
 }
