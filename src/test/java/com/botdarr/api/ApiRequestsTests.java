@@ -1,6 +1,6 @@
-package com.botdarr;
+package com.botdarr.api;
 
-import com.botdarr.api.ApiRequests;
+import com.botdarr.Config;
 import com.botdarr.database.Bootstrap;
 import com.botdarr.database.DatabaseHelper;
 import mockit.*;

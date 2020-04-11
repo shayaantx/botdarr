@@ -1,13 +1,9 @@
-package com.botdarr;
+package com.botdarr.api;
 
-import com.botdarr.api.RadarrApi;
+import com.botdarr.Config;
+import com.botdarr.TestResponse;
+import com.botdarr.TestResponseBuilder;
 import com.botdarr.api.radarr.*;
-import com.botdarr.api.sonarr.SonarrProfile;
-import com.botdarr.api.sonarr.SonarrQueue;
-import com.botdarr.api.sonarr.SonarrShow;
-import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.clients.ChatClientResponseBuilder;
-import com.botdarr.commands.Command;
 import com.botdarr.commands.CommandResponse;
 import com.google.gson.Gson;
 import mockit.Deencapsulation;
@@ -63,7 +59,7 @@ public class RadarrApiTests {
     //verify response data
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     Assert.assertEquals(testResponses.size(), 1);
-    Assert.assertEquals(expectedRadarrMovie.getTitle(), testResponses.get(0).radarrMovie.getTitle());
+    Assert.assertEquals(expectedRadarrMovie.getTitle(), testResponses.get(0).getRadarrMovie().getTitle());
   }
 
   @Test
@@ -134,7 +130,7 @@ public class RadarrApiTests {
     //verify the max (20) even though the mock server returned 40 (see above)
     Assert.assertEquals(20, testResponses.size());
     //verify the first message is a message about the fact too many movies were returned by the server
-    Assert.assertEquals(testResponses.get(0).responseMessage, "Too many movies found, please narrow search");
+    Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movies found, please narrow search");
   }
 
   @Test
@@ -170,7 +166,7 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //there should only be 1 response stating no new movies could be found
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("Could not find any new movies for search term=searchTerm", testResponses.get(0).responseMessage);
+    Assert.assertEquals("Could not find any new movies for search term=searchTerm", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -206,8 +202,8 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //since we looking up not new films, existing movies can be returned, and should be the only result
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals(expectedRadarrMovie.getTitle(), testResponses.get(0).radarrMovie.getTitle());
-    Assert.assertEquals(expectedRadarrMovie.getTmdbId(), testResponses.get(0).radarrMovie.getTmdbId());
+    Assert.assertEquals(expectedRadarrMovie.getTitle(), testResponses.get(0).getRadarrMovie().getTitle());
+    Assert.assertEquals(expectedRadarrMovie.getTmdbId(), testResponses.get(0).getRadarrMovie().getTmdbId());
   }
 
   @Test
@@ -235,7 +231,7 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //since nothing is downloading we should only get back 1 response with a message about no downloads
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("No movies downloading", testResponses.get(0).responseMessage);
+    Assert.assertEquals("No movies downloading", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -268,9 +264,9 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //only movie is downloading, verify all properties
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals(1, testResponses.get(0).radarrQueue.getId());
-    Assert.assertEquals("05:00", testResponses.get(0).radarrQueue.getTimeleft());
-    Assert.assertEquals("DOWNLOADING", testResponses.get(0).radarrQueue.getStatus());
+    Assert.assertEquals(1, testResponses.get(0).getRadarrQueue().getId());
+    Assert.assertEquals("05:00", testResponses.get(0).getRadarrQueue().getTimeleft());
+    Assert.assertEquals("DOWNLOADING", testResponses.get(0).getRadarrQueue().getStatus());
   }
 
   @Test
@@ -299,7 +295,7 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //no movies should be found, the only response should be a message
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("No movies found", testResponses.get(0).responseMessage);
+    Assert.assertEquals("No movies found", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -335,7 +331,7 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //no movies should be found, the only response should be a message
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("Movie already exists", testResponses.get(0).responseMessage);
+    Assert.assertEquals("Movie already exists", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -376,7 +372,7 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //no movies should be found, the only response should be a message
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("No new movies found, check existing movies", testResponses.get(0).responseMessage);
+    Assert.assertEquals("No new movies found, check existing movies", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -414,7 +410,7 @@ public class RadarrApiTests {
     //even though we sent 30 movies, the api limits it to 20
     //with the first message being a message about too many movies found
     Assert.assertEquals(20, testResponses.size());
-    Assert.assertEquals("Too many movies found, please narrow search", testResponses.get(0).responseMessage);
+    Assert.assertEquals("Too many movies found, please narrow search", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -431,106 +427,6 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //only movie is downloading, but our config explicitly states no downloads should be shown
     Assert.assertEquals(0, testResponses.size());
-  }
-
-  private static class TestResponse implements ChatClientResponse {
-    private TestResponse() {}
-    private TestResponse(RadarrMovie radarrMovie) {
-      this.radarrMovie = radarrMovie;
-    }
-    private TestResponse(String responseMessage) {
-      this.responseMessage = responseMessage;
-    }
-    public TestResponse(RadarrQueue radarrQueue) {
-      this.radarrQueue = radarrQueue;
-    }
-
-    private String responseMessage;
-    private RadarrMovie radarrMovie;
-    private RadarrQueue radarrQueue;
-  }
-
-  private static class TestResponseBuilder implements ChatClientResponseBuilder<TestResponse> {
-
-    @Override
-    public TestResponse getHelpResponse() {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getMoviesHelpResponse(List<Command> radarrCommands) {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getShowsHelpResponse(List<Command> sonarrCommands) {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getShowResponse(SonarrShow show) {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getShowDownloadResponses(SonarrQueue sonarrShow) {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getMovieDownloadResponses(RadarrQueue radarrQueue) {
-      return new TestResponse(radarrQueue);
-    }
-
-    @Override
-    public TestResponse createErrorMessage(String message) {
-      return new TestResponse(message);
-    }
-
-    @Override
-    public TestResponse createInfoMessage(String message) {
-      return new TestResponse(message);
-    }
-
-    @Override
-    public TestResponse createSuccessMessage(String message) {
-      return new TestResponse(message);
-    }
-
-    @Override
-    public TestResponse getTorrentResponses(RadarrTorrent radarrTorrent, String movieTitle) {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getShowProfile(SonarrProfile sonarrProfile) {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getMovieProfile(RadarrProfile radarrProfile) {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getNewOrExistingShow(SonarrShow sonarrShow, SonarrShow existingShow, boolean findNew) {
-      return new TestResponse();
-    }
-
-    @Override
-    public TestResponse getNewOrExistingMovie(RadarrMovie lookupMovie, RadarrMovie existingMovie, boolean findNew) {
-      return new TestResponse(lookupMovie);
-    }
-
-    @Override
-    public TestResponse getMovie(RadarrMovie radarrMovie) {
-      return new TestResponse(radarrMovie);
-    }
-
-    @Override
-    public TestResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
-      return new TestResponse(radarrMovie);
-    }
   }
 
   private Properties getDefaultProperties() {
