@@ -5,6 +5,8 @@ import com.botdarr.api.radarr.*;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.Command;
+import com.botdarr.commands.RadarrCommands;
+import com.botdarr.commands.SonarrCommands;
 import com.github.seratch.jslack.api.model.block.ContextBlock;
 import com.github.seratch.jslack.api.model.block.ContextBlockElement;
 import com.github.seratch.jslack.api.model.block.ImageBlock;
@@ -308,7 +310,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .build());
     if (findNew) {
       slackResponse.addBlock(SectionBlock.builder()
-        .text(MarkdownTextObject.builder().text(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + "show id add " + sonarrShow.getTitle() + " " + sonarrShow.getTvdbId()).build())
+        .text(MarkdownTextObject.builder().text(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId())).build())
         .build());
     } else {
       slackResponse.addBlock(SectionBlock.builder()
@@ -349,7 +351,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .build());
     if (findNew) {
       slackResponse.addBlock(SectionBlock.builder()
-        .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + lookupMovie.getTitle() + " " + lookupMovie.getTmdbId()).build())
+        .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + RadarrCommands.getAddMovieCommandStr(lookupMovie.getTitle(), lookupMovie.getTmdbId())).build())
         .build());
     } else {
       slackResponse.addBlock(SectionBlock.builder()
@@ -379,7 +381,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .text(MarkdownTextObject.builder().text("TmdbId - " + radarrMovie.getTmdbId()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + "movie id add " + radarrMovie.getTitle() + " " + radarrMovie.getTmdbId()).build())
+      .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId())).build())
       .build());
     if (!Strings.isBlank(radarrMovie.getRemotePoster())) {
       //if there is no poster to display, slack will fail to render all the blocks

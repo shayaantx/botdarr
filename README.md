@@ -105,6 +105,10 @@ sonarr-url-base=
 # The max number of results to show per search command (default is 20)
 # If you set this to any value less than 0, the bot won't startup
 #max-results-to-show=20
+
+# The command prefix (default is /)
+# Any prefix is allowed (but I haven't tested every single prefix in every client)
+command-prefix=/
 ```
 
 1. Run the jar using java
