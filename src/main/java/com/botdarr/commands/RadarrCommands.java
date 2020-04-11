@@ -112,6 +112,10 @@ public class RadarrCommands {
     }};
   }
 
+  public static String getAddMovieCommandStr(String title, long tmdbId) {
+    return new CommandProcessor().getPrefix() + "movie id add " + title + " " + tmdbId;
+  }
+
   private static void validateMovieTitle(String movieTitle) {
     if (Strings.isEmpty(movieTitle)) {
       throw new IllegalArgumentException("Movie title is missing");
