@@ -59,7 +59,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b("*Title* - " + show.getTitle()));
     domContents.add(code("TvdbId - " + show.getTvdbId()));
-    domContents.add(u(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + "show id add " + show.getTitle() + " " + show.getTvdbId()));
+    domContents.add(u(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " +  SonarrCommands.getAddShowCommandStr(show.getTitle(), show.getTvdbId())));
     domContents.add(a(show.getRemotePoster()));
     return new TelegramResponse(domContents);
   }
