@@ -47,7 +47,7 @@ public class CommandProcessor {
     return null;
   }
 
-  String getPrefix() {
+  public String getPrefix() {
     String configuredPrefix = Config.getProperty(Config.Constants.COMMAND_PREFIX);
     if (!Strings.isEmpty(configuredPrefix)) {
       return configuredPrefix;
