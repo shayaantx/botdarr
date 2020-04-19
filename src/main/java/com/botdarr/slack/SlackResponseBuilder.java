@@ -5,6 +5,7 @@ import com.botdarr.api.radarr.*;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.Command;
+import com.botdarr.commands.CommandProcessor;
 import com.botdarr.commands.RadarrCommands;
 import com.botdarr.commands.SonarrCommands;
 import com.github.seratch.jslack.api.model.block.ContextBlock;
@@ -40,13 +41,13 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       boolean sonarrEnabled = Config.isSonarrEnabled();
       if (radarrEnabled) {
         slackResponse.addBlock(SectionBlock.builder()
-          .text(MarkdownTextObject.builder().text("*movies help* - Shows all the commands for movies").build())
+          .text(MarkdownTextObject.builder().text(RadarrCommands.getHelpMovieCommandStr() + " - Shows all the commands for movies").build())
           .build());
       }
 
       if (sonarrEnabled) {
         slackResponse.addBlock(SectionBlock.builder()
-          .text(MarkdownTextObject.builder().text("*shows help* - Shows all the commands for shows").build())
+          .text(MarkdownTextObject.builder().text(SonarrCommands.getHelpShowCommandStr() + " - Shows all the commands for shows").build())
           .build());
       }
 
@@ -406,7 +407,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .build());
     for (Command command : commands) {
       slackResponse.addBlock(SectionBlock.builder()
-        .text(MarkdownTextObject.builder().text("*" + command.getCommandText() + "* - " + command.getDescription()).build())
+        .text(MarkdownTextObject.builder().text(new CommandProcessor().getPrefix() + command.getCommandText() + " - " + command.getDescription()).build())
         .build());
     }
     return slackResponse;

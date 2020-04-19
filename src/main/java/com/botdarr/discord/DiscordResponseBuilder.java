@@ -5,6 +5,7 @@ import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.api.radarr.*;
 import com.botdarr.commands.Command;
+import com.botdarr.commands.CommandProcessor;
 import com.botdarr.commands.RadarrCommands;
 import com.botdarr.commands.SonarrCommands;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -35,11 +36,11 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     boolean radarrEnabled = Config.isRadarrEnabled();
     boolean sonarrEnabled = Config.isSonarrEnabled();
     if (radarrEnabled) {
-      embedBuilder.addField("movies help", "Shows all the commands for movies", false);
+      embedBuilder.addField(RadarrCommands.getHelpMovieCommandStr(), "Shows all the commands for movies", false);
     }
 
     if (sonarrEnabled) {
-      embedBuilder.addField("shows help", "Shows all the commands for shows", false);
+      embedBuilder.addField(SonarrCommands.getHelpShowCommandStr(), "Shows all the commands for shows", false);
     }
 
     if (!radarrEnabled && !sonarrEnabled) {
@@ -264,7 +265,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle("Commands");
     for (Command com : commands) {
-      embedBuilder.addField(com.getCommandText(), com.getDescription(), false);
+      embedBuilder.addField(new CommandProcessor().getPrefix() + com.getCommandText(), com.getDescription(), false);
     }
     return new DiscordResponse(embedBuilder.build());
   }

@@ -5,6 +5,7 @@ import com.botdarr.api.radarr.*;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.Command;
+import com.botdarr.commands.CommandProcessor;
 import com.botdarr.commands.RadarrCommands;
 import com.botdarr.commands.SonarrCommands;
 import j2html.tags.DomContent;
@@ -30,10 +31,10 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
       boolean radarrEnabled = Config.isRadarrEnabled();
       boolean sonarrEnabled = Config.isSonarrEnabled();
       if (radarrEnabled) {
-        domContents.add(text("*movies help* - Shows all the commands for movies"));
+        domContents.add(text(RadarrCommands.getHelpMovieCommandStr() + " - Shows all the commands for movies"));
       }
       if (sonarrEnabled) {
-        domContents.add(text("*shows help* - Shows all the commands for shows"));
+        domContents.add(text(SonarrCommands.getHelpShowCommandStr() + " - Shows all the commands for shows"));
       }
       if (!radarrEnabled && !sonarrEnabled) {
         domContents.add(b("*No radarr or sonarr commands configured, check your properties file and logs*"));
@@ -253,7 +254,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(u(b("*Commands*")));
     for (Command command : commands) {
-      domContents.add(text("*" + command.getCommandText() + "* - " + command.getDescription()));
+      domContents.add(text(new CommandProcessor().getPrefix() + command.getCommandText() + " - " + command.getDescription()));
       domContents.add(text(" "));
     }
     return domContents;

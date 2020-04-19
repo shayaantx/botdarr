@@ -76,6 +76,10 @@ public class SonarrCommands {
     return new CommandProcessor().getPrefix() + "show id add " + title + " " + tvdbId;
   }
 
+  public static String getHelpShowCommandStr() {
+    return new CommandProcessor().getPrefix() + "shows help";
+  }
+
   private static void validateShowTitle(String movieTitle) {
     if (Strings.isEmpty(movieTitle)) {
       throw new IllegalArgumentException("Show title is missing");
