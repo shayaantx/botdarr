@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -427,6 +428,46 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //only movie is downloading, but our config explicitly states no downloads should be shown
     Assert.assertEquals(0, testResponses.size());
+  }
+
+  @Test
+  public <T extends TestResponse> void addWithId_movieAlreadyExists() {
+    RadarrMovie existingMovie = getRadarrMovie(1, 2, "movie1");
+    List<RadarrMovie> radarrMovies = new ArrayList<>();
+    radarrMovies.add(existingMovie);
+
+    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+    RadarrCache radarrCache = Deencapsulation.getField(radarrApi, "RADARR_CACHE");
+    radarrCache.add(existingMovie);
+
+    HttpRequest titleRequest = HttpRequest.request()
+      .withMethod("GET")
+      .withPath("/api/movie/lookup")
+      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
+      .withQueryStringParameter("term", "movie1");
+
+    //setup expected response in mock server for both requests
+    HttpResponse expectedResponse = HttpResponse.response()
+      .withStatusCode(200)
+      .withBody(new Gson().toJson(radarrMovies.toArray()), MediaType.APPLICATION_JSON);
+    mockServerRule.getClient()
+      .when(titleRequest)
+      .respond(expectedResponse);
+
+    //trigger api
+    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithId("movie1", "2"));
+
+    //verify response data
+    TestResponse testResponses = commandResponse.getSingleChatClientResponse();
+    Assert.assertEquals("Movie already exists", testResponses.getResponseMessage());
+  }
+
+  private RadarrMovie getRadarrMovie(long id, long tmdbId, String title) {
+    RadarrMovie radarrMovie = new RadarrMovie();
+    radarrMovie.setId(id);
+    radarrMovie.setTmdbId(tmdbId);
+    radarrMovie.setTitle(title);
+    return radarrMovie;
   }
 
   private Properties getDefaultProperties() {
