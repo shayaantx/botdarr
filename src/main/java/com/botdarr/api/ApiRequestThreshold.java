@@ -14,11 +14,12 @@ public enum ApiRequestThreshold {
     }
 
     @Override
-    public PreparedStatement getThresholdQuery(Connection conn, String username) throws SQLException {
-      PreparedStatement preparedStatement = conn.prepareStatement("select count(*) from user_requests where user = ? and dt = ?");
+    public PreparedStatement getThresholdQuery(Connection conn, String username, ApiRequestType requestType) throws SQLException {
+      PreparedStatement preparedStatement = conn.prepareStatement("select count(*) from user_requests where user = ? and dt = ? and request_type = ?");
       preparedStatement.setString(1, username.toLowerCase());
       LocalDate today = LocalDate.now();
       preparedStatement.setObject(2, today);
+      preparedStatement.setInt(3, requestType.ordinal());
       return preparedStatement;
     }
   },
@@ -29,12 +30,13 @@ public enum ApiRequestThreshold {
     }
 
     @Override
-    public PreparedStatement getThresholdQuery(Connection conn, String username) throws SQLException {
-      PreparedStatement preparedStatement = conn.prepareStatement("select count(*) from user_requests where user = ? and dt between ? and ?");
+    public PreparedStatement getThresholdQuery(Connection conn, String username, ApiRequestType requestType) throws SQLException {
+      PreparedStatement preparedStatement = conn.prepareStatement("select count(*) from user_requests where user = ? and dt between ? and ? and request_type = ?");
       preparedStatement.setString(1, username.toLowerCase());
       LocalDate today = LocalDate.now();
       preparedStatement.setObject(2, today.with(DayOfWeek.MONDAY));
       preparedStatement.setObject(3, today.with(DayOfWeek.SUNDAY));
+      preparedStatement.setInt(4, requestType.ordinal());
       return preparedStatement;
     }
   },
@@ -45,16 +47,17 @@ public enum ApiRequestThreshold {
     }
 
     @Override
-    public PreparedStatement getThresholdQuery(Connection conn, String username) throws SQLException {
-      PreparedStatement preparedStatement = conn.prepareStatement("select count(*) from user_requests where user = ? and dt between ? and ?");
+    public PreparedStatement getThresholdQuery(Connection conn, String username, ApiRequestType requestType) throws SQLException {
+      PreparedStatement preparedStatement = conn.prepareStatement("select count(*) from user_requests where user = ? and dt between ? and ? and request_type = ?");
       preparedStatement.setString(1, username.toLowerCase());
       LocalDate today = LocalDate.now();
       preparedStatement.setObject(2, today.withDayOfMonth(1));
       preparedStatement.setObject(3, today.withDayOfMonth(today.lengthOfMonth()));
+      preparedStatement.setInt(4, requestType.ordinal());
       return preparedStatement;
     }
   };
 
   public abstract String getReadableName();
-  public abstract PreparedStatement getThresholdQuery(Connection conn, String username) throws SQLException;
+  public abstract PreparedStatement getThresholdQuery(Connection conn, String username, ApiRequestType requestType) throws SQLException;
 }

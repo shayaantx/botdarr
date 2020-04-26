@@ -115,23 +115,26 @@ public class RadarrApi implements Api {
     }
   }
 
-  public ChatClientResponse addWithId(String searchText, String id) {
+  public ChatClientResponse addWithId(String searchText, String tmdbId) {
     try {
       List<RadarrMovie> movies = lookupMovies(searchText);
       if (movies.isEmpty()) {
         LOGGER.warn("Search text " + searchText + "yielded no movies, trying id");
+        movies = lookupMovieById(tmdbId);
       }
-      movies = lookupMovieById(id);
       if (movies.isEmpty()) {
-        LOGGER.warn("Search id " + id + "yielded no movies, stopping");
+        LOGGER.warn("Search id " + tmdbId + "yielded no movies, stopping");
         return chatClientResponseBuilder.createErrorMessage("No movies found");
       }
       for (RadarrMovie radarrMovie : movies) {
-        if (radarrMovie.getTmdbId() == Integer.valueOf(id)) {
+        if (radarrMovie.getTmdbId() == Integer.valueOf(tmdbId)) {
+          if (RADARR_CACHE.doesMovieExist(radarrMovie.getTitle())) {
+            return chatClientResponseBuilder.createErrorMessage("Movie already exists");
+          }
           return addMovie(radarrMovie);
         }
       }
-      return chatClientResponseBuilder.createErrorMessage("Could not find movie with search text=" + searchText + " and id=" + id);
+      return chatClientResponseBuilder.createErrorMessage("Could not find movie with search text=" + searchText + " and tmdbId=" + tmdbId);
     } catch (Exception e) {
       LOGGER.error("Error trying to add movie", e);
       return chatClientResponseBuilder.createErrorMessage("Error adding content, e=" + e.getMessage());
@@ -235,6 +238,7 @@ public class RadarrApi implements Api {
 
   @Override
   public void cacheData() {
+    RADARR_CACHE.reset();
     ConnectionHelper.makeGetRequest(this, "/movie", new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) throws Exception {
@@ -333,9 +337,10 @@ public class RadarrApi implements Api {
 
       String username = CommandContext.getConfig().getUsername();
       ApiRequests apiRequests = new ApiRequests();
-      if (apiRequests.checkRequestLimits() && !apiRequests.canMakeRequests(username)) {
+      ApiRequestType apiRequestType = ApiRequestType.MOVIE;
+      if (apiRequests.checkRequestLimits(apiRequestType) && !apiRequests.canMakeRequests(apiRequestType, username)) {
         ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
-        return chatClientResponseBuilder.createErrorMessage("Could not add movie, user " + username + " has exceeded max requests for " + requestThreshold.getReadableName());
+        return chatClientResponseBuilder.createErrorMessage("Could not add movie, user " + username + " has exceeded max movie requests for " + requestThreshold.getReadableName());
       }
       try (CloseableHttpResponse response = client.execute(post)) {
         if (LOGGER.isDebugEnabled()) {
@@ -348,7 +353,7 @@ public class RadarrApi implements Api {
           return chatClientResponseBuilder.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
         LogManager.getLogger("AuditLog").info("User " + username + " added " + radarrMovie.getTitle());
-        apiRequests.auditRequest(username, radarrMovie.getTitle());
+        apiRequests.auditRequest(apiRequestType, username, radarrMovie.getTitle());
         return chatClientResponseBuilder.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {

@@ -192,12 +192,17 @@ public class Config {
     public static final String DATABASE_NAME = "botdarr.db";
 
     /**
-     * The max amount of requests per user per configured threshold
+     * The max amount of movie requests per user per configured threshold
      */
-    public static final String MAX_REQUESTS_PER_USER = "max-requests-per-user";
+    public static final String MAX_MOVIE_REQUESTS_PER_USER = "max-movie-requests-per-user";
 
     /**
-     * The max amount of requests per user per configured threshold
+     * The max amount of show requests per user per configured threshold
+     */
+    public static final String MAX_SHOW_REQUESTS_PER_USER = "max-show-requests-per-user";
+
+    /**
+     * The type of threshold to enforce around request maximums (i.e., {@link com.botdarr.api.ApiRequestThreshold}
      */
     public static final String MAX_REQUESTS_THRESHOLD = "max-requests-threshold";
 

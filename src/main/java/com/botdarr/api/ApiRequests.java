@@ -37,19 +37,12 @@ public class ApiRequests {
     return 20;
   }
 
-  public boolean checkRequestLimits() {
-    String maxRequestsPerUser = Config.getProperty(Config.Constants.MAX_REQUESTS_PER_USER);
+  public boolean checkRequestLimits(ApiRequestType requestType) {
     String maxRequestsThreshold = Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD);
-    if (Strings.isEmpty(maxRequestsPerUser)) {
-      return false;
-    }
     if (Strings.isEmpty(maxRequestsThreshold)) {
       return false;
     }
-    try {
-      Integer.valueOf(maxRequestsPerUser);
-    } catch (NumberFormatException e) {
-      LOGGER.error("Invalid max requests per user configuration", e);
+    if (!requestType.isConfigured()) {
       return false;
     }
     try {
@@ -66,12 +59,12 @@ public class ApiRequests {
     return true;
   }
 
-  public boolean canMakeRequests(String username) {
+  public boolean canMakeRequests(ApiRequestType requestType, String username) {
     ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
-    int maxRequestsPerUser = Integer.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_PER_USER));
+    int maxRequestsPerUser = requestType.getMaxRequestsAllowed();
     String url = databaseHelper.getJdbcUrl();
     try (Connection conn = DriverManager.getConnection(url)) {
-      ResultSet rs = requestThreshold.getThresholdQuery(conn, username).executeQuery();
+      ResultSet rs = requestThreshold.getThresholdQuery(conn, username, requestType).executeQuery();
       while (rs.next()) {
         return rs.getInt(1) < maxRequestsPerUser;
       }
@@ -82,12 +75,13 @@ public class ApiRequests {
     return false;
   }
 
-  public void auditRequest(String username, String title) {
+  public void auditRequest(ApiRequestType apiRequestType, String username, String title) {
     try (Connection conn = DriverManager.getConnection(databaseHelper.getJdbcUrl())) {
-      PreparedStatement preparedStatement = conn.prepareStatement("insert into user_requests (user, title, dt) values (?, ?, ?)");
+      PreparedStatement preparedStatement = conn.prepareStatement("insert into user_requests (user, title, dt, request_type) values (?, ?, ?, ?)");
       preparedStatement.setString(1, username.toLowerCase());
       preparedStatement.setString(2, title);
       preparedStatement.setObject(3, LocalDate.now());
+      preparedStatement.setInt(4, apiRequestType.ordinal());
       preparedStatement.execute();
     } catch (SQLException e) {
       LOGGER.error("Error trying to insert request", e);

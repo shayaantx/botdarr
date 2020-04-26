@@ -45,6 +45,14 @@ public class SonarrCache {
     return existingProfiles.get(qualityProfileName.toLowerCase());
   }
 
+  public void reset() {
+    existingProfiles.clear();
+    existingShowTitlesToSonarrId.clear();
+    existingTvdbIdsToMovies.clear();
+    existingTvrageIdsToMovies.clear();
+    existingTvmazeIdsToMovies.clear();
+  }
+
   private Map<String, SonarrProfile> existingProfiles = new ConcurrentHashMap<>();
   private Map<String, Long> existingShowTitlesToSonarrId = new ConcurrentHashMap<>();
   private Map<Long, SonarrShow> existingTvdbIdsToMovies = new ConcurrentHashMap<>();
