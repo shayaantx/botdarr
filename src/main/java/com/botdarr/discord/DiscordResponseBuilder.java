@@ -1,6 +1,7 @@
 package com.botdarr.discord;
 
 import com.botdarr.Config;
+import com.botdarr.api.lidarr.LidarrArtist;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.api.radarr.*;
@@ -19,8 +20,8 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 
-import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
-import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class DiscordResponseBuilder implements ChatClientResponseBuilder<DiscordResponse> {
@@ -47,6 +48,11 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
       embedBuilder.appendDescription("No radarr or sonarr commands configured, check your properties file and logs");
     }
     return new DiscordResponse(embedBuilder.build());
+  }
+
+  @Override
+  public DiscordResponse getMusicHelpResponse(List<Command> lidarCommands) {
+    return getListOfCommands(lidarCommands);
   }
 
   @Override
@@ -199,15 +205,28 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
   public DiscordResponse getNewOrExistingMovie(RadarrMovie radarrMovie, RadarrMovie existingMovie, boolean findNew) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle(radarrMovie.getTitle());
-    embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
+    embedBuilder.addField("TmdbId", String.valueOf(radarrMovie.getTmdbId()), false);
     if (findNew) {
       embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()), false);
     } else {
-      embedBuilder.addField("Id", "" + existingMovie.getId(), false);
-      embedBuilder.addField("Downloaded", existingMovie.isDownloaded() + "", false);
-      embedBuilder.addField("Has File", existingMovie.isHasFile() + "", false);
+      embedBuilder.addField("Id", String.valueOf(existingMovie.getId()), false);
+      embedBuilder.addField("Downloaded", String.valueOf(existingMovie.isDownloaded()), false);
+      embedBuilder.addField("Has File", String.valueOf(existingMovie.isHasFile()), false);
     }
     embedBuilder.setImage(radarrMovie.getRemotePoster());
+    return new DiscordResponse(embedBuilder.build());
+  }
+
+  @Override
+  public DiscordResponse getNewOrExistingArtist(LidarrArtist lookupArtist, LidarrArtist existingArtist, boolean findNew) {
+    EmbedBuilder embedBuilder = new EmbedBuilder();
+    embedBuilder.setTitle(lookupArtist.getArtistName());
+    embedBuilder.addField("Foreign Artist Id", lookupArtist.getForeignArtistId(), false);
+    if (findNew) {
+
+    } else {
+
+    }
     return new DiscordResponse(embedBuilder.build());
   }
 

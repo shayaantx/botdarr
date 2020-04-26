@@ -1,7 +1,10 @@
-package com.botdarr.api;
+package com.botdarr.api.radarr;
 
 import com.botdarr.Config;
-import com.botdarr.api.radarr.*;
+import com.botdarr.api.Api;
+import com.botdarr.api.ApiRequestThreshold;
+import com.botdarr.api.ApiRequestType;
+import com.botdarr.api.ApiRequests;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.CommandContext;
 import com.botdarr.clients.ChatClient;
@@ -20,7 +23,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
@@ -115,23 +117,26 @@ public class RadarrApi implements Api {
     }
   }
 
-  public ChatClientResponse addWithId(String searchText, String id) {
+  public ChatClientResponse addWithId(String searchText, String tmdbId) {
     try {
       List<RadarrMovie> movies = lookupMovies(searchText);
       if (movies.isEmpty()) {
         LOGGER.warn("Search text " + searchText + "yielded no movies, trying id");
+        movies = lookupMovieById(tmdbId);
       }
-      movies = lookupMovieById(id);
       if (movies.isEmpty()) {
-        LOGGER.warn("Search id " + id + "yielded no movies, stopping");
+        LOGGER.warn("Search id " + tmdbId + "yielded no movies, stopping");
         return chatClientResponseBuilder.createErrorMessage("No movies found");
       }
       for (RadarrMovie radarrMovie : movies) {
-        if (radarrMovie.getTmdbId() == Integer.valueOf(id)) {
+        if (radarrMovie.getTmdbId() == Integer.valueOf(tmdbId)) {
+          if (RADARR_CACHE.doesMovieExist(radarrMovie.getTitle())) {
+            return chatClientResponseBuilder.createErrorMessage("Movie already exists");
+          }
           return addMovie(radarrMovie);
         }
       }
-      return chatClientResponseBuilder.createErrorMessage("Could not find movie with search text=" + searchText + " and id=" + id);
+      return chatClientResponseBuilder.createErrorMessage("Could not find movie with search text=" + searchText + " and tmdbId=" + tmdbId);
     } catch (Exception e) {
       LOGGER.error("Error trying to add movie", e);
       return chatClientResponseBuilder.createErrorMessage("Error adding content, e=" + e.getMessage());
@@ -171,7 +176,7 @@ public class RadarrApi implements Api {
 
     for (RadarrTorrent radarrTorrent : radarrTorrents) {
       if (radarrTorrent.getGuid().equalsIgnoreCase(guid)) {
-        return ConnectionHelper.makePostRequest(this, "release", radarrTorrent, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+        return ConnectionHelper.makePostRequest(this, RadarrUrls.RELEASE_BASE, radarrTorrent, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
           @Override
           public List<ChatClientResponse> onSuccess(String response) throws Exception {
             return Arrays.asList(chatClientResponseBuilder.createSuccessMessage("Forced the download for " + title));
@@ -207,7 +212,7 @@ public class RadarrApi implements Api {
   public List<ChatClientResponse> cancelDownload(String command) {
     try {
       Long id = Long.valueOf(command);
-      return ConnectionHelper.makeDeleteRequest(this, "queue/" + id, "&blacklist=true", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+      return ConnectionHelper.makeDeleteRequest(this, RadarrUrls.DOWNLOAD_BASE + "/" + id, "&blacklist=true", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
         @Override
         public List<ChatClientResponse> onSuccess(String response) throws Exception {
           //TODO: implement
@@ -235,7 +240,8 @@ public class RadarrApi implements Api {
 
   @Override
   public void cacheData() {
-    ConnectionHelper.makeGetRequest(this, "/movie", new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+    RADARR_CACHE.reset();
+    ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_BASE, new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) throws Exception {
         JsonParser parser = new JsonParser();
@@ -252,7 +258,7 @@ public class RadarrApi implements Api {
     for (RadarrProfile radarrProfile : radarrProfiles) {
       RADARR_CACHE.addProfile(radarrProfile);
     }
-    LOGGER.info("Finished caching radarr data");
+    LOGGER.debug("Finished caching radarr data");
   }
 
   @Override
@@ -261,7 +267,7 @@ public class RadarrApi implements Api {
   }
 
   public List<ChatClientResponse> discover() {
-    return ConnectionHelper.makeGetRequest(this, "movies/discover/recommendations", new ConnectionHelper.SimpleEntityResponseHandler<ChatClientResponse>() {
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DISCOVER_MOVIES, new ConnectionHelper.SimpleEntityResponseHandler<ChatClientResponse>() {
       @Override
       public List<ChatClientResponse> onSuccess(String response) throws Exception {
         List<ChatClientResponse> recommendedMovies = new ArrayList<>();
@@ -286,7 +292,7 @@ public class RadarrApi implements Api {
   }
 
   private List<ChatClientResponse> getMovieDownloads() {
-    return ConnectionHelper.makeGetRequest(this, "queue", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DOWNLOAD_BASE, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
       @Override
       public List<ChatClientResponse> onSuccess(String response) throws Exception {
         List<ChatClientResponse> chatClientResponses = new ArrayList<>();
@@ -320,7 +326,7 @@ public class RadarrApi implements Api {
     radarrMovie.setQualityProfileId((int) radarrProfile.getId());
 
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-      HttpPost post = new HttpPost(getApiUrl("movie"));
+      HttpPost post = new HttpPost(getApiUrl(RadarrUrls.MOVIE_BASE));
 
       post.addHeader("content-type", "application/x-www-form-urlencoded");
       String json = new Gson().toJson(radarrMovie, RadarrMovie.class);
@@ -333,9 +339,10 @@ public class RadarrApi implements Api {
 
       String username = CommandContext.getConfig().getUsername();
       ApiRequests apiRequests = new ApiRequests();
-      if (apiRequests.checkRequestLimits() && !apiRequests.canMakeRequests(username)) {
+      ApiRequestType apiRequestType = ApiRequestType.MOVIE;
+      if (apiRequests.checkRequestLimits(apiRequestType) && !apiRequests.canMakeRequests(apiRequestType, username)) {
         ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
-        return chatClientResponseBuilder.createErrorMessage("Could not add movie, user " + username + " has exceeded max requests for " + requestThreshold.getReadableName());
+        return chatClientResponseBuilder.createErrorMessage("Could not add movie, user " + username + " has exceeded max movie requests for " + requestThreshold.getReadableName());
       }
       try (CloseableHttpResponse response = client.execute(post)) {
         if (LOGGER.isDebugEnabled()) {
@@ -348,7 +355,7 @@ public class RadarrApi implements Api {
           return chatClientResponseBuilder.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
         LogManager.getLogger("AuditLog").info("User " + username + " added " + radarrMovie.getTitle());
-        apiRequests.auditRequest(username, radarrMovie.getTitle());
+        apiRequests.auditRequest(apiRequestType, username, radarrMovie.getTitle());
         return chatClientResponseBuilder.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
@@ -363,7 +370,7 @@ public class RadarrApi implements Api {
       LOGGER.warn("Could not find title id for title " + title);
       return Collections.emptyList();
     }
-    return ConnectionHelper.makeGetRequest(this, "release", "&movieId=" + id + "&sort_by=releaseWeight&order=asc", new ConnectionHelper.SimpleEntityResponseHandler<RadarrTorrent>() {
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.RELEASE_BASE, "&movieId=" + id + "&sort_by=releaseWeight&order=asc", new ConnectionHelper.SimpleEntityResponseHandler<RadarrTorrent>() {
       @Override
       public List<RadarrTorrent> onSuccess(String response) throws Exception {
         List<RadarrTorrent> radarrTorrents = new ArrayList<>();
@@ -383,7 +390,7 @@ public class RadarrApi implements Api {
   }
 
   private List<RadarrMovie> lookupMovies(String search) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, "movie/lookup", "&term=" + URLEncoder.encode(search, "UTF-8"),
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_LOOKUP, "&term=" + URLEncoder.encode(search, "UTF-8"),
       new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) {
@@ -399,7 +406,7 @@ public class RadarrApi implements Api {
   }
 
   private List<RadarrMovie> lookupMovieById(String tmdbid) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, "movie/lookup/tmdb", "&tmdbId=" + URLEncoder.encode(tmdbid, "UTF-8"),
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_LOOKUP_TMDB, "&tmdbId=" + URLEncoder.encode(tmdbid, "UTF-8"),
       new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) {
@@ -413,7 +420,7 @@ public class RadarrApi implements Api {
   }
 
   private List<RadarrProfile> getRadarrProfiles() {
-    return ConnectionHelper.makeGetRequest(this, "profile", new ConnectionHelper.SimpleEntityResponseHandler<RadarrProfile>() {
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.PROFILE_BASE, new ConnectionHelper.SimpleEntityResponseHandler<RadarrProfile>() {
       @Override
       public List<RadarrProfile> onSuccess(String response) {
         List<RadarrProfile> radarrProfiles = new ArrayList<>();

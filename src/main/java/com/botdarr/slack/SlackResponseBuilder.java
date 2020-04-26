@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
-import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
-import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResponse> {
@@ -60,6 +60,11 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       throw new RuntimeException("Error getting botdarr version", e);
     }
     return slackResponse;
+  }
+
+  @Override
+  public SlackResponse getMusicHelpResponse(List<Command> lidarCommands) {
+    return getListOfCommands(lidarCommands);
   }
 
   @Override

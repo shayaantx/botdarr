@@ -71,7 +71,7 @@ node {
         archiveArtifacts 'target/botdarr-release.jar'
       }
 
-      if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
+      if (env.BRANCH_NAME == "development") {
         //don't upload for PR's
         stage('Create/Upload Release') {
           withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
@@ -86,7 +86,7 @@ node {
       }
     }
 
-    if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
+    if (env.BRANCH_NAME == "development") {
       //don't upload for PR's
       stage('Upload to dockerhub') {
         def dockerFileImage = """
@@ -104,7 +104,7 @@ node {
         ENTRYPOINT ["java", "-jar", "botdarr-release.jar"]
         """;
         fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
-        def releaseTag = env.BRANCH_NAME == "master" ? "stable" : "latest";
+        def releaseTag = "latest";
         def imageWithReleaseTag = docker.build("shayaantx/botdarr:${releaseTag}", "-f ./DockerfileUpload .");
         withDockerRegistry(credentialsId: 'docker-credentials') {
           imageWithReleaseTag.push();

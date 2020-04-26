@@ -26,16 +26,16 @@ public class ApiRequestsTests {
   public void checkRequestLimits_noLimitsSet() {
     ApiRequests apiRequests = new ApiRequests();
     writeFakePropertiesFile(getDefaultProperties());
-    Assert.assertFalse(apiRequests.checkRequestLimits());
+    Assert.assertFalse(apiRequests.checkRequestLimits(ApiRequestType.SHOW));
   }
 
   @Test
   public void checkRequestLimits_maxRequestCountSetButThresholdMissing() {
     ApiRequests apiRequests = new ApiRequests();
     Properties properties = getDefaultProperties();
-    properties.setProperty("max-requests-per-user", "5");
+    properties.setProperty("max-show-requests-per-user", "5");
     writeFakePropertiesFile(properties);
-    Assert.assertFalse(apiRequests.checkRequestLimits());
+    Assert.assertFalse(apiRequests.checkRequestLimits(ApiRequestType.SHOW));
   }
 
   @Test
@@ -44,7 +44,7 @@ public class ApiRequestsTests {
     Properties properties = getDefaultProperties();
     properties.setProperty("max-requests-threshold", "WEEK");
     writeFakePropertiesFile(properties);
-    Assert.assertFalse(apiRequests.checkRequestLimits());
+    Assert.assertFalse(apiRequests.checkRequestLimits(ApiRequestType.SHOW));
   }
 
   @Test
@@ -54,24 +54,24 @@ public class ApiRequestsTests {
       new IllegalArgumentException("No enum constant com.botdarr.api.ApiRequestThreshold.WEEKx"));
     ApiRequests apiRequests = new ApiRequests();
     Properties properties = getDefaultProperties();
-    properties.setProperty("max-requests-per-user", "5");
+    properties.setProperty("max-show-requests-per-user", "5");
     properties.setProperty("max-requests-threshold", "WEEKx");
     writeFakePropertiesFile(properties);
-    Assert.assertFalse(apiRequests.checkRequestLimits());
+    Assert.assertFalse(apiRequests.checkRequestLimits(ApiRequestType.SHOW));
     mockedLogger.validate();
   }
 
   @Test
   public void checkRequestLimits_invalidMaxRequestCountSet() {
     MockedLogger mockedLogger = new MockedLogger(
-      "Invalid max requests per user configuration",
+      "Invalid max requests per SHOW per user configuration",
       new NumberFormatException("For input string: \"5x\""));
     ApiRequests apiRequests = new ApiRequests();
     Properties properties = getDefaultProperties();
-    properties.setProperty("max-requests-per-user", "5x");
+    properties.setProperty("max-show-requests-per-user", "5x");
     properties.setProperty("max-requests-threshold", "WEEK");
     writeFakePropertiesFile(properties);
-    Assert.assertFalse(apiRequests.checkRequestLimits());
+    Assert.assertFalse(apiRequests.checkRequestLimits(ApiRequestType.SHOW));
     mockedLogger.validate();
   }
 
@@ -175,21 +175,21 @@ public class ApiRequestsTests {
     String username = "user1";
     //add existing requests
     for (int i = 0; i < maxRequestsToAdd; i++) {
-      apiRequests.auditRequest(username, "title" + i);
+      apiRequests.auditRequest(ApiRequestType.SHOW, username, "title" + i);
     }
 
     //setup max requests for the given max and threshold type
     Properties properties = getDefaultProperties();
-    properties.setProperty("max-requests-per-user", "" + maxRequestsAllowed);
+    properties.setProperty("max-show-requests-per-user", "" + maxRequestsAllowed);
     properties.setProperty("max-requests-threshold", threshold);
     writeFakePropertiesFile(properties);
 
     if (expectExceedsThreshold) {
       //shouldn't be able to make requests
-      Assert.assertFalse(apiRequests.canMakeRequests(username));
+      Assert.assertFalse(apiRequests.canMakeRequests(ApiRequestType.SHOW, username));
     } else {
       //should be able to make requests
-      Assert.assertTrue(apiRequests.canMakeRequests(username));
+      Assert.assertTrue(apiRequests.canMakeRequests(ApiRequestType.SHOW, username));
     }
   }
 

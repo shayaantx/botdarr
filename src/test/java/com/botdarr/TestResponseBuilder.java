@@ -20,6 +20,11 @@ public class TestResponseBuilder implements ChatClientResponseBuilder<TestRespon
   }
 
   @Override
+  public TestResponse getMusicHelpResponse(List<Command> lidarCommands) {
+    return new TestResponse();
+  }
+
+  @Override
   public TestResponse getMoviesHelpResponse(List<Command> radarrCommands) {
     return new TestResponse();
   }

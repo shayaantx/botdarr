@@ -1,0 +1,1 @@
+alter table user_requests add column request_type int null;
