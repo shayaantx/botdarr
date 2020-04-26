@@ -115,23 +115,26 @@ public class RadarrApi implements Api {
     }
   }
 
-  public ChatClientResponse addWithId(String searchText, String id) {
+  public ChatClientResponse addWithId(String searchText, String tmdbId) {
     try {
       List<RadarrMovie> movies = lookupMovies(searchText);
       if (movies.isEmpty()) {
         LOGGER.warn("Search text " + searchText + "yielded no movies, trying id");
+        movies = lookupMovieById(tmdbId);
       }
-      movies = lookupMovieById(id);
       if (movies.isEmpty()) {
-        LOGGER.warn("Search id " + id + "yielded no movies, stopping");
+        LOGGER.warn("Search id " + tmdbId + "yielded no movies, stopping");
         return chatClientResponseBuilder.createErrorMessage("No movies found");
       }
       for (RadarrMovie radarrMovie : movies) {
-        if (radarrMovie.getTmdbId() == Integer.valueOf(id)) {
+        if (radarrMovie.getTmdbId() == Integer.valueOf(tmdbId)) {
+          if (RADARR_CACHE.doesMovieExist(radarrMovie.getTitle())) {
+            return chatClientResponseBuilder.createErrorMessage("Movie already exists");
+          }
           return addMovie(radarrMovie);
         }
       }
-      return chatClientResponseBuilder.createErrorMessage("Could not find movie with search text=" + searchText + " and id=" + id);
+      return chatClientResponseBuilder.createErrorMessage("Could not find movie with search text=" + searchText + " and tmdbId=" + tmdbId);
     } catch (Exception e) {
       LOGGER.error("Error trying to add movie", e);
       return chatClientResponseBuilder.createErrorMessage("Error adding content, e=" + e.getMessage());
