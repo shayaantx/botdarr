@@ -91,8 +91,10 @@ sonarr-default-profile=any
 sonarr-url-base=
 
 # If you don't want to limit user requests, don't set these properties
-# The max number of requests per user per month
-#max-requests-per-user=
+# The max number of movie requests per user per month, day, or week
+#max-movie-requests-per-user=
+# The max number of show requests per user per month, day, or week
+#max-show-requests-per-user=
 # The threshold type for max requests
 # WEEK, MONTH, DAY
 # WEEK is from monday to sunday

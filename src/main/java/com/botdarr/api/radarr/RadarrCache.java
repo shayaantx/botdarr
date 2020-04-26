@@ -35,6 +35,12 @@ public class RadarrCache {
     return existingProfiles.get(qualityProfileName.toLowerCase());
   }
 
+  public void reset() {
+    existingProfiles.clear();
+    existingMovieTitlesToIds.clear();
+    existingTmdbIdsToMovies.clear();
+  }
+
   private Map<String, RadarrProfile> existingProfiles = new ConcurrentHashMap<>();
   private Map<String, Long> existingMovieTitlesToIds = new ConcurrentHashMap<>();
   private Map<Long, RadarrMovie> existingTmdbIdsToMovies = new ConcurrentHashMap<>();

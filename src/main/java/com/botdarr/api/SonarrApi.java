@@ -54,6 +54,9 @@ public class SonarrApi implements Api {
       }
       for (SonarrShow sonarrShow : shows) {
         if (sonarrShow.getTvdbId() == Integer.valueOf(id)) {
+          if (SONARR_CACHE.doesShowExist(sonarrShow.getTitle())) {
+            return chatClientResponseBuilder.createErrorMessage("Show already exists");
+          }
           return addShow(sonarrShow);
         }
       }
@@ -170,6 +173,7 @@ public class SonarrApi implements Api {
 
   @Override
   public void cacheData() {
+    SONARR_CACHE.reset();
     ConnectionHelper.makeGetRequest(this, "/series", new ConnectionHelper.SimpleEntityResponseHandler<SonarrShow>() {
       @Override
       public List<SonarrShow> onSuccess(String response) throws Exception {
@@ -237,9 +241,10 @@ public class SonarrApi implements Api {
     sonarrShow.setQualityProfileId((int) sonarrProfile.getId());
     String username = CommandContext.getConfig().getUsername();
     ApiRequests apiRequests = new ApiRequests();
-    if (apiRequests.checkRequestLimits() && !apiRequests.canMakeRequests(username)) {
+    ApiRequestType apiRequestType = ApiRequestType.SHOW;
+    if (apiRequests.checkRequestLimits(apiRequestType) && !apiRequests.canMakeRequests(apiRequestType, username)) {
       ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
-      return chatClientResponseBuilder.createErrorMessage("Could not add show, user " + username + " has exceeded max requests for " + requestThreshold.getReadableName());
+      return chatClientResponseBuilder.createErrorMessage("Could not add show, user " + username + " has exceeded max show requests for " + requestThreshold.getReadableName());
     }
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl("series"));
@@ -253,7 +258,7 @@ public class SonarrApi implements Api {
           return chatClientResponseBuilder.createErrorMessage("Could not add show, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
         LogManager.getLogger("AuditLog").info("User " + username + " added " + title);
-        apiRequests.auditRequest(username, title);
+        apiRequests.auditRequest(apiRequestType, username, title);
         return chatClientResponseBuilder.createSuccessMessage("Show " + title + " added, sonarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {

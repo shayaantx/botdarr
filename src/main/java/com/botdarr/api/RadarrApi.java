@@ -235,6 +235,7 @@ public class RadarrApi implements Api {
 
   @Override
   public void cacheData() {
+    RADARR_CACHE.reset();
     ConnectionHelper.makeGetRequest(this, "/movie", new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) throws Exception {
@@ -333,9 +334,10 @@ public class RadarrApi implements Api {
 
       String username = CommandContext.getConfig().getUsername();
       ApiRequests apiRequests = new ApiRequests();
-      if (apiRequests.checkRequestLimits() && !apiRequests.canMakeRequests(username)) {
+      ApiRequestType apiRequestType = ApiRequestType.MOVIE;
+      if (apiRequests.checkRequestLimits(apiRequestType) && !apiRequests.canMakeRequests(apiRequestType, username)) {
         ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
-        return chatClientResponseBuilder.createErrorMessage("Could not add movie, user " + username + " has exceeded max requests for " + requestThreshold.getReadableName());
+        return chatClientResponseBuilder.createErrorMessage("Could not add movie, user " + username + " has exceeded max movie requests for " + requestThreshold.getReadableName());
       }
       try (CloseableHttpResponse response = client.execute(post)) {
         if (LOGGER.isDebugEnabled()) {
@@ -348,7 +350,7 @@ public class RadarrApi implements Api {
           return chatClientResponseBuilder.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
         LogManager.getLogger("AuditLog").info("User " + username + " added " + radarrMovie.getTitle());
-        apiRequests.auditRequest(username, radarrMovie.getTitle());
+        apiRequests.auditRequest(apiRequestType, username, radarrMovie.getTitle());
         return chatClientResponseBuilder.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
