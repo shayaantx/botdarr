@@ -10,4 +10,5 @@ public class LidarrUrls {
    * See https://github.com/lidarr/Lidarr/wiki/Artist-Lookup
    */
   public static final String LOOKUP_ARTISTS = "Artist/lookup";
+  public static final String DOWNLOAD_BASE = "queue";
 }

@@ -1,11 +1,7 @@
 package com.botdarr.api.sonarr;
 
 import com.botdarr.Config;
-import com.botdarr.api.Api;
-import com.botdarr.api.ApiRequestThreshold;
-import com.botdarr.api.ApiRequestType;
-import com.botdarr.api.ApiRequests;
-import com.botdarr.api.sonarr.*;
+import com.botdarr.api.*;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
@@ -40,14 +36,7 @@ public class SonarrApi implements Api {
 
   @Override
   public List<ChatClientResponse> downloads() {
-    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
-      return Collections.emptyList();
-    }
-    List<ChatClientResponse> chatClientResponses = getShowDownloads();
-    if (chatClientResponses.isEmpty()) {
-      chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No shows downloading"));
-    }
-    return chatClientResponses;
+    return getDownloadsStrategy().downloads();
   }
 
   public ChatClientResponse addWithId(String searchText, String id) {
@@ -106,31 +95,23 @@ public class SonarrApi implements Api {
   }
 
   public List<ChatClientResponse> lookup(String search, boolean findNew) {
-    try {
-      List<ChatClientResponse> responses = new ArrayList<>();
-      List<SonarrShow> shows = lookupShows(search);
-      for (SonarrShow sonarrShow : shows) {
-        //TODO: should we try to lookup shows with rage/maze id's as well?
-        SonarrShow existingShow = SONARR_CACHE.getExistingShowFromTvdbId(sonarrShow.getTvdbId());
-        boolean isExistingMovie = existingShow != null;
-        boolean skip = findNew ? isExistingMovie : !isExistingMovie;
-        if (skip) {
-          continue;
-        }
-        responses.add(chatClientResponseBuilder.getNewOrExistingShow(sonarrShow, existingShow, findNew));
+    return new LookupStrategy<SonarrShow>(chatClientResponseBuilder, ContentType.SHOW) {
+
+      @Override
+      public SonarrShow lookupExistingItem(SonarrShow lookupItem) {
+        return SONARR_CACHE.getExistingShowFromTvdbId(lookupItem.getTvdbId());
       }
-      if (responses.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " shows for search term=" + search));
+
+      @Override
+      public List<SonarrShow> lookup(String searchTerm) throws Exception {
+        return lookupShows(searchTerm);
       }
-      if (responses.size() > MAX_RESULTS_TO_SHOW) {
-        responses = subList(responses, MAX_RESULTS_TO_SHOW);
-        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many shows found, limiting results to " + MAX_RESULTS_TO_SHOW));
+
+      @Override
+      public ChatClientResponse getNewOrExistingItem(SonarrShow lookupItem, SonarrShow existingItem, boolean findNew) {
+        return chatClientResponseBuilder.getNewOrExistingShow(lookupItem, existingItem, findNew);
       }
-      return responses;
-    } catch (Exception e) {
-      LOGGER.error("Error trying to lookup show, searchText=" + search, e);
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error looking up content, e=" + e.getMessage()));
-    }
+    }.lookup(search, findNew);
   }
 
   public List<ChatClientResponse> lookupTorrents(String command, boolean showRejected) {
@@ -203,29 +184,23 @@ public class SonarrApi implements Api {
   }
 
   private List<ChatClientResponse> getShowDownloads() {
-    return ConnectionHelper.makeGetRequest(this, "queue", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+    return getDownloadsStrategy().getContentDownloads();
+  }
+
+  private DownloadsStrategy getDownloadsStrategy() {
+    return new DownloadsStrategy(this, SonarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.SHOW) {
       @Override
-      public List<ChatClientResponse> onSuccess(String response) throws Exception {
-        List<ChatClientResponse> responses = new ArrayList<>();
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        for (int i = 0; i < json.size(); i++) {
-          SonarrQueue showQueue = new Gson().fromJson(json.get(i), SonarrQueue.class);
-          SonarQueueEpisode episode = showQueue.getEpisode();
-          if (episode == null) {
-            //something is wrong with the download, skip
-            LOGGER.error("Series " + showQueue.getSonarrQueueShow().getTitle() + " missing episode info for id " + showQueue.getId());
-            continue;
-          }
-          responses.add(chatClientResponseBuilder.getShowDownloadResponses(showQueue));
+      public ChatClientResponse getResponse(JsonElement rawElement) {
+        SonarrQueue showQueue = new Gson().fromJson(rawElement, SonarrQueue.class);
+        SonarQueueEpisode episode = showQueue.getEpisode();
+        if (episode == null) {
+          //something is wrong with the download, skip
+          LOGGER.error("Series " + showQueue.getSonarrQueueShow().getTitle() + " missing episode info for id " + showQueue.getId());
+          return null;
         }
-        if (json.size() >= MAX_DOWNLOADS_TO_SHOW) {
-          responses = subList(responses, MAX_DOWNLOADS_TO_SHOW);
-          responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_DOWNLOADS_TO_SHOW));
-        }
-        return responses;
+        return chatClientResponseBuilder.getShowDownloadResponses(showQueue);
       }
-    });
+    };
   }
 
   private ChatClientResponse addShow(SonarrShow sonarrShow) {

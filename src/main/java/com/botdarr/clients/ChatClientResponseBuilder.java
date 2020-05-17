@@ -26,6 +26,7 @@ public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
   T getShowResponse(SonarrShow show);
   T getShowDownloadResponses(SonarrQueue sonarrShow);
   T getMovieDownloadResponses(RadarrQueue radarrQueue);
+  T getArtistDownloadResponses(LidarrArtist lidarrArtist);
   T createErrorMessage(String message);
   T createInfoMessage(String message);
   T createSuccessMessage(String message);
