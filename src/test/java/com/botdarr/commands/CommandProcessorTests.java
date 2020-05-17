@@ -2,8 +2,8 @@ package com.botdarr.commands;
 
 import com.botdarr.TestResponse;
 import com.botdarr.TestResponseBuilder;
-import com.botdarr.api.RadarrApi;
-import com.botdarr.api.SonarrApi;
+import com.botdarr.api.radarr.RadarrApi;
+import com.botdarr.api.sonarr.SonarrApi;
 import mockit.*;
 import org.junit.Assert;
 import org.junit.Before;

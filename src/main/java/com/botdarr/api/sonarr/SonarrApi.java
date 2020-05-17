@@ -1,6 +1,10 @@
-package com.botdarr.api;
+package com.botdarr.api.sonarr;
 
 import com.botdarr.Config;
+import com.botdarr.api.Api;
+import com.botdarr.api.ApiRequestThreshold;
+import com.botdarr.api.ApiRequestType;
+import com.botdarr.api.ApiRequests;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
@@ -190,7 +194,7 @@ public class SonarrApi implements Api {
     for (SonarrProfile sonarrProfile : sonarrProfiles) {
       SONARR_CACHE.addProfile(sonarrProfile);
     }
-    LOGGER.info("Finished caching sonarr data");
+    LOGGER.debug("Finished caching sonarr data");
   }
 
   @Override

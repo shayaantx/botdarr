@@ -9,7 +9,8 @@ import java.util.List;
 public class HelpCommands {
   public static List<Command> getCommands(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder,
                                           List<Command> radarrCommands,
-                                          List<Command> sonarrCommands) {
+                                          List<Command> sonarrCommands,
+                                          List<Command> lidarrCommands) {
     return new ArrayList<Command>() {{
       add(new BaseHelpCommand("help", "") {
         @Override
@@ -27,6 +28,12 @@ public class HelpCommands {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           return new CommandResponse(chatClientResponseBuilder.getShowsHelpResponse(sonarrCommands));
+        }
+      });
+      add(new BaseHelpCommand("music help", "") {
+        @Override
+        public CommandResponse<? extends ChatClientResponse> execute(String command) {
+          return new CommandResponse(chatClientResponseBuilder.getMusicHelpResponse(lidarrCommands));
         }
       });
     }};

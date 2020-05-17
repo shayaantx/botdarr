@@ -1,6 +1,6 @@
 package com.botdarr.commands;
 
-import com.botdarr.api.SonarrApi;
+import com.botdarr.api.sonarr.SonarrApi;
 import com.botdarr.clients.ChatClientResponse;
 import org.apache.logging.log4j.util.Strings;
 

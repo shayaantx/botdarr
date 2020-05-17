@@ -1,4 +1,4 @@
-package com.botdarr.api;
+package com.botdarr.api.radarr;
 
 import com.botdarr.Config;
 import com.botdarr.TestResponse;
@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 

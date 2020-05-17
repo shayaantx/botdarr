@@ -1,5 +1,6 @@
 package com.botdarr.clients;
 
+import com.botdarr.api.lidarr.LidarrArtist;
 import com.botdarr.api.radarr.RadarrMovie;
 import com.botdarr.api.radarr.RadarrProfile;
 import com.botdarr.api.radarr.RadarrQueue;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
   T getHelpResponse();
+  T getMusicHelpResponse(List<Command> lidarCommands);
   T getMoviesHelpResponse(List<Command> radarrCommands);
   T getShowsHelpResponse(List<Command> sonarrCommands);
   T getShowResponse(SonarrShow show);
@@ -32,6 +34,7 @@ public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
   T getMovieProfile(RadarrProfile radarrProfile);
   T getNewOrExistingShow(SonarrShow sonarrShow, SonarrShow existingShow, boolean findNew);
   T getNewOrExistingMovie(RadarrMovie lookupMovie, RadarrMovie existingMovie, boolean findNew);
+  T getNewOrExistingArtist(LidarrArtist lookupArtist, LidarrArtist existingArtist, boolean findNew);
   T getMovie(RadarrMovie radarrMovie);
   T getDiscoverableMovies(RadarrMovie radarrMovie);
 

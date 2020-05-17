@@ -1,7 +1,7 @@
 package com.botdarr.commands;
 
 import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.api.RadarrApi;
+import com.botdarr.api.radarr.RadarrApi;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.ArrayList;

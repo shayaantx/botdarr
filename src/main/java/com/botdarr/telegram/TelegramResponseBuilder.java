@@ -11,8 +11,8 @@ import com.botdarr.commands.SonarrCommands;
 import j2html.tags.DomContent;
 import org.apache.commons.io.FileUtils;
 
-import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
-import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static j2html.TagCreator.*;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
@@ -43,6 +43,11 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     } catch (IOException e) {
       throw new RuntimeException("Error getting help response", e);
     }
+  }
+
+  @Override
+  public TelegramResponse getMusicHelpResponse(List<Command> lidarCommands) {
+    return new TelegramResponse(getListOfCommands(lidarCommands));
   }
 
   @Override

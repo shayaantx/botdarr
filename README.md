@@ -13,7 +13,7 @@ Made this simple slack/discord/telegram bot so I could access radarr, sonarr, an
 - [ ] Radarr (v3)
 - [ ] Sonarr (v2)
 - [x] Sonarr (v3)
-- [ ] Lidarr
+- [x] Lidarr (v1)
 
 ## Currently Supported Chat Client's
 
@@ -123,17 +123,13 @@ nohup java -jar botdarr-release.jar &
 
 1. Docker images are here https://cloud.docker.com/repository/docker/shayaantx/botdarr/general
 1. Create a folder on your host called "botdarr"
-1. Create a logs folder in the botdarr folder
-1. Put your properties file in botdarr folder inside a folder named "config"
-1. Create a folder called "database" in the botdarr folder
+1. Create a logs folder in the botdarr folder (BOTDARR_HOME)
+1. Put your properties file in botdarr folder (BOTDARR_HOME)
+1. Create a folder called "database" in the botdarr folder (BOTDARR_HOME)
 1. Then run below command (replace BOTDARR_HOME variables)
 ```
 # for latest
 docker run -d --name botdarr -v /BOTDARR_HOME/database:/home/botdarr/database -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:latest &
-
-# for stable
-
-docker run -d --name botdarr -v /BOTDARR_HOME/database:/home/botdarr/database -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:stable &
 ```
 
 Or if you want to use docker-compose
