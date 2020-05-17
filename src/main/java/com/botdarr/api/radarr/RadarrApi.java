@@ -1,19 +1,13 @@
 package com.botdarr.api.radarr;
 
 import com.botdarr.Config;
-import com.botdarr.api.Api;
-import com.botdarr.api.ApiRequestThreshold;
-import com.botdarr.api.ApiRequestType;
-import com.botdarr.api.ApiRequests;
+import com.botdarr.api.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.CommandContext;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.connections.ConnectionHelper;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -43,42 +37,28 @@ public class RadarrApi implements Api {
   }
 
   public List<ChatClientResponse> lookup(String search, boolean findNew) {
-    try {
-      List<ChatClientResponse> responses = new ArrayList<>();
-      List<RadarrMovie> movies = lookupMovies(search);
-      for (RadarrMovie lookupMovie : movies) {
-        RadarrMovie existingMovie = RADARR_CACHE.getExistingMovie(lookupMovie.getTmdbId());
-        boolean isExistingMovie = existingMovie != null;
-        boolean skip = findNew ? isExistingMovie : !isExistingMovie;
-        if (skip) {
-          continue;
-        }
-        responses.add(chatClientResponseBuilder.getNewOrExistingMovie(lookupMovie, existingMovie, findNew));
+    return new LookupStrategy<RadarrMovie>(chatClientResponseBuilder, ContentType.MOVIE) {
+
+      @Override
+      public RadarrMovie lookupExistingItem(RadarrMovie lookupItem) {
+        return RADARR_CACHE.getExistingMovie(lookupItem.getTmdbId());
       }
-      if (responses.size() > MAX_RESULTS_TO_SHOW) {
-        responses = responses.subList(0, MAX_RESULTS_TO_SHOW - 1);
-        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many movies found, please narrow search"));
+
+      @Override
+      public List<RadarrMovie> lookup(String searchTerm) throws Exception {
+        return lookupMovies(searchTerm);
       }
-      if (responses.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " movies for search term=" + search));
+
+      @Override
+      public ChatClientResponse getNewOrExistingItem(RadarrMovie lookupItem, RadarrMovie existingItem, boolean findNew) {
+        return chatClientResponseBuilder.getNewOrExistingMovie(lookupItem, existingItem, findNew);
       }
-      return responses;
-    } catch (Exception e) {
-      LOGGER.error("Error trying to lookup movie", e);
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error looking up content, e=" + e.getMessage()));
-    }
+    }.lookup(search, findNew);
   }
 
   @Override
   public List<ChatClientResponse> downloads() {
-    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
-      return Collections.emptyList();
-    }
-    List<ChatClientResponse> chatClientResponses = getMovieDownloads();
-    if (chatClientResponses.isEmpty()) {
-      chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No movies downloading"));
-    }
-    return chatClientResponses;
+    return getDownloadsStrategy().downloads();
   }
 
   public List<ChatClientResponse> addWithTitle(String searchText) {
@@ -230,7 +210,7 @@ public class RadarrApi implements Api {
       LOGGER.debug("Bot configured to show no downloads");
       return;
     }
-    List<ChatClientResponse> downloads = getMovieDownloads();
+    List<ChatClientResponse> downloads = getDownloadsStrategy().getContentDownloads();
     if (downloads != null && !downloads.isEmpty()) {
       chatClient.sendToConfiguredChannels(downloads);
     } else {
@@ -291,25 +271,14 @@ public class RadarrApi implements Api {
     });
   }
 
-  private List<ChatClientResponse> getMovieDownloads() {
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DOWNLOAD_BASE, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+  private DownloadsStrategy getDownloadsStrategy() {
+    return new DownloadsStrategy(this, RadarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.MOVIE) {
       @Override
-      public List<ChatClientResponse> onSuccess(String response) throws Exception {
-        List<ChatClientResponse> chatClientResponses = new ArrayList<>();
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        boolean tooManyDownloads = json.size() >= MAX_DOWNLOADS_TO_SHOW;
-        for (int i = 0; i < json.size(); i++) {
-          RadarrQueue radarrQueue = new Gson().fromJson(json.get(i), RadarrQueue.class);
-          chatClientResponses.add(chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue));
-        }
-        if (tooManyDownloads) {
-          chatClientResponses = subList(chatClientResponses, MAX_DOWNLOADS_TO_SHOW);
-          chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_DOWNLOADS_TO_SHOW));
-        }
-        return chatClientResponses;
+      public ChatClientResponse getResponse(JsonElement rawElement) {
+        RadarrQueue radarrQueue = new Gson().fromJson(rawElement, RadarrQueue.class);
+        return chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue);
       }
-    });
+    };
   }
 
   private ChatClientResponse addMovie(RadarrMovie radarrMovie) {

@@ -1,19 +1,18 @@
 package com.botdarr.api.lidarr;
 
 import com.botdarr.Config;
-import com.botdarr.api.Api;
-import com.botdarr.api.ApiRequests;
+import com.botdarr.api.*;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.connections.ConnectionHelper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,18 +33,7 @@ public class LidarrApi implements Api {
 
   @Override
   public List<ChatClientResponse> downloads() {
-    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
-      return Collections.emptyList();
-    }
-    //TODO: implement
-    /*
-    List<ChatClientResponse> chatClientResponses = getMusicDownloads();
-    if (chatClientResponses.isEmpty()) {
-      chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No music downloading"));
-    }
-    return chatClientResponses;
-    */
-    return null;
+    return getDownloadsStrategy().downloads();
   }
 
   @Override
@@ -54,13 +42,12 @@ public class LidarrApi implements Api {
       LOGGER.debug("Bot configured to show no downloads");
       return;
     }
-    //TODO: implement
-    /*List<ChatClientResponse> downloads = getMusicDownloads();
+    List<ChatClientResponse> downloads = getDownloadsStrategy().getContentDownloads();
     if (downloads != null && !downloads.isEmpty()) {
       chatClient.sendToConfiguredChannels(downloads);
     } else {
       LOGGER.debug("No music downloads available for sending");
-    }*/
+    }
   }
 
   @Override
@@ -95,31 +82,23 @@ public class LidarrApi implements Api {
   }
 
   public List<ChatClientResponse> lookupArtists(String search, boolean findNew) {
-    try {
-      List<ChatClientResponse> responses = new ArrayList<>();
-      List<LidarrArtist> artists = lookupArtists(search);
-      for (LidarrArtist lookupArtist : artists) {
-        LidarrArtist existingArtist = LIDARR_CACHE.getExistingArtist(lookupArtist);
-        boolean isExistingArtist = existingArtist != null;
-        boolean skip = findNew ? isExistingArtist : !isExistingArtist;
-        if (skip) {
-          continue;
-        }
-        responses.add(chatClientResponseBuilder.getNewOrExistingArtist(lookupArtist, existingArtist, findNew));
-      }
-      if (responses.size() > MAX_RESULTS_TO_SHOW) {
-        responses = responses.subList(0, MAX_RESULTS_TO_SHOW - 1);
-        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many artists found, please narrow search"));
-      }
-      if (responses.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " artists for search term=" + search));
-      }
-      return responses;
+    return new LookupStrategy<LidarrArtist>(chatClientResponseBuilder, ContentType.ARTIST) {
 
-    } catch (Exception e) {
-      LOGGER.error("Error trying to lookup artists", e);
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error looking up content, e=" + e.getMessage()));
-    }
+      @Override
+      public LidarrArtist lookupExistingItem(LidarrArtist lookupItem) {
+        return LIDARR_CACHE.getExistingArtist(lookupItem);
+      }
+
+      @Override
+      public List<LidarrArtist> lookup(String searchTerm) throws Exception {
+        return lookupArtists(searchTerm);
+      }
+
+      @Override
+      public ChatClientResponse getNewOrExistingItem(LidarrArtist lookupItem, LidarrArtist existingItem, boolean findNew) {
+        return chatClientResponseBuilder.getNewOrExistingArtist(lookupItem, existingItem, findNew);
+      }
+    }.lookup(search, findNew);
   }
 
   /*
@@ -128,6 +107,16 @@ public class LidarrApi implements Api {
     //post
 
   }*/
+
+  private DownloadsStrategy getDownloadsStrategy() {
+    return new DownloadsStrategy(this, LidarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.ARTIST) {
+      @Override
+      public ChatClientResponse getResponse(JsonElement rawElement) {
+        LidarrArtist lidarrArtist = new Gson().fromJson(rawElement, LidarrArtist.class);
+        return chatClientResponseBuilder.getArtistDownloadResponses(lidarrArtist);
+      }
+    };
+  }
 
   private List<LidarrArtist> lookupArtists(String search) throws Exception {
     return ConnectionHelper.makeGetRequest(this, LidarrUrls.LOOKUP_ARTISTS, "&term=" + URLEncoder.encode(search, "UTF-8"),

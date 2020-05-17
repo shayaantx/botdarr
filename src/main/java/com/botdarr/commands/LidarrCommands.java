@@ -21,6 +21,12 @@ public class LidarrCommands {
           return new CommandResponse<>(lidarrApi.lookupArtists(command, false));
         }
       });
+      add(new BaseCommand("music artist find new", "") {
+        @Override
+        public CommandResponse<? extends ChatClientResponse> execute(String command) {
+          return new CommandResponse<>(lidarrApi.lookupArtists(command, true));
+        }
+      });
       //TODO: add by artist id
       //TODO: lookup by album
       //TODO: add by album id
