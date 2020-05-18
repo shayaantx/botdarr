@@ -40,58 +40,11 @@ public class SonarrApi implements Api {
   }
 
   public ChatClientResponse addWithId(String searchText, String id) {
-    try {
-      List<SonarrShow> shows = lookupShows(searchText);
-      if (shows.size() == 0) {
-        return chatClientResponseBuilder.createErrorMessage("No shows found");
-      }
-      for (SonarrShow sonarrShow : shows) {
-        if (sonarrShow.getTvdbId() == Integer.valueOf(id)) {
-          if (SONARR_CACHE.doesShowExist(sonarrShow.getTitle())) {
-            return chatClientResponseBuilder.createErrorMessage("Show already exists");
-          }
-          return addShow(sonarrShow);
-        }
-      }
-      return chatClientResponseBuilder.createErrorMessage("Could not find show with search text=" + searchText + " and id=" + id);
-    } catch (Exception e) {
-      LOGGER.error("Error trying to add show=" + searchText, e);
-      return chatClientResponseBuilder.createErrorMessage("Error adding content, e=" + e.getMessage());
-    }
+    return getAddStrategy().addWithSearchId(searchText, id);
   }
 
   public List<ChatClientResponse> addWithTitle(String searchText) {
-    try {
-      List<SonarrShow> shows = lookupShows(searchText);
-      if (shows.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("No shows found"));
-      }
-      if (shows.size() == 1) {
-        SonarrShow sonarrShow = shows.get(0);
-        if (SONARR_CACHE.doesShowExist(sonarrShow.getTitle())) {
-          return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Show already exists"));
-        }
-        return Arrays.asList(addShow(shows.get(0)));
-      }
-      List<ChatClientResponse> restOfShows = new ArrayList<>();
-      for (SonarrShow sonarrShow : shows) {
-        if (SONARR_CACHE.doesShowExist(sonarrShow.getTitle())) {
-          //skip existing movies
-          continue;
-        }
-        restOfShows.add(chatClientResponseBuilder.getShowResponse(sonarrShow));
-      }
-      if (restOfShows.size() > 1) {
-        restOfShows.add(0, chatClientResponseBuilder.createInfoMessage("Too many shows found, please narrow search"));
-      }
-      if (restOfShows.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No new shows found, check existing movies"));
-      }
-      return subList(restOfShows, MAX_RESULTS_TO_SHOW);
-    } catch (Exception e) {
-      LOGGER.error("Error found trying to add show=" + searchText, e);
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error trying to add show " + searchText + ", e=" + e.getMessage()));
-    }
+    return getAddStrategy().addWithSearchTitle(searchText);
   }
 
   public List<ChatClientResponse> lookup(String search, boolean findNew) {
@@ -185,6 +138,41 @@ public class SonarrApi implements Api {
 
   private List<ChatClientResponse> getShowDownloads() {
     return getDownloadsStrategy().getContentDownloads();
+  }
+
+  private AddStrategy<SonarrShow> getAddStrategy() {
+    return new AddStrategy<SonarrShow>(chatClientResponseBuilder, ContentType.SHOW) {
+      @Override
+      public List<SonarrShow> lookupContent(String search) throws Exception {
+        return lookupShows(search);
+      }
+
+      @Override
+      public List<SonarrShow> lookupItemById(String id) {
+        //TODO: if sonarr has a lookup by id, implement
+        return Collections.emptyList();
+      }
+
+      @Override
+      public boolean doesItemExist(SonarrShow content) {
+        return SONARR_CACHE.doesShowExist(content.getTitle());
+      }
+
+      @Override
+      public String getItemId(SonarrShow item) {
+        return String.valueOf(item.getTvdbId());
+      }
+
+      @Override
+      public ChatClientResponse addContent(SonarrShow content) {
+        return addShow(content);
+      }
+
+      @Override
+      public ChatClientResponse getResponse(SonarrShow item) {
+        return chatClientResponseBuilder.getShowResponse(item);
+      }
+    };
   }
 
   private DownloadsStrategy getDownloadsStrategy() {

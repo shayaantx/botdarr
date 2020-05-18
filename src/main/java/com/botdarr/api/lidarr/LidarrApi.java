@@ -76,8 +76,7 @@ public class LidarrApi implements Api {
     return null;
   }
 
-  public ChatClientResponse addArtist(String artist) {
-    //TODO: lookup existing artist
+  private ChatClientResponse addArtist(LidarrArtist artist) {
     return null;
   }
 
@@ -107,6 +106,41 @@ public class LidarrApi implements Api {
     //post
 
   }*/
+
+  private AddStrategy<LidarrArtist> getArtistAddStrategy() {
+    return new AddStrategy<LidarrArtist>(chatClientResponseBuilder, ContentType.ARTIST) {
+      @Override
+      public List<LidarrArtist> lookupContent(String search) throws Exception {
+        return lookupArtists(search);
+      }
+
+      @Override
+      public List<LidarrArtist> lookupItemById(String id) throws Exception {
+        //TODO: if there is a way to search artist by id, implement
+        return Collections.emptyList();
+      }
+
+      @Override
+      public boolean doesItemExist(LidarrArtist content) {
+        return LIDARR_CACHE.doesArtistExist(content);
+      }
+
+      @Override
+      public String getItemId(LidarrArtist item) {
+        return item.getForeignArtistId();
+      }
+
+      @Override
+      public ChatClientResponse addContent(LidarrArtist content) {
+        return addArtist(content);
+      }
+
+      @Override
+      public ChatClientResponse getResponse(LidarrArtist item) {
+        return null;
+      }
+    };
+  }
 
   private DownloadsStrategy getDownloadsStrategy() {
     return new DownloadsStrategy(this, LidarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.ARTIST) {

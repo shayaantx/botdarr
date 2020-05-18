@@ -5,6 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class LidarrCache {
 
+  public boolean doesArtistExist(LidarrArtist content) {
+    return existingArtistNamesToIds.containsKey(content.getArtistName().toLowerCase());
+  }
+
   public void addArtist(LidarrArtist artist) {
     existingForeignArtistIdToArtist.put(Long.valueOf(artist.getForeignArtistId()), artist);
     existingArtistNamesToIds.put(artist.getArtistName(), Long.valueOf(artist.getForeignArtistId()));

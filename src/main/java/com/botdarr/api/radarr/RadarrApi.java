@@ -62,65 +62,11 @@ public class RadarrApi implements Api {
   }
 
   public List<ChatClientResponse> addWithTitle(String searchText) {
-    try {
-      List<RadarrMovie> movies = lookupMovies(searchText);
-      if (movies.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No movies found"));
-      }
-
-      if (movies.size() == 1) {
-        RadarrMovie radarrMovie = movies.get(0);
-        if (RADARR_CACHE.doesMovieExist(radarrMovie.getTitle())) {
-          return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Movie already exists"));
-        }
-        return Arrays.asList(addMovie(movies.get(0)));
-      }
-      List<ChatClientResponse> restOfMovies = new ArrayList<>();
-      for (RadarrMovie radarrMovie : movies) {
-        if (RADARR_CACHE.doesMovieExist(radarrMovie.getTitle())) {
-          //skip existing movies
-          continue;
-        }
-        restOfMovies.add(chatClientResponseBuilder.getMovie(radarrMovie));
-      }
-      if (restOfMovies.size() > 1) {
-        restOfMovies = subList(restOfMovies, MAX_RESULTS_TO_SHOW);
-        restOfMovies.add(0, chatClientResponseBuilder.createInfoMessage("Too many movies found, please narrow search"));
-      }
-      if (restOfMovies.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No new movies found, check existing movies"));
-      }
-      return restOfMovies;
-    } catch (Exception e) {
-      LOGGER.error("Error trying to add movie", e);
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error trying to add movie " + searchText + ", e=" + e.getMessage()));
-    }
+    return getAddStrategy().addWithSearchTitle(searchText);
   }
 
   public ChatClientResponse addWithId(String searchText, String tmdbId) {
-    try {
-      List<RadarrMovie> movies = lookupMovies(searchText);
-      if (movies.isEmpty()) {
-        LOGGER.warn("Search text " + searchText + "yielded no movies, trying id");
-        movies = lookupMovieById(tmdbId);
-      }
-      if (movies.isEmpty()) {
-        LOGGER.warn("Search id " + tmdbId + "yielded no movies, stopping");
-        return chatClientResponseBuilder.createErrorMessage("No movies found");
-      }
-      for (RadarrMovie radarrMovie : movies) {
-        if (radarrMovie.getTmdbId() == Integer.valueOf(tmdbId)) {
-          if (RADARR_CACHE.doesMovieExist(radarrMovie.getTitle())) {
-            return chatClientResponseBuilder.createErrorMessage("Movie already exists");
-          }
-          return addMovie(radarrMovie);
-        }
-      }
-      return chatClientResponseBuilder.createErrorMessage("Could not find movie with search text=" + searchText + " and tmdbId=" + tmdbId);
-    } catch (Exception e) {
-      LOGGER.error("Error trying to add movie", e);
-      return chatClientResponseBuilder.createErrorMessage("Error adding content, e=" + e.getMessage());
-    }
+    return getAddStrategy().addWithSearchId(searchText, tmdbId);
   }
 
   public List<ChatClientResponse> getProfiles() {
@@ -281,6 +227,40 @@ public class RadarrApi implements Api {
     };
   }
 
+  private AddStrategy<RadarrMovie> getAddStrategy() {
+    return new AddStrategy<RadarrMovie>(chatClientResponseBuilder, ContentType.MOVIE) {
+      @Override
+      public List<RadarrMovie> lookupContent(String search)  throws Exception {
+        return lookupMovies(search);
+      }
+
+      @Override
+      public List<RadarrMovie> lookupItemById(String id) throws Exception {
+        return lookupMoviesById(id);
+      }
+
+      @Override
+      public boolean doesItemExist(RadarrMovie content) {
+        return RADARR_CACHE.doesMovieExist(content.getTitle());
+      }
+
+      @Override
+      public String getItemId(RadarrMovie item) {
+        return String.valueOf(item.getTmdbId());
+      }
+
+      @Override
+      public ChatClientResponse addContent(RadarrMovie content) {
+        return addMovie(content);
+      }
+
+      @Override
+      public ChatClientResponse getResponse(RadarrMovie item) {
+        return chatClientResponseBuilder.getMovie(item);
+      }
+    };
+  }
+
   private ChatClientResponse addMovie(RadarrMovie radarrMovie) {
     //make sure we specify where the movie should get downloaded
     radarrMovie.setPath(Config.getProperty(Config.Constants.RADARR_PATH) + File.separator + radarrMovie.getTitle() + "(" + radarrMovie.getYear() + ")");
@@ -374,7 +354,7 @@ public class RadarrApi implements Api {
     });
   }
 
-  private List<RadarrMovie> lookupMovieById(String tmdbid) throws Exception {
+  private List<RadarrMovie> lookupMoviesById(String tmdbid) throws Exception {
     return ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_LOOKUP_TMDB, "&tmdbId=" + URLEncoder.encode(tmdbid, "UTF-8"),
       new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
       @Override
