@@ -179,6 +179,14 @@ public class LidarrArtist {
     this.statistics = statistics;
   }
 
+  public String getRootFolderrPath() {
+    return rootFolderrPath;
+  }
+
+  public void setRootFolderrPath(String rootFolderrPath) {
+    this.rootFolderrPath = rootFolderrPath;
+  }
+
   private String status;
   private Boolean ended;
   private String artistName;
@@ -202,4 +210,5 @@ public class LidarrArtist {
   private LidarrRating ratings = new LidarrRating();
   private LidarrStatistics statistics = new LidarrStatistics();
   private LidarrAddOptions addOptions = new LidarrAddOptions();
+  private String rootFolderrPath;
 }

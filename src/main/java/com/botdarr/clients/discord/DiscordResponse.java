@@ -1,4 +1,4 @@
-package com.botdarr.discord;
+package com.botdarr.clients.discord;
 
 import com.botdarr.clients.ChatClientResponse;
 import net.dv8tion.jda.api.entities.MessageEmbed;

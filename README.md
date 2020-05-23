@@ -95,6 +95,8 @@ sonarr-url-base=
 #max-movie-requests-per-user=
 # The max number of show requests per user per month, day, or week
 #max-show-requests-per-user=
+# The max number of artist requests per user per month, day, or week
+#max-artist-requests-per-user=100
 # The threshold type for max requests
 # WEEK, MONTH, DAY
 # WEEK is from monday to sunday

@@ -1,14 +1,12 @@
-package com.botdarr.discord;
+package com.botdarr.clients.discord;
 
 import com.botdarr.Config;
 import com.botdarr.api.lidarr.LidarrArtist;
+import com.botdarr.api.lidarr.LidarrQueue;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.api.radarr.*;
-import com.botdarr.commands.Command;
-import com.botdarr.commands.CommandProcessor;
-import com.botdarr.commands.RadarrCommands;
-import com.botdarr.commands.SonarrCommands;
+import com.botdarr.commands.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.apache.commons.io.FileUtils;
@@ -20,6 +18,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 
+import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
@@ -36,6 +35,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     }
     boolean radarrEnabled = Config.isRadarrEnabled();
     boolean sonarrEnabled = Config.isSonarrEnabled();
+    boolean lidarrEnabled = Config.isLidarrEnabled();
     if (radarrEnabled) {
       embedBuilder.addField(RadarrCommands.getHelpMovieCommandStr(), "Shows all the commands for movies", false);
     }
@@ -44,8 +44,12 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
       embedBuilder.addField(SonarrCommands.getHelpShowCommandStr(), "Shows all the commands for shows", false);
     }
 
-    if (!radarrEnabled && !sonarrEnabled) {
-      embedBuilder.appendDescription("No radarr or sonarr commands configured, check your properties file and logs");
+    if (lidarrEnabled) {
+      embedBuilder.addField(LidarrCommands.getHelpCommandStr(), "Shows all the commands for music", false);
+    }
+
+    if (!radarrEnabled && !sonarrEnabled && !lidarrEnabled) {
+      embedBuilder.appendDescription("No radarr or sonarr or lidarr commands configured, check your properties file and logs");
     }
     return new DiscordResponse(embedBuilder.build());
   }
@@ -116,6 +120,12 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     }
     embedBuilder.addField("Cancel download command", "movie cancel download " + radarrQueue.getId(), true);
     return new DiscordResponse(embedBuilder.build());
+  }
+
+  @Override
+  public DiscordResponse getArtistDownloadResponses(LidarrQueue lidarrQueue) {
+    //TODO: implement
+    return null;
   }
 
   @Override
@@ -223,10 +233,11 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle(lookupArtist.getArtistName());
     embedBuilder.addField("Foreign Artist Id", lookupArtist.getForeignArtistId(), false);
     if (findNew) {
-
+      embedBuilder.addField(ADD_ARTIST_COMMAND_FIELD_PREFIX, LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId()), false);
     } else {
-
+      embedBuilder.addField("Id", String.valueOf(existingArtist.getForeignArtistId()), false);
     }
+    embedBuilder.setImage(lookupArtist.getRemotePoster());
     return new DiscordResponse(embedBuilder.build());
   }
 

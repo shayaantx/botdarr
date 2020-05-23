@@ -1,13 +1,12 @@
-package com.botdarr.slack;
+package com.botdarr.clients.slack;
 
 import com.botdarr.Config;
+import com.botdarr.api.lidarr.LidarrArtist;
+import com.botdarr.api.lidarr.LidarrQueue;
 import com.botdarr.api.radarr.*;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
-import com.botdarr.commands.Command;
-import com.botdarr.commands.CommandProcessor;
-import com.botdarr.commands.RadarrCommands;
-import com.botdarr.commands.SonarrCommands;
+import com.botdarr.commands.*;
 import com.github.seratch.jslack.api.model.block.ContextBlock;
 import com.github.seratch.jslack.api.model.block.ContextBlockElement;
 import com.github.seratch.jslack.api.model.block.ImageBlock;
@@ -23,6 +22,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
+import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
@@ -39,6 +39,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
 
       boolean radarrEnabled = Config.isRadarrEnabled();
       boolean sonarrEnabled = Config.isSonarrEnabled();
+      boolean lidarrEnabled = Config.isLidarrEnabled();
       if (radarrEnabled) {
         slackResponse.addBlock(SectionBlock.builder()
           .text(MarkdownTextObject.builder().text(RadarrCommands.getHelpMovieCommandStr() + " - Shows all the commands for movies").build())
@@ -51,9 +52,15 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
           .build());
       }
 
-      if (!radarrEnabled && !sonarrEnabled) {
+      if (lidarrEnabled) {
         slackResponse.addBlock(SectionBlock.builder()
-          .text(MarkdownTextObject.builder().text("*No radarr or sonarr commands configured, check your properties file and logs*").build())
+          .text(MarkdownTextObject.builder().text(LidarrCommands.getHelpCommandStr() + " - Shows all the commands for music").build())
+          .build());
+      }
+
+      if (!radarrEnabled && !sonarrEnabled && !lidarrEnabled) {
+        slackResponse.addBlock(SectionBlock.builder()
+          .text(MarkdownTextObject.builder().text("*No radarr or sonarr or lidarr commands configured, check your properties file and logs*").build())
           .build());
       }
     } catch (IOException e) {
@@ -177,6 +184,12 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .text(MarkdownTextObject.builder().text("Cancel download command - " + "movie cancel download " + radarrQueue.getId()).build())
       .build());
     return slackResponse;
+  }
+
+  @Override
+  public SlackResponse getArtistDownloadResponses(LidarrQueue lidarrQueue) {
+    //TODO: implement
+    return null;
   }
 
   @Override
@@ -373,6 +386,32 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     slackResponse.addBlock(ImageBlock.builder()
       .imageUrl(lookupMovie.getRemotePoster())
       .altText(lookupMovie.getTitle() + " poster")
+      .build());
+    return slackResponse;
+  }
+
+  @Override
+  public SlackResponse getNewOrExistingArtist(LidarrArtist lookupArtist, LidarrArtist existingArtist, boolean findNew) {
+    SlackResponse slackResponse = new SlackResponse();
+    slackResponse.addBlock(SectionBlock.builder()
+      .text(MarkdownTextObject.builder().text("*Artist Name* - " + lookupArtist.getArtistName()).build())
+      .build());
+    slackResponse.addBlock(SectionBlock.builder()
+      .text(MarkdownTextObject.builder().text("Artist Id - " + lookupArtist.getForeignArtistId()).build())
+      .build());
+    if (findNew) {
+      slackResponse.addBlock(SectionBlock.builder()
+        .text(MarkdownTextObject.builder().text(ADD_ARTIST_COMMAND_FIELD_PREFIX + " - " +
+          LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId())).build())
+        .build());
+    } else {
+      slackResponse.addBlock(SectionBlock.builder()
+        .text(MarkdownTextObject.builder().text("Id - " + existingArtist.getForeignArtistId()).build())
+        .build());
+    }
+    slackResponse.addBlock(ImageBlock.builder()
+      .imageUrl(lookupArtist.getRemotePoster())
+      .altText(lookupArtist.getArtistName() + " poster")
       .build());
     return slackResponse;
   }

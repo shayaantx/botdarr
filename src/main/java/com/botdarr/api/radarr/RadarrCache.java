@@ -35,8 +35,11 @@ public class RadarrCache {
     return existingProfiles.get(qualityProfileName.toLowerCase());
   }
 
-  public void reset() {
+  public void resetProfiles() {
     existingProfiles.clear();
+  }
+
+  public void resetMovie() {
     existingMovieTitlesToIds.clear();
     existingTmdbIdsToMovies.clear();
   }

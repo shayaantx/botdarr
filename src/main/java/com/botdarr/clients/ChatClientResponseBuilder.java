@@ -1,6 +1,7 @@
 package com.botdarr.clients;
 
 import com.botdarr.api.lidarr.LidarrArtist;
+import com.botdarr.api.lidarr.LidarrQueue;
 import com.botdarr.api.radarr.RadarrMovie;
 import com.botdarr.api.radarr.RadarrProfile;
 import com.botdarr.api.radarr.RadarrQueue;
@@ -26,7 +27,7 @@ public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
   T getShowResponse(SonarrShow show);
   T getShowDownloadResponses(SonarrQueue sonarrShow);
   T getMovieDownloadResponses(RadarrQueue radarrQueue);
-  T getArtistDownloadResponses(LidarrArtist lidarrArtist);
+  T getArtistDownloadResponses(LidarrQueue lidarrQueue);
   T createErrorMessage(String message);
   T createInfoMessage(String message);
   T createSuccessMessage(String message);
