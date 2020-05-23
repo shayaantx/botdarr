@@ -29,10 +29,6 @@ public class SonarrCache {
     existingShowTitlesToSonarrId.put(show.getTitle().toLowerCase(), show.getId());
   }
 
-  public Long getSonarrId(String title) {
-    return existingShowTitlesToSonarrId.get(title.toLowerCase());
-  }
-
   public Collection<SonarrProfile> getQualityProfiles() {
     return Collections.unmodifiableCollection(existingProfiles.values());
   }
@@ -45,8 +41,11 @@ public class SonarrCache {
     return existingProfiles.get(qualityProfileName.toLowerCase());
   }
 
-  public void reset() {
+  public void resetProfiles() {
     existingProfiles.clear();
+  }
+
+  public void resetShows() {
     existingShowTitlesToSonarrId.clear();
     existingTvdbIdsToMovies.clear();
     existingTvrageIdsToMovies.clear();

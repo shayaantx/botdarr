@@ -1,4 +1,4 @@
-package com.botdarr.slack;
+package com.botdarr.clients.slack;
 
 public class SlackMessage {
   public String getType() {

@@ -1,4 +1,4 @@
-package com.botdarr.slack;
+package com.botdarr.clients.slack;
 
 import com.botdarr.clients.ChatClientResponse;
 import com.github.seratch.jslack.api.model.block.LayoutBlock;

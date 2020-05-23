@@ -97,47 +97,62 @@ public class SonarrApi implements Api {
 
   @Override
   public void sendPeriodicNotifications(ChatClient chatClient) {
-    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
-      LOGGER.debug("Bot configured to show no downloads");
-      return;
-    }
-    List<ChatClientResponse> downloads = getShowDownloads();
-    if (downloads != null && !downloads.isEmpty()) {
-      chatClient.sendToConfiguredChannels(downloads);
-    } else {
-      LOGGER.debug("No show downloads available for sending");
-    }
+    new PeriodicNotificationStrategy(ContentType.SHOW, getDownloadsStrategy()) {
+      @Override
+      public void sendToConfiguredChannels(List downloads) {
+        chatClient.sendToConfiguredChannels(downloads);
+      }
+    }.sendPeriodicNotifications();
   }
 
   @Override
   public void cacheData() {
-    SONARR_CACHE.reset();
-    ConnectionHelper.makeGetRequest(this, "/series", new ConnectionHelper.SimpleEntityResponseHandler<SonarrShow>() {
+    new CacheProfileStrategy<SonarrProfile>() {
       @Override
-      public List<SonarrShow> onSuccess(String response) throws Exception {
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        for (int i = 0; i < json.size(); i++) {
-          SonarrShow sonarrShow = new Gson().fromJson(json.get(i), SonarrShow.class);
-          SONARR_CACHE.add(sonarrShow);
-        }
-        return null;
+      public void resetCache() {
+        SONARR_CACHE.resetProfiles();
       }
-    });
-    List<SonarrProfile> sonarrProfiles = getSonarrProfiles();
-    for (SonarrProfile sonarrProfile : sonarrProfiles) {
-      SONARR_CACHE.addProfile(sonarrProfile);
-    }
-    LOGGER.debug("Finished caching sonarr data");
+
+      @Override
+      public List<SonarrProfile> getProfiles() {
+        return ConnectionHelper.makeGetRequest(SonarrApi.this, SonarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<SonarrProfile>() {
+          @Override
+          public List<SonarrProfile> onSuccess(String response) {
+            List<SonarrProfile> sonarrProfiles = new ArrayList<>();
+            JsonParser parser = new JsonParser();
+            JsonArray json = parser.parse(response).getAsJsonArray();
+            for (int i = 0; i < json.size(); i++) {
+              SonarrProfile sonarrProfile = new Gson().fromJson(json.get(i), SonarrProfile.class);
+              sonarrProfiles.add(sonarrProfile);
+            }
+            return sonarrProfiles;
+          }
+        });
+      }
+
+      @Override
+      public void addProfile(SonarrProfile profile) {
+        SONARR_CACHE.addProfile(profile);
+      }
+    }.cacheData();
+
+    new CacheContentStrategy<SonarrShow>(this, SonarrUrls.SERIES_BASE) {
+      @Override
+      public void resetCache() {
+        SONARR_CACHE.resetShows();
+      }
+
+      @Override
+      public void addToCache(JsonElement cacheItem) {
+        SonarrShow sonarrShow = new Gson().fromJson(cacheItem, SonarrShow.class);
+        SONARR_CACHE.add(sonarrShow);
+      }
+    }.cacheData();
   }
 
   @Override
   public String getApiToken() {
     return Config.Constants.SONARR_TOKEN;
-  }
-
-  private List<ChatClientResponse> getShowDownloads() {
-    return getDownloadsStrategy().getContentDownloads();
   }
 
   private AddStrategy<SonarrShow> getAddStrategy() {
@@ -214,7 +229,7 @@ public class SonarrApi implements Api {
       return chatClientResponseBuilder.createErrorMessage("Could not add show, user " + username + " has exceeded max show requests for " + requestThreshold.getReadableName());
     }
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-      HttpPost post = new HttpPost(getApiUrl("series"));
+      HttpPost post = new HttpPost(getApiUrl(SonarrUrls.SERIES_BASE));
 
       post.addHeader("content-type", "application/x-www-form-urlencoded");
       post.setEntity(new StringEntity(new GsonBuilder().addSerializationExclusionStrategy(excludeUnnecessaryFields).create().toJson(sonarrShow, SonarrShow.class)));
@@ -235,7 +250,7 @@ public class SonarrApi implements Api {
   }
 
   private List<SonarrShow> lookupShows(String search) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, "series/lookup", "&term=" + URLEncoder.encode(search, "UTF-8"), new ConnectionHelper.SimpleEntityResponseHandler<SonarrShow>() {
+    return ConnectionHelper.makeGetRequest(this, SonarrUrls.LOOKUP_SERIES, "&term=" + URLEncoder.encode(search, "UTF-8"), new ConnectionHelper.SimpleEntityResponseHandler<SonarrShow>() {
       @Override
       public List<SonarrShow> onSuccess(String response) {
         List<SonarrShow> movies = new ArrayList<>();
@@ -245,22 +260,6 @@ public class SonarrApi implements Api {
           movies.add(new Gson().fromJson(json.get(i), SonarrShow.class));
         }
         return movies;
-      }
-    });
-  }
-
-  private List<SonarrProfile> getSonarrProfiles() {
-    return ConnectionHelper.makeGetRequest(this, "profile", new ConnectionHelper.SimpleEntityResponseHandler<SonarrProfile>() {
-      @Override
-      public List<SonarrProfile> onSuccess(String response) {
-        List<SonarrProfile> sonarrProfiles = new ArrayList<>();
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        for (int i = 0; i < json.size(); i++) {
-          SonarrProfile sonarrProfile = new Gson().fromJson(json.get(i), SonarrProfile.class);
-          sonarrProfiles.add(sonarrProfile);
-        }
-        return sonarrProfiles;
       }
     });
   }
@@ -280,7 +279,5 @@ public class SonarrApi implements Api {
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
-  private final int MAX_RESULTS_TO_SHOW = new ApiRequests().getMaxResultsToShow();
-  private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
   public static final String ADD_SHOW_COMMAND_FIELD_PREFIX = "Add show command";
 }

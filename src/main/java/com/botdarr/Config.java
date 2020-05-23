@@ -73,7 +73,7 @@ public class Config {
         !Strings.isBlank(properties.getProperty(Constants.LIDARR_URL)) &&
         !Strings.isBlank(properties.getProperty(Constants.LIDARR_PATH)) &&
         !Strings.isBlank(properties.getProperty(Constants.LIDARR_TOKEN)) &&
-        !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_PROFILE));\
+        !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_PROFILE));
 
       if (!this.isLidarrEnabled) {
         LOGGER.warn("Lidarr commands are not enabled, make sure you set the lidarr url, path, token, default profile");
@@ -236,6 +236,11 @@ public class Config {
      * The max amount of show requests per user per configured threshold
      */
     public static final String MAX_SHOW_REQUESTS_PER_USER = "max-show-requests-per-user";
+
+    /**
+     * TODO: doc
+     */
+    public static final String MAX_ARTIST_REQUESTS_PER_USER = "max-artist-requests-per-user";
 
     /**
      * The type of threshold to enforce around request maximums (i.e., {@link com.botdarr.api.ApiRequestThreshold}

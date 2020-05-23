@@ -1,16 +1,16 @@
-package com.botdarr.telegram;
+package com.botdarr.clients.telegram;
 
 import com.botdarr.Config;
+import com.botdarr.api.lidarr.LidarrArtist;
+import com.botdarr.api.lidarr.LidarrQueue;
 import com.botdarr.api.radarr.*;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
-import com.botdarr.commands.Command;
-import com.botdarr.commands.CommandProcessor;
-import com.botdarr.commands.RadarrCommands;
-import com.botdarr.commands.SonarrCommands;
+import com.botdarr.commands.*;
 import j2html.tags.DomContent;
 import org.apache.commons.io.FileUtils;
 
+import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static j2html.TagCreator.*;
@@ -30,14 +30,18 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
       domContents.add(u(b("*Commands*")));
       boolean radarrEnabled = Config.isRadarrEnabled();
       boolean sonarrEnabled = Config.isSonarrEnabled();
+      boolean lidarrEnabled = Config.isLidarrEnabled();
       if (radarrEnabled) {
         domContents.add(text(RadarrCommands.getHelpMovieCommandStr() + " - Shows all the commands for movies"));
       }
       if (sonarrEnabled) {
         domContents.add(text(SonarrCommands.getHelpShowCommandStr() + " - Shows all the commands for shows"));
       }
+      if (lidarrEnabled) {
+        domContents.add(text(LidarrCommands.getHelpCommandStr() + " - Shows all the commands for music"));
+      }
       if (!radarrEnabled && !sonarrEnabled) {
-        domContents.add(b("*No radarr or sonarr commands configured, check your properties file and logs*"));
+        domContents.add(b("*No radarr or sonarr or lidarr commands configured, check your properties file and logs*"));
       }
       return new TelegramResponse(domContents);
     } catch (IOException e) {
@@ -118,6 +122,12 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     }
     domContents.add(code(details.toString()));
     return new TelegramResponse(domContents);
+  }
+
+  @Override
+  public TelegramResponse getArtistDownloadResponses(LidarrQueue lidarrQueue) {
+    //TODO: implement
+    return null;
   }
 
   @Override
@@ -237,6 +247,20 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
       domContents.add(code(existingDetails.toString()));
     }
     domContents.add(a(lookupMovie.getRemotePoster()));
+    return new TelegramResponse(domContents);
+  }
+
+  @Override
+  public TelegramResponse getNewOrExistingArtist(LidarrArtist lookupArtist, LidarrArtist existingArtist, boolean findNew) {
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b(lookupArtist.getArtistName()));    if (findNew) {
+      domContents.add(u(ADD_ARTIST_COMMAND_FIELD_PREFIX + " - " + LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId())));
+    } else {
+      StringBuilder existingDetails = new StringBuilder();
+      existingDetails.append("Id - " + existingArtist.getForeignArtistId() + "\n");
+      domContents.add(code(existingDetails.toString()));
+    }
+    domContents.add(a(lookupArtist.getRemotePoster()));
     return new TelegramResponse(domContents);
   }
 

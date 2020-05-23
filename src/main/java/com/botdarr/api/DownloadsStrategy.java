@@ -7,8 +7,6 @@ import com.botdarr.utilities.ListUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,7 +63,6 @@ public abstract class DownloadsStrategy {
   private final Api api;
   private final String url;
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
-  private static final Logger LOGGER = LogManager.getLogger();
   private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
   private final ContentType contentType;
 }

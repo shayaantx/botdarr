@@ -2,6 +2,7 @@ package com.botdarr.commands;
 
 import com.botdarr.TestResponse;
 import com.botdarr.TestResponseBuilder;
+import com.botdarr.api.lidarr.LidarrApi;
 import com.botdarr.api.radarr.RadarrApi;
 import com.botdarr.api.sonarr.SonarrApi;
 import mockit.*;
@@ -369,9 +370,11 @@ public class CommandProcessorTests {
   private List<Command> getCommandsToTest() {
     List<Command> radarrCommands = RadarrCommands.getCommands(radarrApi);
     List<Command> sonarrCommands = SonarrCommands.getCommands(sonarrApi);
-    List<Command> commands = new ArrayList<>(HelpCommands.getCommands(responseBuilder, radarrCommands, sonarrCommands));
+    List<Command> lidarrCommands = LidarrCommands.getCommands(lidarrApi);
+    List<Command> commands = new ArrayList<>(HelpCommands.getCommands(responseBuilder, radarrCommands, sonarrCommands, lidarrCommands));
     commands.addAll(radarrCommands);
     commands.addAll(sonarrCommands);
+    commands.addAll(lidarrCommands);
     return commands;
   }
 
@@ -380,6 +383,9 @@ public class CommandProcessorTests {
 
   @Injectable
   private SonarrApi sonarrApi;
+
+  @Injectable
+  private LidarrApi lidarrApi;
 
   private TestResponseBuilder responseBuilder = new TestResponseBuilder();
 }

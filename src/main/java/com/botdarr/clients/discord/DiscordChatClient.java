@@ -1,4 +1,4 @@
-package com.botdarr.discord;
+package com.botdarr.clients.discord;
 
 import com.botdarr.Config;
 import com.botdarr.clients.ChatClient;

@@ -152,39 +152,57 @@ public class RadarrApi implements Api {
 
   @Override
   public void sendPeriodicNotifications(ChatClient chatClient) {
-    if (MAX_DOWNLOADS_TO_SHOW <= 0) {
-      LOGGER.debug("Bot configured to show no downloads");
-      return;
-    }
-    List<ChatClientResponse> downloads = getDownloadsStrategy().getContentDownloads();
-    if (downloads != null && !downloads.isEmpty()) {
-      chatClient.sendToConfiguredChannels(downloads);
-    } else {
-      LOGGER.debug("No movie downloads available for sending");
-    }
+    new PeriodicNotificationStrategy(ContentType.MOVIE, getDownloadsStrategy()) {
+      @Override
+      public void sendToConfiguredChannels(List downloads) {
+        chatClient.sendToConfiguredChannels(downloads);
+      }
+    }.sendPeriodicNotifications();
   }
 
   @Override
   public void cacheData() {
-    RADARR_CACHE.reset();
-    ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_BASE, new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+    new CacheProfileStrategy<RadarrProfile>() {
       @Override
-      public List<RadarrMovie> onSuccess(String response) throws Exception {
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        for (int i = 0; i < json.size(); i++) {
-          RadarrMovie radarrMovie = new Gson().fromJson(json.get(i), RadarrMovie.class);
-          RADARR_CACHE.add(radarrMovie);
-        }
-        return null;
+      public void resetCache() {
+        RADARR_CACHE.resetProfiles();
       }
-    });
 
-    List<RadarrProfile> radarrProfiles = getRadarrProfiles();
-    for (RadarrProfile radarrProfile : radarrProfiles) {
-      RADARR_CACHE.addProfile(radarrProfile);
-    }
-    LOGGER.debug("Finished caching radarr data");
+      @Override
+      public List<RadarrProfile> getProfiles() {
+        return ConnectionHelper.makeGetRequest(RadarrApi.this, RadarrUrls.PROFILE_BASE, new ConnectionHelper.SimpleEntityResponseHandler<RadarrProfile>() {
+          @Override
+          public List<RadarrProfile> onSuccess(String response) {
+            List<RadarrProfile> radarrProfiles = new ArrayList<>();
+            JsonParser parser = new JsonParser();
+            JsonArray json = parser.parse(response).getAsJsonArray();
+            for (int i = 0; i < json.size(); i++) {
+              RadarrProfile radarrProfile = new Gson().fromJson(json.get(i), RadarrProfile.class);
+              radarrProfiles.add(radarrProfile);
+            }
+            return radarrProfiles;
+          }
+        });
+      }
+
+      @Override
+      public void addProfile(RadarrProfile profile) {
+        RADARR_CACHE.addProfile(profile);
+      }
+    }.cacheData();
+
+    new CacheContentStrategy<RadarrMovie>(this, RadarrUrls.MOVIE_BASE) {
+      @Override
+      public void resetCache() {
+        RADARR_CACHE.resetMovie();
+      }
+
+      @Override
+      public void addToCache(JsonElement cacheItem) {
+        RadarrMovie radarrMovie = new Gson().fromJson(cacheItem, RadarrMovie.class);
+        RADARR_CACHE.add(radarrMovie);
+      }
+    }.cacheData();
   }
 
   @Override
@@ -205,8 +223,8 @@ public class RadarrApi implements Api {
         JsonArray json = parser.parse(response).getAsJsonArray();
 
         for (int i = 0; i < json.size(); i++) {
-          if (i == MAX_RESULTS_TO_SHOW) {
-            //don't show more than MAX_RESULTS_TO_SHOW
+          if (i == new ApiRequests().getMaxResultsToShow()) {
+            //don't show more than configured max results to show
             break;
           }
           RadarrMovie radarrMovie = new Gson().fromJson(json.get(i), RadarrMovie.class);
@@ -368,25 +386,7 @@ public class RadarrApi implements Api {
     });
   }
 
-  private List<RadarrProfile> getRadarrProfiles() {
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.PROFILE_BASE, new ConnectionHelper.SimpleEntityResponseHandler<RadarrProfile>() {
-      @Override
-      public List<RadarrProfile> onSuccess(String response) {
-        List<RadarrProfile> radarrProfiles = new ArrayList<>();
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        for (int i = 0; i < json.size(); i++) {
-          RadarrProfile radarrProfile = new Gson().fromJson(json.get(i), RadarrProfile.class);
-          radarrProfiles.add(radarrProfile);
-        }
-        return radarrProfiles;
-      }
-    });
-  }
-
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final RadarrCache RADARR_CACHE = new RadarrCache();
-  private final int MAX_RESULTS_TO_SHOW = new ApiRequests().getMaxResultsToShow();
-  private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
   public static final String ADD_MOVIE_COMMAND_FIELD_PREFIX = "Add movie command";
 }

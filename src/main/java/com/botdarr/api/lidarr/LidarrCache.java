@@ -15,7 +15,7 @@ public class LidarrCache {
   }
 
   public void addProfile(LidarrProfile lidarrProfile) {
-    //TODO:
+    existingProfiles.put(lidarrProfile.getName().toLowerCase(), lidarrProfile);
   }
 
   public LidarrArtist getExistingArtist(LidarrArtist lidarrArtist) {
@@ -26,8 +26,11 @@ public class LidarrCache {
     return existingProfiles.get(qualityProfileName.toLowerCase());
   }
 
-  public void reset() {
+  public void resetProfiles() {
     existingProfiles.clear();
+  }
+
+  public void resetArtists() {
     existingArtistNamesToIds.clear();
     existingForeignArtistIdToArtist.clear();
   }
