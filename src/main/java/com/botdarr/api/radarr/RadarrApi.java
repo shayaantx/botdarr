@@ -162,10 +162,10 @@ public class RadarrApi implements Api {
 
   @Override
   public void cacheData() {
-    new CacheProfileStrategy<RadarrProfile>() {
+    new CacheProfileStrategy<RadarrProfile, String>() {
       @Override
-      public void resetCache() {
-        RADARR_CACHE.resetProfiles();
+      public void deleteFromCache(List<String> profilesAddUpdated) {
+        RADARR_CACHE.removeDeletedProfiles(profilesAddUpdated);
       }
 
       @Override
@@ -191,16 +191,17 @@ public class RadarrApi implements Api {
       }
     }.cacheData();
 
-    new CacheContentStrategy<RadarrMovie>(this, RadarrUrls.MOVIE_BASE) {
+    new CacheContentStrategy<RadarrMovie, Long>(this, RadarrUrls.MOVIE_BASE) {
       @Override
-      public void resetCache() {
-        RADARR_CACHE.resetMovie();
+      public void deleteFromCache(List<Long> itemsAddedUpdated) {
+        RADARR_CACHE.removeDeletedMovies(itemsAddedUpdated);
       }
 
       @Override
-      public void addToCache(JsonElement cacheItem) {
+      public Long addToCache(JsonElement cacheItem) {
         RadarrMovie radarrMovie = new Gson().fromJson(cacheItem, RadarrMovie.class);
         RADARR_CACHE.add(radarrMovie);
+        return radarrMovie.getKey();
       }
     }.cacheData();
   }

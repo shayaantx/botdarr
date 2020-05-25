@@ -31,7 +31,7 @@ public abstract class DownloadsStrategy {
     }
     List<ChatClientResponse> chatClientResponses = getContentDownloads();
     if (chatClientResponses.isEmpty()) {
-      chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No " + this.contentType.name() + "s downloading"));
+      chatClientResponses.add(chatClientResponseBuilder.createInfoMessage("No " + this.contentType.getDisplayName() + "s downloading"));
     }
     return chatClientResponses;
   }

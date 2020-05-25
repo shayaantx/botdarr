@@ -1,16 +1,19 @@
 package com.botdarr.api.lidarr;
 
 public class LidarrUrls {
+  private static final String VERSION = "v1/";
   /**
    * See https://github.com/lidarr/Lidarr/wiki/Artist
    */
-  public static final String ALL_ARTISTS = "artist";
+  public static final String ALL_ARTISTS = VERSION + "artist";
 
   /**
    * See https://github.com/lidarr/Lidarr/wiki/Artist-Lookup
    */
-  public static final String LOOKUP_ARTISTS = "Artist/lookup";
-  public static final String DOWNLOAD_BASE = "queue";
+  public static final String LOOKUP_ARTISTS = VERSION + "Artist/lookup";
+  public static final String DOWNLOAD_BASE = VERSION + "queue";
 
-  public static final String PROFILE = "v1/qualityprofile";
+  public static final String PROFILE = VERSION + "qualityprofile";
+
+  public static final String METADATA_PROFILE = VERSION + "metadataprofile";
 }

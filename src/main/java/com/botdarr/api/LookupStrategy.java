@@ -34,11 +34,11 @@ public abstract class LookupStrategy<T> {
         responses.add(getNewOrExistingItem(lookupItem, existingItem, findNew));
       }
       if (responses.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + this.contentType + " for search term=" + search));
+        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " " + this.contentType.getDisplayName() + " for search term=" + search));
       }
       if (responses.size() > MAX_RESULTS_TO_SHOW) {
         responses = ListUtils.subList(responses, MAX_RESULTS_TO_SHOW);
-        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many " + this.contentType + " found, limiting results to " + MAX_RESULTS_TO_SHOW));
+        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many " + this.contentType.getDisplayName() + " found, limiting results to " + MAX_RESULTS_TO_SHOW));
       }
       return responses;
     } catch (Exception e) {

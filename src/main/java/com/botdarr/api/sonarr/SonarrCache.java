@@ -1,8 +1,6 @@
 package com.botdarr.api.sonarr;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SonarrCache {
@@ -23,7 +21,7 @@ public class SonarrCache {
   }
 
   public void add(SonarrShow show) {
-    existingTvdbIdsToMovies.put(show.getTvdbId(), show);
+    existingTvdbIdsToMovies.put(show.getKey(), show);
     existingTvrageIdsToMovies.put(show.getTvRageId(), show);
     existingTvmazeIdsToMovies.put(show.getTvMazeId(), show);
     existingShowTitlesToSonarrId.put(show.getTitle().toLowerCase(), show.getId());
@@ -34,22 +32,33 @@ public class SonarrCache {
   }
 
   public void addProfile(SonarrProfile qualityProfile) {
-    existingProfiles.put(qualityProfile.getName().toLowerCase(), qualityProfile);
+    existingProfiles.put(qualityProfile.getKey(), qualityProfile);
   }
 
   public SonarrProfile getProfile(String qualityProfileName) {
     return existingProfiles.get(qualityProfileName.toLowerCase());
   }
 
-  public void resetProfiles() {
-    existingProfiles.clear();
+  public void removeDeletedProfiles(List<String> addUpdatedProfiles) {
+    existingProfiles.keySet().retainAll(addUpdatedProfiles);
   }
 
-  public void resetShows() {
-    existingShowTitlesToSonarrId.clear();
-    existingTvdbIdsToMovies.clear();
-    existingTvrageIdsToMovies.clear();
-    existingTvmazeIdsToMovies.clear();
+  public void removeDeletedShows(List<Long> addUpdatedTvdbShowIds) {
+    List<String> existingShowTitles = new ArrayList<>();
+    List<Long> existingTvRageIds = new ArrayList<>();
+    List<Long> existingTvmazeIds = new ArrayList<>();
+    for (Long tvdbId : addUpdatedTvdbShowIds) {
+      SonarrShow sonarrShow = existingTvdbIdsToMovies.get(tvdbId);
+      if (sonarrShow != null) {
+        existingShowTitles.add(sonarrShow.getTitle());
+        existingTvRageIds.add(sonarrShow.getTvRageId());
+        existingTvmazeIds.add(sonarrShow.getTvMazeId());
+      }
+    }
+    existingShowTitlesToSonarrId.keySet().retainAll(addUpdatedTvdbShowIds);
+    existingTvdbIdsToMovies.keySet().retainAll(addUpdatedTvdbShowIds);
+    existingTvrageIdsToMovies.keySet().retainAll(existingTvRageIds);
+    existingTvmazeIdsToMovies.keySet().retainAll(existingTvmazeIds);
   }
 
   private Map<String, SonarrProfile> existingProfiles = new ConcurrentHashMap<>();

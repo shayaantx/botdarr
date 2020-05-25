@@ -1,8 +1,6 @@
 package com.botdarr.api.radarr;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RadarrCache {
@@ -23,25 +21,32 @@ public class RadarrCache {
   }
 
   public void add(RadarrMovie movie) {
-    existingTmdbIdsToMovies.put(movie.getTmdbId(), movie);
+    existingTmdbIdsToMovies.put(movie.getKey(), movie);
     existingMovieTitlesToIds.put(movie.getTitle().toLowerCase(), movie.getId());
   }
 
   public void addProfile(RadarrProfile qualityProfile) {
-    existingProfiles.put(qualityProfile.getName().toLowerCase(), qualityProfile);
+    existingProfiles.put(qualityProfile.getKey(), qualityProfile);
   }
 
   public RadarrProfile getProfile(String qualityProfileName) {
     return existingProfiles.get(qualityProfileName.toLowerCase());
   }
 
-  public void resetProfiles() {
-    existingProfiles.clear();
+  public void removeDeletedProfiles(List<String> addUpdatedProfiles) {
+    existingProfiles.keySet().retainAll(addUpdatedProfiles);
   }
 
-  public void resetMovie() {
-    existingMovieTitlesToIds.clear();
-    existingTmdbIdsToMovies.clear();
+  public void removeDeletedMovies(List<Long> addUpdatedMovies) {
+    List<String> existingMovieTitles = new ArrayList<>();
+    for (Long tmdbId : addUpdatedMovies) {
+      RadarrMovie radarrMovie = existingTmdbIdsToMovies.get(tmdbId);
+      if (radarrMovie != null) {
+        existingMovieTitles.add(radarrMovie.getTitle());
+      }
+    }
+    existingTmdbIdsToMovies.keySet().retainAll(addUpdatedMovies);
+    existingMovieTitlesToIds.keySet().retainAll(existingMovieTitles);
   }
 
   private Map<String, RadarrProfile> existingProfiles = new ConcurrentHashMap<>();

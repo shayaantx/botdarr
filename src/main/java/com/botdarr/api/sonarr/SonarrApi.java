@@ -107,10 +107,10 @@ public class SonarrApi implements Api {
 
   @Override
   public void cacheData() {
-    new CacheProfileStrategy<SonarrProfile>() {
+    new CacheProfileStrategy<SonarrProfile, String>() {
       @Override
-      public void resetCache() {
-        SONARR_CACHE.resetProfiles();
+      public void deleteFromCache(List<String> profilesAddUpdated) {
+        SONARR_CACHE.removeDeletedProfiles(profilesAddUpdated);
       }
 
       @Override
@@ -136,16 +136,17 @@ public class SonarrApi implements Api {
       }
     }.cacheData();
 
-    new CacheContentStrategy<SonarrShow>(this, SonarrUrls.SERIES_BASE) {
+    new CacheContentStrategy<SonarrShow, Long>(this, SonarrUrls.SERIES_BASE) {
       @Override
-      public void resetCache() {
-        SONARR_CACHE.resetShows();
+      public void deleteFromCache(List<Long> itemsAddedUpdated) {
+        SONARR_CACHE.removeDeletedShows(itemsAddedUpdated);
       }
 
       @Override
-      public void addToCache(JsonElement cacheItem) {
+      public Long addToCache(JsonElement cacheItem) {
         SonarrShow sonarrShow = new Gson().fromJson(cacheItem, SonarrShow.class);
         SONARR_CACHE.add(sonarrShow);
+        return sonarrShow.getKey();
       }
     }.cacheData();
   }

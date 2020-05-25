@@ -32,17 +32,17 @@ public abstract class AddStrategy<T> {
       }
       if (items.isEmpty()) {
         LOGGER.warn("Search id " + id + "yielded no " + this.contentType + "s, stopping");
-        return chatClientResponseBuilder.createErrorMessage("No " + this.contentType + "s found");
+        return chatClientResponseBuilder.createErrorMessage("No " + this.contentType.getDisplayName() + "s found");
       }
       for (T item : items) {
         if (getItemId(item).equalsIgnoreCase(id)) {
           if (doesItemExist(item)) {
-            return chatClientResponseBuilder.createErrorMessage(this.contentType + " already exists");
+            return chatClientResponseBuilder.createErrorMessage(this.contentType.getDisplayName() + " already exists");
           }
           return addContent(item);
         }
       }
-      return chatClientResponseBuilder.createErrorMessage("Could not find " + this.contentType + " with search text=" + searchText + " and id=" + id);
+      return chatClientResponseBuilder.createErrorMessage("Could not find " + this.contentType.getDisplayName() + " with search text=" + searchText + " and id=" + id);
     } catch (Exception e) {
       LOGGER.error("Error trying to add " + this.contentType, e);
       return chatClientResponseBuilder.createErrorMessage("Error adding content, e=" + e.getMessage());

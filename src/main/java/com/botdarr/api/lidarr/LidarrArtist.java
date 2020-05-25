@@ -1,8 +1,15 @@
 package com.botdarr.api.lidarr;
 
+import com.botdarr.api.KeyBased;
+
 import java.util.List;
 
-public class LidarrArtist {
+public class LidarrArtist implements KeyBased<String> {
+  @Override
+  public String getKey() {
+    return foreignArtistId;
+  }
+
   public String getStatus() {
     return status;
   }
@@ -187,6 +194,14 @@ public class LidarrArtist {
     this.rootFolderrPath = rootFolderrPath;
   }
 
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
   private String status;
   private Boolean ended;
   private String artistName;
@@ -211,4 +226,5 @@ public class LidarrArtist {
   private LidarrStatistics statistics = new LidarrStatistics();
   private LidarrAddOptions addOptions = new LidarrAddOptions();
   private String rootFolderrPath;
+  private String path;
 }

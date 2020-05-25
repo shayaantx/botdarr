@@ -20,6 +20,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -58,46 +59,78 @@ public class LidarrApi implements Api {
 
   @Override
   public void cacheData() {
-    new CacheProfileStrategy<LidarrProfile>() {
+    new CacheProfileStrategy<LidarrQualityProfile, String>() {
 
       @Override
-      public void resetCache() {
-        LIDARR_CACHE.resetProfiles();
+      public void deleteFromCache(List<String> profilesAddUpdated) {
+        LIDARR_CACHE.removeDeletedQualityProfiles(profilesAddUpdated);
       }
 
       @Override
-      public List<LidarrProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<LidarrProfile>() {
+      public List<LidarrQualityProfile> getProfiles() {
+        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<LidarrQualityProfile>() {
           @Override
-          public List<LidarrProfile> onSuccess(String response) {
-            List<LidarrProfile> lidarrProfiles = new ArrayList<>();
+          public List<LidarrQualityProfile> onSuccess(String response) {
+            List<LidarrQualityProfile> lidarrQualityProfiles = new ArrayList<>();
             JsonParser parser = new JsonParser();
             JsonArray json = parser.parse(response).getAsJsonArray();
             for (int i = 0; i < json.size(); i++) {
-              LidarrProfile lidarrProfile = new Gson().fromJson(json.get(i), LidarrProfile.class);
-              lidarrProfiles.add(lidarrProfile);
+              LidarrQualityProfile lidarrQualityProfile = new Gson().fromJson(json.get(i), LidarrQualityProfile.class);
+              lidarrQualityProfiles.add(lidarrQualityProfile);
             }
-            return lidarrProfiles;
+            return lidarrQualityProfiles;
           }
         });
       }
 
       @Override
-      public void addProfile(LidarrProfile profile) {
-        LIDARR_CACHE.addProfile(profile);
+      public void addProfile(LidarrQualityProfile profile) {
+        LIDARR_CACHE.addQualityProfile(profile);
       }
     }.cacheData();
 
-    new CacheContentStrategy<LidarrArtist>(this, LidarrUrls.ALL_ARTISTS) {
+    new CacheProfileStrategy<LidarrMetadataProfile, String>() {
 
       @Override
-      public void resetCache() {
-        LIDARR_CACHE.resetArtists();
+      public void deleteFromCache(List<String> profilesAddUpdated) {
+        LIDARR_CACHE.removeDeletedMetadataProfiles(profilesAddUpdated);
       }
 
       @Override
-      public void addToCache(JsonElement cacheItem) {
+      public List<LidarrMetadataProfile> getProfiles() {
+        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.METADATA_PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<LidarrMetadataProfile>() {
+          @Override
+          public List<LidarrMetadataProfile> onSuccess(String response) {
+            List<LidarrMetadataProfile> lidarrMetadataProfiles = new ArrayList<>();
+            JsonParser parser = new JsonParser();
+            JsonArray json = parser.parse(response).getAsJsonArray();
+            for (int i = 0; i < json.size(); i++) {
+              LidarrMetadataProfile lidarrMetadataProfile = new Gson().fromJson(json.get(i), LidarrMetadataProfile.class);
+              lidarrMetadataProfiles.add(lidarrMetadataProfile);
+            }
+            return lidarrMetadataProfiles;
+          }
+        });
+      }
+
+      @Override
+      public void addProfile(LidarrMetadataProfile profile) {
+        LIDARR_CACHE.addMetadataProfile(profile);
+      }
+    }.cacheData();
+
+    new CacheContentStrategy<LidarrArtist, String>(this, LidarrUrls.ALL_ARTISTS) {
+
+      @Override
+      public void deleteFromCache(List<String> itemsToRetain) {
+        LIDARR_CACHE.removeDeletedArtists(itemsToRetain);
+      }
+
+      @Override
+      public String addToCache(JsonElement cacheItem) {
+        LidarrArtist lidarrArtist = new Gson().fromJson(cacheItem, LidarrArtist.class);
         LIDARR_CACHE.addArtist(new Gson().fromJson(cacheItem, LidarrArtist.class));
+        return lidarrArtist.getKey();
       }
     }.cacheData();
 
@@ -106,7 +139,11 @@ public class LidarrApi implements Api {
 
   @Override
   public String getApiToken() {
-    return null;
+    return Config.Constants.LIDARR_TOKEN;
+  }
+
+  public ChatClientResponse addArtistWithId(String id, String artistName) {
+    return getArtistAddStrategy().addWithSearchId(artistName, id);
   }
 
   public List<ChatClientResponse> addArtist(String artistToSearch) {
@@ -132,13 +169,6 @@ public class LidarrApi implements Api {
       }
     }.lookup(search, findNew);
   }
-
-  /*
-  public ChatClientResponse addArtistWithId() {
-    //http://192.168.1.196:8686/api/v1/artist
-    //post
-
-  }*/
 
   private AddStrategy<LidarrArtist> getArtistAddStrategy() {
     return new AddStrategy<LidarrArtist>(chatClientResponseBuilder, ContentType.ARTIST) {
@@ -203,16 +233,23 @@ public class LidarrApi implements Api {
   }
 
   private ChatClientResponse addArtist(LidarrArtist lidarrArtist) {
-    String artistName = lidarrArtist.getArtistName();
     lidarrArtist.setMonitored(true);
-    lidarrArtist.setRootFolderrPath(Config.getProperty(Config.Constants.LIDARR_PATH) + "/" + artistName);
+    lidarrArtist.setPath(Config.getProperty(Config.Constants.LIDARR_PATH) + File.separator + lidarrArtist.getArtistName());
+    lidarrArtist.setRootFolderrPath(Config.getProperty(Config.Constants.LIDARR_PATH));
 
-    String lidarrProfileName = Config.getProperty(Config.Constants.LIDARR_DEFAULT_PROFILE);
-    LidarrProfile lidarrProfile = LIDARR_CACHE.getProfile(lidarrProfileName.toLowerCase());
-    if (lidarrProfile == null) {
+    String lidarrProfileName = Config.getProperty(Config.Constants.LIDARR_DEFAULT_QUALITY_PROFILE);
+    LidarrQualityProfile lidarrQualityProfile = LIDARR_CACHE.getQualityProfile(lidarrProfileName.toLowerCase());
+    if (lidarrQualityProfile == null) {
       return chatClientResponseBuilder.createErrorMessage("Could not find lidarr profile for default " + lidarrProfileName);
     }
-    lidarrArtist.setQualityProfileId(lidarrProfile.getId());
+
+    String lidarrMetadataProfileName = Config.getProperty(Config.Constants.LIDARR_DEFAULT_METADATA_PROFILE);
+    LidarrMetadataProfile lidarrMetadataProfile = LIDARR_CACHE.getMetadataProfile(lidarrMetadataProfileName.toLowerCase());
+    if (lidarrMetadataProfile == null) {
+      return chatClientResponseBuilder.createErrorMessage("Could not find lidarr metadata profile for default " + lidarrProfileName);
+    }
+    lidarrArtist.setMetadataProfileId(lidarrMetadataProfile.getId());
+    lidarrArtist.setQualityProfileId(lidarrQualityProfile.getId());
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl(SonarrUrls.ARTIST_BASE));
       post.addHeader("content-type", "application/x-www-form-urlencoded");
