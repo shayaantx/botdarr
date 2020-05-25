@@ -23,7 +23,7 @@ public abstract class PeriodicNotificationStrategy<T extends ChatClientResponse>
     if (downloads != null && !downloads.isEmpty()) {
       sendToConfiguredChannels(downloads);
     } else {
-      LOGGER.debug("No " + this.contentType.name() + " downloads available for sending");
+      LOGGER.debug("No " + this.contentType + " downloads available for sending");
     }
   }
 

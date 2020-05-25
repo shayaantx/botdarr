@@ -1,5 +1,6 @@
 package com.botdarr.api.lidarr;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,31 +11,45 @@ public class LidarrCache {
   }
 
   public void addArtist(LidarrArtist artist) {
-    existingForeignArtistIdToArtist.put(Long.valueOf(artist.getForeignArtistId()), artist);
-    existingArtistNamesToIds.put(artist.getArtistName(), Long.valueOf(artist.getForeignArtistId()));
+    existingForeignArtistIdToArtist.put(artist.getForeignArtistId(), artist);
+    existingArtistNamesToIds.put(artist.getArtistName(), artist.getForeignArtistId());
   }
 
-  public void addProfile(LidarrProfile lidarrProfile) {
-    existingProfiles.put(lidarrProfile.getName().toLowerCase(), lidarrProfile);
+  public void addQualityProfile(LidarrQualityProfile lidarrQualityProfile) {
+    existingQualityProfiles.put(lidarrQualityProfile.getKey(), lidarrQualityProfile);
+  }
+
+  public void addMetadataProfile(LidarrMetadataProfile lidarrMetadataProfile) {
+    existingMetadataProfiles.put(lidarrMetadataProfile.getKey(), lidarrMetadataProfile);
   }
 
   public LidarrArtist getExistingArtist(LidarrArtist lidarrArtist) {
-    return existingForeignArtistIdToArtist.get(Long.valueOf(lidarrArtist.getForeignArtistId()));
+    return existingForeignArtistIdToArtist.get(lidarrArtist.getForeignArtistId());
   }
 
-  public LidarrProfile getProfile(String qualityProfileName) {
-    return existingProfiles.get(qualityProfileName.toLowerCase());
+  public LidarrQualityProfile getQualityProfile(String qualityProfileName) {
+    return existingQualityProfiles.get(qualityProfileName.toLowerCase());
   }
 
-  public void resetProfiles() {
-    existingProfiles.clear();
+  public LidarrMetadataProfile getMetadataProfile(String metadataProfileName) {
+    return existingMetadataProfiles.get(metadataProfileName.toLowerCase());
   }
 
-  public void resetArtists() {
-    existingArtistNamesToIds.clear();
-    existingForeignArtistIdToArtist.clear();
+  public void removeDeletedQualityProfiles(List<String> addUpdatedProfiles) {
+    existingQualityProfiles.keySet().retainAll(addUpdatedProfiles);
   }
-  private Map<String, Long> existingArtistNamesToIds = new ConcurrentHashMap<>();
-  private Map<Long, LidarrArtist> existingForeignArtistIdToArtist = new ConcurrentHashMap<>();
-  private Map<String, LidarrProfile> existingProfiles = new ConcurrentHashMap<>();
+
+  public void removeDeletedMetadataProfiles(List<String> addUpdatedProfiles) {
+    existingMetadataProfiles.keySet().retainAll(addUpdatedProfiles);
+  }
+
+  public void removeDeletedArtists(List<String> addUpdatedArtists) {
+    existingArtistNamesToIds.keySet().retainAll(addUpdatedArtists);
+    existingForeignArtistIdToArtist.keySet().retainAll(addUpdatedArtists);
+  }
+
+  private Map<String, String> existingArtistNamesToIds = new ConcurrentHashMap<>();
+  private Map<String, LidarrArtist> existingForeignArtistIdToArtist = new ConcurrentHashMap<>();
+  private Map<String, LidarrQualityProfile> existingQualityProfiles = new ConcurrentHashMap<>();
+  private Map<String, LidarrMetadataProfile> existingMetadataProfiles = new ConcurrentHashMap<>();
 }

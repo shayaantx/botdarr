@@ -44,6 +44,7 @@ import org.apache.logging.log4j.util.Strings;
 import javax.annotation.Nonnull;
 import java.util.*;
 
+import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 
@@ -124,7 +125,9 @@ public enum ChatClientType {
                   List<MessageEmbed> embeds = message.getEmbeds();
                   fieldLoop:
                   for (MessageEmbed.Field field : embeds.get(0).getFields()) {
-                    if (field.getName().equals(ADD_MOVIE_COMMAND_FIELD_PREFIX) || field.getName().equals(ADD_SHOW_COMMAND_FIELD_PREFIX)) {
+                    if (field.getName().equals(ADD_MOVIE_COMMAND_FIELD_PREFIX) ||
+                        field.getName().equals(ADD_SHOW_COMMAND_FIELD_PREFIX) ||
+                        field.getName().equals(ADD_ARTIST_COMMAND_FIELD_PREFIX)) {
                       //capture/process the command
                       handleCommand(event.getJDA(), field.getValue(), event.getUser().getName(), event.getChannel().getName());
                       break messageLoop;

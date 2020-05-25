@@ -18,7 +18,13 @@ public class LidarrCommands {
       add(new BaseCommand("music artist id add", "") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse<>(lidarrApi.addArtist(command));
+          int lastSpace = command.lastIndexOf(" ");
+          if (lastSpace == -1) {
+            throw new RuntimeException("Missing expected arguments - usage: music artist id add ARTIST_NAME_HERE ARTIST_ID_HERE");
+          }
+          String searchText = command.substring(0, lastSpace);
+          String id = command.substring(lastSpace + 1);
+          return new CommandResponse<>(lidarrApi.addArtistWithId(id, searchText));
         }
       });
       add(new BaseCommand("music artist find existing", "") {

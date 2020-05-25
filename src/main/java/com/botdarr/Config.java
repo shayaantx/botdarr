@@ -73,7 +73,8 @@ public class Config {
         !Strings.isBlank(properties.getProperty(Constants.LIDARR_URL)) &&
         !Strings.isBlank(properties.getProperty(Constants.LIDARR_PATH)) &&
         !Strings.isBlank(properties.getProperty(Constants.LIDARR_TOKEN)) &&
-        !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_PROFILE));
+        !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_QUALITY_PROFILE)) &&
+        !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_METADATA_PROFILE));
 
       if (!this.isLidarrEnabled) {
         LOGGER.warn("Lidarr commands are not enabled, make sure you set the lidarr url, path, token, default profile");
@@ -213,9 +214,14 @@ public class Config {
     public static final String LIDARR_TOKEN = "lidarr-token";
 
     /**
-     * The default profile you want lidarr to use when adding artists
+     * The default quality profile you want lidarr to use when adding artists
      */
-    public static final String LIDARR_DEFAULT_PROFILE = "lidarr-default-profile";
+    public static final String LIDARR_DEFAULT_QUALITY_PROFILE = "lidarr-default-quality-profile";
+
+    /**
+     * The default metadata profile you want lidarr to use when adding artists
+     */
+    public static final String LIDARR_DEFAULT_METADATA_PROFILE = "lidarr-default-metadata-profile";
 
     /**
      * The url base for lidarr

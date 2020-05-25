@@ -90,6 +90,19 @@ sonarr-default-profile=any
 # leave empty if you never changed this in sonarr
 sonarr-url-base=
 
+# your lidarr url (i.e., http://SOME-IP:SOME-PORT)
+lidarr-url=
+# your lidarr token (go to Lidarr->Settings->General->Security->Api Key)
+lidarr-token=
+# the root path your lidarr artists get added to
+lidarr-path=
+# the default quality profile you want to use (go to Lidarr->Settings->Profiles)
+lidarr-default-quality-profile=
+# the default metadata profile you want to use (go to Lidarr->Settings->Profiles)
+lidarr-default-metadata-profile=
+# leave empty if you never changed this in lidarr
+lidarr-url-base=
+
 # If you don't want to limit user requests, don't set these properties
 # The max number of movie requests per user per month, day, or week
 #max-movie-requests-per-user=
