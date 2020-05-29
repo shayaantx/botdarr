@@ -307,7 +307,8 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(u(b("*Commands*")));
     for (Command command : commands) {
-      domContents.add(text(new CommandProcessor().getPrefix() + command.getCommandUsage() + " - " + command.getDescription()));
+      domContents.add(b(text(new CommandProcessor().getPrefix() + command.getCommandUsage())));
+      domContents.add(text(command.getDescription()));
       domContents.add(text(" "));
     }
     return domContents;

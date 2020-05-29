@@ -10,7 +10,7 @@ public class LidarrCommands {
   public static List<Command> getCommands(LidarrApi lidarrApi) {
     return new ArrayList<Command>() {{
       add(new BaseCommand("music artist add", "music artist add <artist-name>",
-        "Adds an artist using search text (i.e., music add Dre Fudgington") {
+        "Adds an artist using search text (i.e., music add Dre Fudgington)") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String artistToSearch) {
           return new CommandResponse<>(lidarrApi.addArtist(artistToSearch));
@@ -44,7 +44,7 @@ public class LidarrCommands {
           return new CommandResponse<>(lidarrApi.lookupArtists(command, true));
         }
       });
-      add(new BaseCommand("music downloads", "Shows all the active artist/albums downloading in lidarr") {
+      add(new BaseCommand("music downloads", "Shows all the active artist downloading in lidarr") {
         @Override
         public boolean hasArguments() {
           return false;

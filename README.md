@@ -29,6 +29,8 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Discord-Bot
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Slack-Bot
 
+<b>(WARNING)</b> If you are using slack "/help" has been deprecated by slack, so pick a different prefix for your commands (i.e., command-prefix=$). Otherwise help commands won't work
+
 ## Telegram bot installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
