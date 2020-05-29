@@ -130,7 +130,7 @@ public class RadarrApiTests {
     //verify the max (20) even though the mock server returned 40 (see above)
     Assert.assertEquals(20, testResponses.size());
     //verify the first message is a message about the fact too many movies were returned by the server
-    Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movies found, please narrow search");
+    Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movie found, limiting results to 20");
   }
 
   @Test
@@ -331,7 +331,7 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //no movies should be found, the only response should be a message
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("Movie already exists", testResponses.get(0).getResponseMessage());
+    Assert.assertEquals("movie already exists", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -458,7 +458,7 @@ public class RadarrApiTests {
 
     //verify response data
     TestResponse testResponses = commandResponse.getSingleChatClientResponse();
-    Assert.assertEquals("Movie already exists", testResponses.getResponseMessage());
+    Assert.assertEquals("movie already exists", testResponses.getResponseMessage());
   }
 
   private RadarrMovie getRadarrMovie(long id, long tmdbId, String title) {
