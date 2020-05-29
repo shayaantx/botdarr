@@ -22,6 +22,7 @@ public abstract class AddStrategy<T> {
   public abstract String getItemId(T item);
   public abstract ChatClientResponse addContent(T content);
   public abstract ChatClientResponse getResponse(T item);
+  protected abstract void cacheContent(T addContent);
 
   public ChatClientResponse addWithSearchId(String searchText, String id) {
     try {
@@ -39,7 +40,9 @@ public abstract class AddStrategy<T> {
           if (doesItemExist(item)) {
             return chatClientResponseBuilder.createErrorMessage(this.contentType.getDisplayName() + " already exists");
           }
-          return addContent(item);
+          ChatClientResponse chatClientResponse = addContent(item);
+          cacheContent(item);
+          return chatClientResponse;
         }
       }
       return chatClientResponseBuilder.createErrorMessage("Could not find " + this.contentType.getDisplayName() + " with search text=" + searchText + " and id=" + id);

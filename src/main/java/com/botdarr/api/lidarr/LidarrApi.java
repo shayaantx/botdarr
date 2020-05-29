@@ -8,10 +8,7 @@ import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.CommandContext;
 import com.botdarr.connections.ConnectionHelper;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -200,7 +197,12 @@ public class LidarrApi implements Api {
 
       @Override
       public ChatClientResponse getResponse(LidarrArtist item) {
-        return null;
+        return chatClientResponseBuilder.getArtistResponse(item);
+      }
+
+      @Override
+      protected void cacheContent(LidarrArtist addContent) {
+        LIDARR_CACHE.addArtist(addContent);
       }
     };
   }
@@ -209,8 +211,20 @@ public class LidarrApi implements Api {
     return new DownloadsStrategy(this, LidarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.ARTIST) {
       @Override
       public ChatClientResponse getResponse(JsonElement rawElement) {
-        LidarrQueue lidarrQueue = new Gson().fromJson(rawElement, LidarrQueue.class);
-        return chatClientResponseBuilder.getArtistDownloadResponses(lidarrQueue);
+        LidarrQueueRecord lidarrQueueRecord = new Gson().fromJson(rawElement, LidarrQueueRecord.class);
+        Integer artistId = lidarrQueueRecord.getArtistId();
+        return chatClientResponseBuilder.getArtistDownloadResponses(lidarrQueueRecord);
+      }
+      @Override
+      public List<ChatClientResponse> getContentDownloads() {
+        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.DOWNLOAD_BASE, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+          @Override
+          public List<ChatClientResponse> onSuccess(String response) {
+            JsonParser parser = new JsonParser();
+            JsonObject json = parser.parse(response).getAsJsonObject();
+            return parseContent(json.get("records").toString());
+          }
+        });
       }
     };
   }
