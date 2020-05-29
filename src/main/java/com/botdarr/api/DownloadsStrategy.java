@@ -40,24 +40,28 @@ public abstract class DownloadsStrategy {
     return ConnectionHelper.makeGetRequest(this.api, this.url, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
       @Override
       public List<ChatClientResponse> onSuccess(String response) {
-        List<ChatClientResponse> chatClientResponses = new ArrayList<>();
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-        boolean tooManyDownloads = json.size() >= MAX_DOWNLOADS_TO_SHOW;
-        for (int i = 0; i < json.size(); i++) {
-          ChatClientResponse chatClientResponse = getResponse(json.get(i));
-          if (chatClientResponse == null) {
-            continue;
-          }
-          chatClientResponses.add(chatClientResponse);
-        }
-        if (tooManyDownloads) {
-          chatClientResponses = ListUtils.subList(chatClientResponses, MAX_DOWNLOADS_TO_SHOW);
-          chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_DOWNLOADS_TO_SHOW));
-        }
-        return chatClientResponses;
+        return parseContent(response);
       }
     });
+  }
+
+  public List<ChatClientResponse> parseContent(String response) {
+    List<ChatClientResponse> chatClientResponses = new ArrayList<>();
+    JsonParser parser = new JsonParser();
+    JsonArray json = parser.parse(response).getAsJsonArray();
+    boolean tooManyDownloads = json.size() >= MAX_DOWNLOADS_TO_SHOW;
+    for (int i = 0; i < json.size(); i++) {
+      ChatClientResponse chatClientResponse = getResponse(json.get(i));
+      if (chatClientResponse == null) {
+        continue;
+      }
+      chatClientResponses.add(chatClientResponse);
+    }
+    if (tooManyDownloads) {
+      chatClientResponses = ListUtils.subList(chatClientResponses, MAX_DOWNLOADS_TO_SHOW);
+      chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_DOWNLOADS_TO_SHOW));
+    }
+    return chatClientResponses;
   }
 
   private final Api api;

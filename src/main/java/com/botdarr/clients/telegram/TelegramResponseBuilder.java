@@ -2,13 +2,16 @@ package com.botdarr.clients.telegram;
 
 import com.botdarr.Config;
 import com.botdarr.api.lidarr.LidarrArtist;
-import com.botdarr.api.lidarr.LidarrQueue;
+import com.botdarr.api.lidarr.LidarrQueueRecord;
+import com.botdarr.api.lidarr.LidarrQueueStatusMessage;
 import com.botdarr.api.radarr.*;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.*;
+import com.botdarr.utilities.ListUtils;
 import j2html.tags.DomContent;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.util.Strings;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
@@ -75,6 +78,16 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
   }
 
   @Override
+  public TelegramResponse getArtistResponse(LidarrArtist lidarrArtist) {
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b("*Artist Name* - " + lidarrArtist.getArtistName()));
+    domContents.add(code("Id - " + lidarrArtist.getForeignArtistId()));
+    domContents.add(u(ADD_ARTIST_COMMAND_FIELD_PREFIX + " - " +  LidarrCommands.getAddArtistCommandStr(lidarrArtist.getArtistName(), lidarrArtist.getForeignArtistId())));
+    domContents.add(a(lidarrArtist.getRemotePoster()));
+    return new TelegramResponse(domContents);
+  }
+
+  @Override
   public TelegramResponse getShowDownloadResponses(SonarrQueue showQueue) {
     SonarQueueEpisode episode = showQueue.getEpisode();
 
@@ -125,9 +138,22 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
   }
 
   @Override
-  public TelegramResponse getArtistDownloadResponses(LidarrQueue lidarrQueue) {
-    //TODO: implement
-    return null;
+  public TelegramResponse getArtistDownloadResponses(LidarrQueueRecord lidarrQueueRecord) {
+    List<DomContent> domContents = new ArrayList<>();
+    domContents.add(b(lidarrQueueRecord.getTitle()));
+    StringBuilder details = new StringBuilder();
+    details.append("Status - " + lidarrQueueRecord.getStatus() + "\n");
+    details.append("Time Left - " + lidarrQueueRecord.getTimeleft() == null ? "unknown" : lidarrQueueRecord.getTimeleft() + "\n");
+    if (lidarrQueueRecord.getStatusMessages() != null) {
+      //limit messages to 5, since lidarr can really throw a ton of status messages
+      for (LidarrQueueStatusMessage statusMessage : ListUtils.subList(lidarrQueueRecord.getStatusMessages(), 5)) {
+        for (String message : statusMessage.getMessages()) {
+          details.append("Download message - " + message + "\n");
+        }
+      }
+    }
+    domContents.add(code(details.toString()));
+    return new TelegramResponse(domContents);
   }
 
   @Override
@@ -253,19 +279,17 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
   @Override
   public TelegramResponse getNewOrExistingArtist(LidarrArtist lookupArtist, LidarrArtist existingArtist, boolean findNew) {
     List<DomContent> domContents = new ArrayList<>();
-    domContents.add(b(lookupArtist.getArtistName()));    if (findNew) {
+    String artistDetail = " (" + lookupArtist.getDisambiguation() + ")";
+    domContents.add(b(lookupArtist.getArtistName() + (Strings.isEmpty(lookupArtist.getDisambiguation()) ? "" :  artistDetail)));
+    if (findNew) {
       domContents.add(u(ADD_ARTIST_COMMAND_FIELD_PREFIX + " - " + LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId())));
-    } else {
-      StringBuilder existingDetails = new StringBuilder();
-      existingDetails.append("Id - " + existingArtist.getForeignArtistId() + "\n");
-      domContents.add(code(existingDetails.toString()));
     }
     domContents.add(a(lookupArtist.getRemotePoster()));
     return new TelegramResponse(domContents);
   }
 
   @Override
-  public TelegramResponse getMovie(RadarrMovie radarrMovie) {
+  public TelegramResponse getMovieResponse(RadarrMovie radarrMovie) {
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b(radarrMovie.getTitle()));
     domContents.add(text("TmdbId - " + radarrMovie.getTmdbId()));
@@ -276,14 +300,15 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
 
   @Override
   public TelegramResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
-    return getMovie(radarrMovie);
+    return getMovieResponse(radarrMovie);
   }
 
   private List<DomContent> getListOfCommands(List<Command> commands) {
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(u(b("*Commands*")));
     for (Command command : commands) {
-      domContents.add(text(new CommandProcessor().getPrefix() + command.getCommandText() + " - " + command.getDescription()));
+      domContents.add(b(text(new CommandProcessor().getPrefix() + command.getCommandUsage())));
+      domContents.add(text(command.getDescription()));
       domContents.add(text(" "));
     }
     return domContents;

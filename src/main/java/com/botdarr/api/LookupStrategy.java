@@ -34,7 +34,7 @@ public abstract class LookupStrategy<T> {
         responses.add(getNewOrExistingItem(lookupItem, existingItem, findNew));
       }
       if (responses.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " " + this.contentType.getDisplayName() + " for search term=" + search));
+        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " " + this.contentType.getDisplayName() + "s for search term=" + search));
       }
       if (responses.size() > MAX_RESULTS_TO_SHOW) {
         responses = ListUtils.subList(responses, MAX_RESULTS_TO_SHOW);

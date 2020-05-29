@@ -22,6 +22,7 @@ public abstract class AddStrategy<T> {
   public abstract String getItemId(T item);
   public abstract ChatClientResponse addContent(T content);
   public abstract ChatClientResponse getResponse(T item);
+  protected abstract void cacheContent(T addContent);
 
   public ChatClientResponse addWithSearchId(String searchText, String id) {
     try {
@@ -39,7 +40,9 @@ public abstract class AddStrategy<T> {
           if (doesItemExist(item)) {
             return chatClientResponseBuilder.createErrorMessage(this.contentType.getDisplayName() + " already exists");
           }
-          return addContent(item);
+          ChatClientResponse chatClientResponse = addContent(item);
+          cacheContent(item);
+          return chatClientResponse;
         }
       }
       return chatClientResponseBuilder.createErrorMessage("Could not find " + this.contentType.getDisplayName() + " with search text=" + searchText + " and id=" + id);
@@ -53,13 +56,13 @@ public abstract class AddStrategy<T> {
     try {
       List<T> items = lookupContent(searchText);
       if (items.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No " + this.contentType + "s found"));
+        return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No " + this.contentType.getDisplayName() + "s found"));
       }
 
       if (items.size() == 1) {
         T item = items.get(0);
         if (doesItemExist(item)) {
-          return Arrays.asList(chatClientResponseBuilder.createErrorMessage(this.contentType + " already exists"));
+          return Arrays.asList(chatClientResponseBuilder.createErrorMessage(this.contentType.getDisplayName() + " already exists"));
         }
         return Arrays.asList(addContent(items.get(0)));
       }
@@ -73,10 +76,10 @@ public abstract class AddStrategy<T> {
       }
       if (restOfItems.size() > 1) {
         restOfItems = ListUtils.subList(restOfItems, MAX_RESULTS_TO_SHOW);
-        restOfItems.add(0, chatClientResponseBuilder.createInfoMessage("Too many " + this.contentType + "s found, please narrow search"));
+        restOfItems.add(0, chatClientResponseBuilder.createInfoMessage("Too many " + this.contentType.getDisplayName() + "s found, please narrow search"));
       }
       if (restOfItems.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No new " + this.contentType + "s found, check existing " + this.contentType + "s"));
+        return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No new " + this.contentType.getDisplayName() + "s found, check existing " + this.contentType.getDisplayName() + "s"));
       }
       return restOfItems;
     } catch (Exception e) {

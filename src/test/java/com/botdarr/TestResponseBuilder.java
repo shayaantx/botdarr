@@ -1,7 +1,7 @@
 package com.botdarr;
 
 import com.botdarr.api.lidarr.LidarrArtist;
-import com.botdarr.api.lidarr.LidarrQueue;
+import com.botdarr.api.lidarr.LidarrQueueRecord;
 import com.botdarr.api.radarr.RadarrMovie;
 import com.botdarr.api.radarr.RadarrProfile;
 import com.botdarr.api.radarr.RadarrQueue;
@@ -42,6 +42,11 @@ public class TestResponseBuilder implements ChatClientResponseBuilder<TestRespon
   }
 
   @Override
+  public TestResponse getArtistResponse(LidarrArtist lidarrArtist) {
+    return new TestResponse();
+  }
+
+  @Override
   public TestResponse getShowDownloadResponses(SonarrQueue sonarrShow) {
     return new TestResponse();
   }
@@ -52,7 +57,7 @@ public class TestResponseBuilder implements ChatClientResponseBuilder<TestRespon
   }
 
   @Override
-  public TestResponse getArtistDownloadResponses(LidarrQueue lidarrQueue) {
+  public TestResponse getArtistDownloadResponses(LidarrQueueRecord lidarrQueueRecord) {
     return new TestResponse();
   }
 
@@ -102,7 +107,7 @@ public class TestResponseBuilder implements ChatClientResponseBuilder<TestRespon
   }
 
   @Override
-  public TestResponse getMovie(RadarrMovie radarrMovie) {
+  public TestResponse getMovieResponse(RadarrMovie radarrMovie) {
     return new TestResponse(radarrMovie);
   }
 

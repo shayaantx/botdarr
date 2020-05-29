@@ -275,7 +275,12 @@ public class RadarrApi implements Api {
 
       @Override
       public ChatClientResponse getResponse(RadarrMovie item) {
-        return chatClientResponseBuilder.getMovie(item);
+        return chatClientResponseBuilder.getMovieResponse(item);
+      }
+
+      @Override
+      protected void cacheContent(RadarrMovie addContent) {
+        RADARR_CACHE.add(addContent);
       }
     };
   }

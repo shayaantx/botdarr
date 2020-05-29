@@ -2,16 +2,19 @@ package com.botdarr.clients.discord;
 
 import com.botdarr.Config;
 import com.botdarr.api.lidarr.LidarrArtist;
-import com.botdarr.api.lidarr.LidarrQueue;
+import com.botdarr.api.lidarr.LidarrQueueRecord;
+import com.botdarr.api.lidarr.LidarrQueueStatusMessage;
 import com.botdarr.api.sonarr.*;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.api.radarr.*;
 import com.botdarr.commands.*;
+import com.botdarr.utilities.ListUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 import java.awt.*;
 import java.io.IOException;
@@ -73,9 +76,19 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
   public DiscordResponse getShowResponse(SonarrShow show) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle(show.getTitle());
-    embedBuilder.addField("TvdbId", "" + show.getTvdbId(), false);
+    embedBuilder.addField("TvdbId", String.valueOf(show.getTvdbId()), false);
     embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, SonarrCommands.getAddShowCommandStr(show.getTitle(), show.getTvdbId()), false);
     embedBuilder.setImage(show.getRemotePoster());
+    return new DiscordResponse(embedBuilder.build());
+  }
+
+  @Override
+  public DiscordResponse getArtistResponse(LidarrArtist lidarrArtist) {
+    EmbedBuilder embedBuilder = new EmbedBuilder();
+    embedBuilder.setTitle(lidarrArtist.getArtistName());
+    embedBuilder.addField("Id", String.valueOf(lidarrArtist.getForeignArtistId()), false);
+    embedBuilder.addField(ADD_ARTIST_COMMAND_FIELD_PREFIX, LidarrCommands.getAddArtistCommandStr(lidarrArtist.getArtistName(), lidarrArtist.getForeignArtistId()), false);
+    embedBuilder.setImage(lidarrArtist.getRemotePoster());
     return new DiscordResponse(embedBuilder.build());
   }
 
@@ -118,14 +131,25 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
         }
       }
     }
-    embedBuilder.addField("Cancel download command", "movie cancel download " + radarrQueue.getId(), true);
+    //TODO: implement
+    //embedBuilder.addField("Cancel download command", "movie cancel download " + radarrQueue.getId(), true);
     return new DiscordResponse(embedBuilder.build());
   }
 
   @Override
-  public DiscordResponse getArtistDownloadResponses(LidarrQueue lidarrQueue) {
-    //TODO: implement
-    return null;
+  public DiscordResponse getArtistDownloadResponses(LidarrQueueRecord lidarrQueueRecord) {
+    EmbedBuilder embedBuilder = new EmbedBuilder();
+    embedBuilder.setTitle(lidarrQueueRecord.getTitle());
+    embedBuilder.addField("Time Left", lidarrQueueRecord.getTimeleft() == null ? "unknown" : lidarrQueueRecord.getTimeleft(), true);
+    embedBuilder.addField("Status", lidarrQueueRecord.getStatus(), true);
+    if (lidarrQueueRecord.getStatusMessages() != null) {
+      for (LidarrQueueStatusMessage statusMessage : ListUtils.subList(lidarrQueueRecord.getStatusMessages(), 5)) {
+        for (String message : statusMessage.getMessages()) {
+          embedBuilder.addField("Download message", message, false);
+        }
+      }
+    }
+    return new DiscordResponse(embedBuilder.build());
   }
 
   @Override
@@ -230,19 +254,17 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
   @Override
   public DiscordResponse getNewOrExistingArtist(LidarrArtist lookupArtist, LidarrArtist existingArtist, boolean findNew) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
-    embedBuilder.setTitle(lookupArtist.getArtistName());
-    embedBuilder.addField("Foreign Artist Id", lookupArtist.getForeignArtistId(), false);
+    String artistDetail = " (" + lookupArtist.getDisambiguation() + ")";
+    embedBuilder.setTitle(lookupArtist.getArtistName() + (Strings.isEmpty(lookupArtist.getDisambiguation()) ? "" :  artistDetail));
     if (findNew) {
       embedBuilder.addField(ADD_ARTIST_COMMAND_FIELD_PREFIX, LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId()), false);
-    } else {
-      embedBuilder.addField("Id", String.valueOf(existingArtist.getForeignArtistId()), false);
     }
     embedBuilder.setImage(lookupArtist.getRemotePoster());
     return new DiscordResponse(embedBuilder.build());
   }
 
   @Override
-  public DiscordResponse getMovie(RadarrMovie radarrMovie) {
+  public DiscordResponse getMovieResponse(RadarrMovie radarrMovie) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle(radarrMovie.getTitle());
     embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
@@ -253,7 +275,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
 
   @Override
   public DiscordResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
-    return getMovie(radarrMovie);
+    return getMovieResponse(radarrMovie);
   }
 
   @Override
@@ -295,7 +317,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle("Commands");
     for (Command com : commands) {
-      embedBuilder.addField(new CommandProcessor().getPrefix() + com.getCommandText(), com.getDescription(), false);
+      embedBuilder.addField(new CommandProcessor().getPrefix() + com.getCommandUsage(), com.getDescription(), false);
     }
     return new DiscordResponse(embedBuilder.build());
   }

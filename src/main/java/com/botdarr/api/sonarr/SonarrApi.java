@@ -188,6 +188,11 @@ public class SonarrApi implements Api {
       public ChatClientResponse getResponse(SonarrShow item) {
         return chatClientResponseBuilder.getShowResponse(item);
       }
+
+      @Override
+      protected void cacheContent(SonarrShow addContent) {
+        SONARR_CACHE.add(addContent);
+      }
     };
   }
 

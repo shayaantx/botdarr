@@ -3,7 +3,7 @@
 
 # Summary
 
-Made this simple slack/discord/telegram bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a multiple slack/discord/telegram channels
+Made this simple slack/discord/telegram bot so I could access radarr, sonarr, and lidarr all from a multiple slack/discord/telegram channels without a UI/server.
 
 <br/>
 
@@ -29,6 +29,8 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Discord-Bot
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Slack-Bot
 
+<b>(WARNING)</b> If you are using slack "/help" has been deprecated by slack, so pick a different prefix for your commands (i.e., command-prefix=$). Otherwise help commands won't work
+
 ## Telegram bot installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
@@ -37,14 +39,15 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
 
 1. Get latest copy of botdarr botdarr-release.jar
 1. Make sure you have openjdk 8 or oracle java 8 installed on your machine
+1. Make sure you run botdarr on the same type of OS has radarr, sonarr, and lidarr (or paths when adding content won't match target OS)
 1. Create a folder called "database" in same folder you run jar in
 1. Create a file called "properties" (without double quotes) in same folder as the jar
-1. Fill it with the following properties (you can omit sonarr properties if you aren't using it, same with radarr, however everything else listed below is required)
+1. Fill it with the following properties (you can omit sonarr properties if you aren't using it, same with radarr/lidarr, however everything else listed below is required)
 1. You can only configure discord or slack or telegram token/channels, otherwise you will get an error during startup
 1. There are is an available option for url base for both radarr/sonarr. If you have a url base and use radarr WITHOUT configuring the url base here, 
 I've found radarr will execute most api requests normally, but /api/movie POST requests wont (assume this is a bug but haven't had time to investigate yet). 
 Radarr seems to return a 200 http code, not actually add the movie, and return json as if you are calling /api/movie as a GET request, unless you prefix 
-the api url with your radarr url base.
+the api url with your radarr url base. So MAKE SURE you account for this in your config/setup.
 ```
 # your discord bot token
 discord-token=
@@ -210,9 +213,13 @@ TODO: need to add more tips for sonarr
   
 <br/>
 
+## Lidarr Tips
+
+TODO:
+
 ## Stuff I might add in the future
 
 1. Interactive season search/download (only available in v3 sonarr)
 2. Per episode search/download
-3. Cancelling/blacklisting downloads (movies and tvshows)
+3. Cancelling/blacklisting downloads (movies, tvshows, artists, or albums)
 4. When I implement lidarr support I want to search by song instead of just artist/album (since lidarr doesn't support song search)
