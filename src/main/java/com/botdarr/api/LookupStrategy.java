@@ -38,17 +38,17 @@ public abstract class LookupStrategy<T> {
       }
       if (responses.size() > MAX_RESULTS_TO_SHOW) {
         responses = ListUtils.subList(responses, MAX_RESULTS_TO_SHOW);
-        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many " + this.contentType.getDisplayName() + " found, limiting results to " + MAX_RESULTS_TO_SHOW));
+        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many " + this.contentType.getDisplayName() + "s found, limiting results to " + MAX_RESULTS_TO_SHOW));
       }
       return responses;
     } catch (Exception e) {
-      LOGGER.error("Error trying to lookup " + this.contentType + ", searchText=" + search, e);
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error looking up " + this.contentType + ", e=" + e.getMessage()));
+      LOGGER.error("Error trying to lookup " + this.contentType.getDisplayName() + ", searchText=" + search, e);
+      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error looking up " + this.contentType.getDisplayName() + ", e=" + e.getMessage()));
     }
   }
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
-  private static final Logger LOGGER = LogManager.getLogger();
+  private static Logger LOGGER = LogManager.getLogger();
   private final int MAX_RESULTS_TO_SHOW = new ApiRequests().getMaxResultsToShow();
   private final ContentType contentType;
 }

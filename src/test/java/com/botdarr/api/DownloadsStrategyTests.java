@@ -4,16 +4,26 @@ import com.botdarr.TestResponse;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.google.gson.JsonElement;
-import mockit.Deencapsulation;
-import mockit.Expectations;
-import mockit.Injectable;
+import mockit.*;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DownloadsStrategyTests {
+  @BeforeClass
+  public static void beforeAllTests() {
+    new MockUp<ApiRequests>() {
+      @Mock
+      public int getMaxDownloadsToShow() {
+        //mock out the max downloads to show which we will override in each test
+        return 0;
+      }
+    };
+  }
+
   @Test
   public void downloads_maxDownloadsToConfiguredToZero_noDownloadsReturned() {
     DownloadsStrategy mockDownloadsStrategy = getMockDownloadsStrategy(0);
