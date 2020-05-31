@@ -1,4 +1,4 @@
-package com.botdarr.telegram;
+package com.botdarr.clients.telegram;
 
 import com.botdarr.clients.ChatClientResponse;
 import j2html.tags.DomContent;

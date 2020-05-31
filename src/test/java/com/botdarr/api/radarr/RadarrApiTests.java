@@ -1,4 +1,4 @@
-package com.botdarr.api;
+package com.botdarr.api.radarr;
 
 import com.botdarr.Config;
 import com.botdarr.TestResponse;
@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -129,9 +128,9 @@ public class RadarrApiTests {
     //verify response data
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //verify the max (20) even though the mock server returned 40 (see above)
-    Assert.assertEquals(20, testResponses.size());
+    Assert.assertEquals(21, testResponses.size());
     //verify the first message is a message about the fact too many movies were returned by the server
-    Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movies found, please narrow search");
+    Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movies found, limiting results to 20");
   }
 
   @Test
@@ -332,7 +331,7 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //no movies should be found, the only response should be a message
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("Movie already exists", testResponses.get(0).getResponseMessage());
+    Assert.assertEquals("movie already exists", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -408,10 +407,10 @@ public class RadarrApiTests {
 
     //verify response data
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
-    //even though we sent 30 movies, the api limits it to 20
-    //with the first message being a message about too many movies found
-    Assert.assertEquals(20, testResponses.size());
-    Assert.assertEquals("Too many movies found, please narrow search", testResponses.get(0).getResponseMessage());
+    //even though we sent 30 movies, the default api limit is 20
+    //with the first message being a message about too many movies found added to the list (making the length 21)
+    Assert.assertEquals(21, testResponses.size());
+    Assert.assertEquals("Too many movies found, please narrow search or increase max results to show", testResponses.get(0).getResponseMessage());
   }
 
   @Test
@@ -459,7 +458,7 @@ public class RadarrApiTests {
 
     //verify response data
     TestResponse testResponses = commandResponse.getSingleChatClientResponse();
-    Assert.assertEquals("Movie already exists", testResponses.getResponseMessage());
+    Assert.assertEquals("movie already exists", testResponses.getResponseMessage());
   }
 
   private RadarrMovie getRadarrMovie(long id, long tmdbId, String title) {

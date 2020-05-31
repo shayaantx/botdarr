@@ -1,4 +1,4 @@
-package com.botdarr.telegram;
+package com.botdarr.clients.telegram;
 
 import com.botdarr.Config;
 import com.botdarr.clients.ChatClient;

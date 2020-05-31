@@ -3,7 +3,7 @@
 
 # Summary
 
-Made this simple slack/discord/telegram bot so I could access radarr, sonarr, and lidarr (not implemented yet) all from a multiple slack/discord/telegram channels
+Made this simple slack/discord/telegram bot so I could access radarr, sonarr, and lidarr all from a multiple slack/discord/telegram channels without a UI/server.
 
 <br/>
 
@@ -13,13 +13,32 @@ Made this simple slack/discord/telegram bot so I could access radarr, sonarr, an
 - [ ] Radarr (v3)
 - [ ] Sonarr (v2)
 - [x] Sonarr (v3)
-- [ ] Lidarr
+- [x] Lidarr (v1)
 
 ## Currently Supported Chat Client's
 
 - [x] Discord
 - [x] Slack
 - [x] Telegram
+
+## Currently Supported Feature's
+
+- [x] Add movie by search string or tmdb id
+- [x] Add show by search string or tvdb id
+- [x] Add artist by search string or foreign artist id (available in search results)
+- [x] Show downloads for movies, show, or artists
+- [x] Configurable value for amount of downloads to show
+- [x] Configurable value for amount of results to show during searches
+- [x] Configurable value for max number of movies, shows, and artists per user
+- [x] Configurable command prefix (i.e., /help, $help, !help)
+- [x] Configurable value for url base for radarr, sonarr, and lidarr
+- [x] Lookup torrents for movies and force download
+- [x] (discord/slack only) Thumbs up reaction will add search results 
+- [x] User requests audited to local database
+- [ ] Cancel/blacklist existing downloads
+- [ ] Episode/season search
+- [ ] Album/song search
+- [ ] Run bot in mode where all 3 chat clients work in same process (right now you would need 3 separate processes/containers)
 
 ## Discord Bot Installation
 
@@ -29,6 +48,8 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Discord-Bot
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Slack-Bot
 
+<b>(WARNING)</b> If you are using slack "/help" has been deprecated by slack, so pick a different prefix for your commands (i.e., command-prefix=$). Otherwise help commands won't work
+
 ## Telegram bot installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
@@ -37,14 +58,15 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
 
 1. Get latest copy of botdarr botdarr-release.jar
 1. Make sure you have openjdk 8 or oracle java 8 installed on your machine
+1. Make sure you run botdarr on the same type of OS has radarr, sonarr, and lidarr (or paths when adding content won't match target OS)
 1. Create a folder called "database" in same folder you run jar in
 1. Create a file called "properties" (without double quotes) in same folder as the jar
-1. Fill it with the following properties (you can omit sonarr properties if you aren't using it, same with radarr, however everything else listed below is required)
+1. Fill it with the following properties (you can omit sonarr properties if you aren't using it, same with radarr/lidarr, however everything else listed below is required)
 1. You can only configure discord or slack or telegram token/channels, otherwise you will get an error during startup
 1. There are is an available option for url base for both radarr/sonarr. If you have a url base and use radarr WITHOUT configuring the url base here, 
 I've found radarr will execute most api requests normally, but /api/movie POST requests wont (assume this is a bug but haven't had time to investigate yet). 
 Radarr seems to return a 200 http code, not actually add the movie, and return json as if you are calling /api/movie as a GET request, unless you prefix 
-the api url with your radarr url base.
+the api url with your radarr url base. So MAKE SURE you account for this in your config/setup.
 ```
 # your discord bot token
 discord-token=
@@ -90,11 +112,26 @@ sonarr-default-profile=any
 # leave empty if you never changed this in sonarr
 sonarr-url-base=
 
+# your lidarr url (i.e., http://SOME-IP:SOME-PORT)
+lidarr-url=
+# your lidarr token (go to Lidarr->Settings->General->Security->Api Key)
+lidarr-token=
+# the root path your lidarr artists get added to
+lidarr-path=
+# the default quality profile you want to use (go to Lidarr->Settings->Profiles)
+lidarr-default-quality-profile=
+# the default metadata profile you want to use (go to Lidarr->Settings->Profiles)
+lidarr-default-metadata-profile=
+# leave empty if you never changed this in lidarr
+lidarr-url-base=
+
 # If you don't want to limit user requests, don't set these properties
 # The max number of movie requests per user per month, day, or week
 #max-movie-requests-per-user=
 # The max number of show requests per user per month, day, or week
 #max-show-requests-per-user=
+# The max number of artist requests per user per month, day, or week
+#max-artist-requests-per-user=100
 # The threshold type for max requests
 # WEEK, MONTH, DAY
 # WEEK is from monday to sunday
@@ -123,17 +160,13 @@ nohup java -jar botdarr-release.jar &
 
 1. Docker images are here https://cloud.docker.com/repository/docker/shayaantx/botdarr/general
 1. Create a folder on your host called "botdarr"
-1. Create a logs folder in the botdarr folder
-1. Put your properties file in botdarr folder inside a folder named "config"
-1. Create a folder called "database" in the botdarr folder
+1. Create a logs folder in the botdarr folder (BOTDARR_HOME)
+1. Put your properties file in botdarr folder (BOTDARR_HOME)
+1. Create a folder called "database" in the botdarr folder (BOTDARR_HOME)
 1. Then run below command (replace BOTDARR_HOME variables)
 ```
 # for latest
 docker run -d --name botdarr -v /BOTDARR_HOME/database:/home/botdarr/database -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:latest &
-
-# for stable
-
-docker run -d --name botdarr -v /BOTDARR_HOME/database:/home/botdarr/database -v /BOTDARR_HOME/properties:/home/botdarr/config/properties -v /BOTDARR_HOME/logs:/home/botdarr/logs shayaantx/botdarr:stable &
 ```
 
 Or if you want to use docker-compose
@@ -154,54 +187,19 @@ botdarr:
 
 ## Usage
 
-* Type /help in discord to get information about commands and what is supported
-* Type /movies help in discord to get information about movie commands
+* Type /help in your configured chat client to get information about commands and what is supported
 * Notifications will appear indicating the current downloads (based on your configuration for max downloads), their status, and their time remaining.
-* (discord only for now) When you react to movie/show results with add commands in the result with a "thumbs up" the content will be added.
-
+* When you search for content (i.e., /movie title add History of Dumb People) if too many results are returned you will be presented with multiple results. You can either use the thumbs up reaction (in discord or slack) or copy the add command (which will be embedded in the result) into the chat client.
+  ![](https://raw.githubusercontent.com/shayaantx/botdarr/development/images/search-results.png)
+* The success of the bot depends a lot on how diverse your trackers you use in radarr, sonarr, lidarr and your quality profiles. If you have a trackers with little content or very restrictive quality profiles, a lot of content will never actually get added. The bot can't do anything about this.
+* Example commands:
+  * /movie title add Lion Fling
+  * /show title add One Piece
+  * /movie find new zombies
+  * /artist find new Linkin Flarp
+  * /movie downloads
+  * /show downloads
+  * /help
+  * /shows help
+  * /movies help
 <br/>
-
-## Radarr Tips
-
-1. Just cause you add a movie successfully does not mean the movie will show up instantly or at all
-   - The way radarr works is you search for a film, then add it, then radarr will start searching through all the configured indexers for a torrent
-   - that matches the configure quality profiles the admin user has set. i.e., if there is only a CAM version of the film you want out there
-   - but the master user of radarr has configured to disallow CAM quality, then it will not download.
-   - If you use "movie find downloads TITLE" or "movie find all downloads TITLE" it can show you the downloads available through radarr for your requested/existing film.
-   - Although this functionality is not complete yet, as movies with similar titles will conflict and not show you downloads.
-   - I also need to somehow add functionality to let you force specific downloads as well.
-
-2. /movie title add
-   - This command will specifically try to add a movie based on title alone. Sometimes there are movies that have same titles or very similar titles
-   - When the title cannot be added by title alone, multiple movies will be returned. Embedded in the results is a command to add the movie with an id
-   - The command will look something "movie add John Wick: Chapter 4 603692". This command uses the movie title plus the TMDBID to add the movie
-
-3. /movie profiles
-   - and this profile is used when identifying downloads.
-   - This command shows you all the profiles available in radarr, it does NOT tell you which is the default profile. The default profile is configured by the bot admin
-   - and this profile is used when identifying downloads.
-
-4. /movie find new
-   - This command uses radarr search api to identify new films.
-   - Embedded in the results are commands to add the films directly, like "movie add Ad Astra 570820"
-
-5. /movie find existing
-   - This command finds any existing films and gives you information about them.
-   - It will tell you if the movie has been downloaded and if the radarr has the file.
-
-
-## Sonarr Tips
-
-1. Just like radarr, when you add a show with sonarr it doesn't automatically mean the show will magically appear. It really depends
-  - on how many trackers your sonarr installation has and how diverse the content within said trackers is.
-
-TODO: need to add more tips for sonarr  
-  
-<br/>
-
-## Stuff I might add in the future
-
-1. Interactive season search/download (only available in v3 sonarr)
-2. Per episode search/download
-3. Cancelling/blacklisting downloads (movies and tvshows)
-4. When I implement lidarr support I want to search by song instead of just artist/album (since lidarr doesn't support song search)

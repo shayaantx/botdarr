@@ -61,12 +61,23 @@ public class Config {
 
       this.isSonarrEnabled =
         !Strings.isBlank(properties.getProperty(Constants.SONARR_URL)) &&
-          !Strings.isBlank(properties.getProperty(Constants.SONARR_PATH)) &&
-          !Strings.isBlank(properties.getProperty(Constants.SONARR_TOKEN)) &&
-          !Strings.isBlank(properties.getProperty(Constants.SONARR_DEFAULT_PROFILE));
+        !Strings.isBlank(properties.getProperty(Constants.SONARR_PATH)) &&
+        !Strings.isBlank(properties.getProperty(Constants.SONARR_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Constants.SONARR_DEFAULT_PROFILE));
 
       if (!this.isSonarrEnabled) {
         LOGGER.warn("Sonarr commands are not enabled, make sure you set the sonarr url, path, token, default profile");
+      }
+
+      this.isLidarrEnabled =
+        !Strings.isBlank(properties.getProperty(Constants.LIDARR_URL)) &&
+        !Strings.isBlank(properties.getProperty(Constants.LIDARR_PATH)) &&
+        !Strings.isBlank(properties.getProperty(Constants.LIDARR_TOKEN)) &&
+        !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_QUALITY_PROFILE)) &&
+        !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_METADATA_PROFILE));
+
+      if (!this.isLidarrEnabled) {
+        LOGGER.warn("Lidarr commands are not enabled, make sure you set the lidarr url, path, token, default profile");
       }
 
       String configuredPrefix = properties.getProperty(Config.Constants.COMMAND_PREFIX);
@@ -89,6 +100,10 @@ public class Config {
 
   public static boolean isSonarrEnabled() {
     return getConfig().isSonarrEnabled;
+  }
+
+  public static boolean isLidarrEnabled() {
+    return getConfig().isLidarrEnabled;
   }
 
   public static ChatClientType getChatClientType() {
@@ -183,8 +198,35 @@ public class Config {
      */
     public static final String SONARR_URL_BASE = "sonarr-url-base";
 
-    //TODO: implement
-    public static final String LIDARR_URL = "lidar-url";
+    /**
+     * The url to your lidarr instance
+     */
+    public static final String LIDARR_URL = "lidarr-url";
+
+    /**
+     * The path to set on all added music in lidarr
+     */
+    public static final String LIDARR_PATH = "lidarr-path";
+
+    /**
+     * The api token for accessing lidarr
+     */
+    public static final String LIDARR_TOKEN = "lidarr-token";
+
+    /**
+     * The default quality profile you want lidarr to use when adding artists
+     */
+    public static final String LIDARR_DEFAULT_QUALITY_PROFILE = "lidarr-default-quality-profile";
+
+    /**
+     * The default metadata profile you want lidarr to use when adding artists
+     */
+    public static final String LIDARR_DEFAULT_METADATA_PROFILE = "lidarr-default-metadata-profile";
+
+    /**
+     * The url base for lidarr
+     */
+    public static final String LIDARR_URL_BASE = "lidarr-url-base";
 
     /**
      * The database name
@@ -200,6 +242,11 @@ public class Config {
      * The max amount of show requests per user per configured threshold
      */
     public static final String MAX_SHOW_REQUESTS_PER_USER = "max-show-requests-per-user";
+
+    /**
+     * TODO: doc
+     */
+    public static final String MAX_ARTIST_REQUESTS_PER_USER = "max-artist-requests-per-user";
 
     /**
      * The type of threshold to enforce around request maximums (i.e., {@link com.botdarr.api.ApiRequestThreshold}
@@ -226,6 +273,7 @@ public class Config {
   private final Properties properties;
   private final boolean isRaddarrEnabled;
   private final boolean isSonarrEnabled;
+  private final boolean isLidarrEnabled;
   private ChatClientType chatClientType = null;
   private static final Logger LOGGER = LogManager.getLogger();
 }
