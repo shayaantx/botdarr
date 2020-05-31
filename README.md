@@ -190,7 +190,8 @@ botdarr:
 * Type /help in your configured chat client to get information about commands and what is supported
 * Notifications will appear indicating the current downloads (based on your configuration for max downloads), their status, and their time remaining.
 * When you search for content (i.e., /movie title add History of Dumb People) if too many results are returned you will be presented with multiple results. You can either use the thumbs up reaction (in discord or slack) or copy the add command (which will be embedded in the result) into the chat client.
-  ![](https://raw.githubusercontent.com/shayaantx/botdarr/development/images/search-results.png)
+
+![](https://raw.githubusercontent.com/shayaantx/botdarr/development/images/search-results.png)
 * The success of the bot depends a lot on how diverse your trackers you use in radarr, sonarr, lidarr and your quality profiles. If you have a trackers with little content or very restrictive quality profiles, a lot of content will never actually get added. The bot can't do anything about this.
 * Example commands:
   * /movie title add Lion Fling
