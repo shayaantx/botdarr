@@ -1,8 +1,15 @@
 package com.botdarr.api.sonarr;
 
+import com.botdarr.api.KeyBased;
+
 import java.util.List;
 
-public class SonarrProfile {
+public class SonarrProfile implements KeyBased<String> {
+  @Override
+  public String getKey() {
+    return name;
+  }
+
   public String getName() {
     return name;
   }

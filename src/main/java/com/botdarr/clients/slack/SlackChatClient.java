@@ -1,4 +1,4 @@
-package com.botdarr.slack;
+package com.botdarr.clients.slack;
 
 import com.botdarr.Config;
 import com.botdarr.clients.ChatClient;

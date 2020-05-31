@@ -1,6 +1,6 @@
 package com.botdarr.commands;
 
-import com.botdarr.api.SonarrApi;
+import com.botdarr.api.sonarr.SonarrApi;
 import com.botdarr.clients.ChatClientResponse;
 import org.apache.logging.log4j.util.Strings;
 
@@ -10,8 +10,9 @@ import java.util.List;
 public class SonarrCommands {
   public static List<Command> getCommands(SonarrApi sonarrApi) {
     return new ArrayList<Command>() {{
-      add(new BaseCommand("show id add", "Adds a show using search text and tmdb id (i.e., show id add 30 rock 484737). The easiest" +
-        " way to use this command is to use \"show find new TITLE\", then the results will contain the show add command for you") {
+      add(new BaseCommand("show id add", "show id add <show-title> <show-tvdbid>",
+        "Adds a show using search text and tmdb id (i.e., show id add 30 rock 484737). The easiest" +
+        " way to use this command is to use \"show find new <show-title>\", then the results will contain the show add command for you") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           int lastSpace = command.lastIndexOf(" ");
@@ -25,7 +26,8 @@ public class SonarrCommands {
           return new CommandResponse(sonarrApi.addWithId(searchText, id));
         }
       });
-      add(new BaseCommand("show title add", "Adds a show with just a title. Since there can be multiple shows that match search criteria" +
+      add(new BaseCommand("show title add", "show title add <show-title>",
+        "Adds a show with just a title. Since there can be multiple shows that match search criteria" +
         " we will either add the show or return all the shows that match your search.") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
@@ -55,14 +57,14 @@ public class SonarrCommands {
           return new CommandResponse(sonarrApi.getProfiles());
         }
       });
-      add(new BaseCommand("show find existing", "Finds a existing show using sonarr (i.e., show find existing Ahh! Real fudgecakes)") {
+      add(new BaseCommand("show find existing", "show find existing <show-title>", "Finds a existing show using sonarr (i.e., show find existing Ahh! Real fudgecakes)") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           validateShowTitle(command);
           return new CommandResponse(sonarrApi.lookup(command, false));
         }
       });
-      add(new BaseCommand("show find new", "Finds a new show using sonarr (i.e., show find new Fresh Prince of Fresh air)") {
+      add(new BaseCommand("show find new", "show find new <show-title>", "Finds a new show using sonarr (i.e., show find new Fresh Prince of Fresh air)") {
         @Override
         public CommandResponse<? extends ChatClientResponse> execute(String command) {
           validateShowTitle(command);

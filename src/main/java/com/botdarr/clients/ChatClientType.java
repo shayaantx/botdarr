@@ -2,18 +2,21 @@ package com.botdarr.clients;
 
 import com.botdarr.api.*;
 import com.botdarr.Config;
+import com.botdarr.api.lidarr.LidarrApi;
+import com.botdarr.api.radarr.RadarrApi;
+import com.botdarr.api.sonarr.SonarrApi;
 import com.botdarr.commands.*;
-import com.botdarr.discord.DiscordChatClient;
-import com.botdarr.discord.DiscordResponse;
-import com.botdarr.discord.DiscordResponseBuilder;
+import com.botdarr.clients.discord.DiscordChatClient;
+import com.botdarr.clients.discord.DiscordResponse;
+import com.botdarr.clients.discord.DiscordResponseBuilder;
 import com.botdarr.scheduling.Scheduler;
-import com.botdarr.slack.SlackChatClient;
-import com.botdarr.slack.SlackMessage;
-import com.botdarr.slack.SlackResponse;
-import com.botdarr.slack.SlackResponseBuilder;
-import com.botdarr.telegram.TelegramChatClient;
-import com.botdarr.telegram.TelegramResponse;
-import com.botdarr.telegram.TelegramResponseBuilder;
+import com.botdarr.clients.slack.SlackChatClient;
+import com.botdarr.clients.slack.SlackMessage;
+import com.botdarr.clients.slack.SlackResponse;
+import com.botdarr.clients.slack.SlackResponseBuilder;
+import com.botdarr.clients.telegram.TelegramChatClient;
+import com.botdarr.clients.telegram.TelegramResponse;
+import com.botdarr.clients.telegram.TelegramResponseBuilder;
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.model.block.LayoutBlock;
 import com.github.seratch.jslack.api.model.block.SectionBlock;
@@ -41,8 +44,9 @@ import org.apache.logging.log4j.util.Strings;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-import static com.botdarr.api.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
-import static com.botdarr.api.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 
 public enum ChatClientType {
   TELEGRAM() {
@@ -121,7 +125,9 @@ public enum ChatClientType {
                   List<MessageEmbed> embeds = message.getEmbeds();
                   fieldLoop:
                   for (MessageEmbed.Field field : embeds.get(0).getFields()) {
-                    if (field.getName().equals(ADD_MOVIE_COMMAND_FIELD_PREFIX) || field.getName().equals(ADD_SHOW_COMMAND_FIELD_PREFIX)) {
+                    if (field.getName().equals(ADD_MOVIE_COMMAND_FIELD_PREFIX) ||
+                        field.getName().equals(ADD_SHOW_COMMAND_FIELD_PREFIX) ||
+                        field.getName().equals(ADD_ARTIST_COMMAND_FIELD_PREFIX)) {
                       //capture/process the command
                       handleCommand(event.getJDA(), field.getValue(), event.getUser().getName(), event.getChannel().getName());
                       break messageLoop;
@@ -278,9 +284,11 @@ public enum ChatClientType {
   private static <T extends ChatClientResponse> ApisAndCommandConfig buildConfig(ChatClientResponseBuilder<T> responseChatClientResponseBuilder) {
     RadarrApi radarrApi = new RadarrApi(responseChatClientResponseBuilder);
     SonarrApi sonarrApi = new SonarrApi(responseChatClientResponseBuilder);
+    LidarrApi lidarrApi = new LidarrApi(responseChatClientResponseBuilder);
 
     List<Command> radarrCommands = RadarrCommands.getCommands(radarrApi);
     List<Command> sonarrCommands = SonarrCommands.getCommands(sonarrApi);
+    List<Command> lidarrCommands = LidarrCommands.getCommands(lidarrApi);
 
     List<Command> commands = new ArrayList<>();
     List<Api> apis = new ArrayList<>();
@@ -292,7 +300,11 @@ public enum ChatClientType {
       commands.addAll(sonarrCommands);
       apis.add(sonarrApi);
     }
-    commands.addAll(HelpCommands.getCommands(responseChatClientResponseBuilder, radarrCommands, sonarrCommands));
+    if (Config.isLidarrEnabled()) {
+      commands.addAll(lidarrCommands);
+      apis.add(lidarrApi);
+    }
+    commands.addAll(HelpCommands.getCommands(responseChatClientResponseBuilder, radarrCommands, sonarrCommands, lidarrCommands));
     return new ApisAndCommandConfig(apis, commands);
   }
 

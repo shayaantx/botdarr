@@ -7,7 +7,8 @@ import org.apache.logging.log4j.util.Strings;
 
 public enum ApiRequestType {
   MOVIE(Config.Constants.MAX_MOVIE_REQUESTS_PER_USER),
-  SHOW(Config.Constants.MAX_SHOW_REQUESTS_PER_USER);
+  SHOW(Config.Constants.MAX_SHOW_REQUESTS_PER_USER),
+  ARTIST(Config.Constants.MAX_ARTIST_REQUESTS_PER_USER);
 
   private ApiRequestType(String configProperty) {
     this.maxRequestsPerUserProperty = configProperty;

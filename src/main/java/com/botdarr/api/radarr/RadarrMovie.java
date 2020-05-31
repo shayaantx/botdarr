@@ -1,8 +1,15 @@
 package com.botdarr.api.radarr;
 
+import com.botdarr.api.KeyBased;
+
 import java.util.List;
 
-public class RadarrMovie {
+public class RadarrMovie implements KeyBased<Long> {
+  @Override
+  public Long getKey() {
+    return tmdbId;
+  }
+
   public String getTitle() {
     return title;
   }

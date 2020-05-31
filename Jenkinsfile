@@ -20,22 +20,12 @@ def getChangelistDescription() {
   return description;
 }
 
-def getNextVersion(scope) {
-  def latestVersion = sh returnStdout: true, script: 'git tag | sort -V | tail -1';
+def getNextVersion() {
+  def latestVersion = readFile "${env.WORKSPACE}/version.txt"
   print "version=" + latestVersion;
   def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() };
   print "major=" + major + ",minor=" + minor + ",patch=" + patch;
-  if (scope == 'release') {
-    def newMinor = minor + 1;
-    def newMajor = major;
-    if (newMinor > 10) {
-      newMinor = 0;
-      newMajor = major + 1;
-    }
-    return "${newMinor}.${newMinor}.0";
-  } else {
-    return "${major}.${minor}.${patch + 1}";
-  }
+  return "${major}.${minor}.${patch + 1}";
 }
 
 node {
@@ -48,10 +38,7 @@ node {
       fileOperations([fileCreateOperation(fileContent: "${dockerFileContents}", fileName: './Dockerfile')]);
     }
 
-    def tag = getNextVersion('development');
-    if (env.BRANCH_NAME == "master") {
-      tag = getNextVersion('release');
-    }
+    def tag = getNextVersion();
     def image = docker.build("botdarr-image", "-f ./Dockerfile .");
     image.inside('-u root') {
       stage('Build') {
@@ -71,7 +58,7 @@ node {
         archiveArtifacts 'target/botdarr-release.jar'
       }
 
-      if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
+      if (env.BRANCH_NAME == "development") {
         //don't upload for PR's
         stage('Create/Upload Release') {
           withCredentials([string(credentialsId: 'git-token', variable: 'token')]) {
@@ -86,7 +73,7 @@ node {
       }
     }
 
-    if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "development") {
+    if (env.BRANCH_NAME == "development") {
       //don't upload for PR's
       stage('Upload to dockerhub') {
         def dockerFileImage = """
@@ -104,7 +91,7 @@ node {
         ENTRYPOINT ["java", "-jar", "botdarr-release.jar"]
         """;
         fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
-        def releaseTag = env.BRANCH_NAME == "master" ? "stable" : "latest";
+        def releaseTag = "latest";
         def imageWithReleaseTag = docker.build("shayaantx/botdarr:${releaseTag}", "-f ./DockerfileUpload .");
         withDockerRegistry(credentialsId: 'docker-credentials') {
           imageWithReleaseTag.push();

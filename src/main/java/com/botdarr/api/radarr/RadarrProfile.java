@@ -1,8 +1,15 @@
 package com.botdarr.api.radarr;
 
+import com.botdarr.api.KeyBased;
+
 import java.util.List;
 
-public class RadarrProfile {
+public class RadarrProfile implements KeyBased<String> {
+  @Override
+  public String getKey() {
+    return name;
+  }
+
   public String getName() {
     return name;
   }

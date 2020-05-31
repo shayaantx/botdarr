@@ -1,8 +1,15 @@
 package com.botdarr.api.sonarr;
 
+import com.botdarr.api.KeyBased;
+
 import java.util.List;
 
-public class SonarrShow {
+public class SonarrShow implements KeyBased<Long> {
+  @Override
+  public Long getKey() {
+    return tvdbId;
+  }
+
   public void setTitle(String title) {
     this.title = title;
   }
