@@ -130,7 +130,7 @@ public class RadarrApiTests {
     //verify the max (20) even though the mock server returned 40 (see above)
     Assert.assertEquals(21, testResponses.size());
     //verify the first message is a message about the fact too many movies were returned by the server
-    Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movie found, limiting results to 20");
+    Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movies found, limiting results to 20");
   }
 
   @Test

@@ -24,6 +24,7 @@ public class AddStrategyTests {
       }
     };
   }
+
   @Test
   public void addWithSearchId_noMoviesFound_errorResponse() throws Exception {
     MockAddStrategy mockAddStrategy = getMockAddStrategy();
@@ -243,10 +244,7 @@ public class AddStrategyTests {
   }
 
   private MockAddStrategy getMockAddStrategy() {
-    MockAddStrategy mockAddStrategy = new MockAddStrategy(chatClientResponseBuilder, ContentType.MOVIE);
-    Deencapsulation.setField(mockAddStrategy, "LOGGER", logger);
-    Deencapsulation.setField(mockAddStrategy, "MAX_RESULTS_TO_SHOW", 5);
-    return mockAddStrategy;
+    return getMockAddStrategy(5);
   }
 
   @Mocked
