@@ -128,7 +128,7 @@ public class RadarrApiTests {
     //verify response data
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //verify the max (20) even though the mock server returned 40 (see above)
-    Assert.assertEquals(20, testResponses.size());
+    Assert.assertEquals(21, testResponses.size());
     //verify the first message is a message about the fact too many movies were returned by the server
     Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movie found, limiting results to 20");
   }
@@ -407,10 +407,10 @@ public class RadarrApiTests {
 
     //verify response data
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
-    //even though we sent 30 movies, the api limits it to 20
-    //with the first message being a message about too many movies found
-    Assert.assertEquals(20, testResponses.size());
-    Assert.assertEquals("Too many movies found, please narrow search", testResponses.get(0).getResponseMessage());
+    //even though we sent 30 movies, the default api limit is 20
+    //with the first message being a message about too many movies found added to the list (making the length 21)
+    Assert.assertEquals(21, testResponses.size());
+    Assert.assertEquals("Too many movies found, please narrow search or increase max results to show", testResponses.get(0).getResponseMessage());
   }
 
   @Test
