@@ -3,12 +3,10 @@ package com.botdarr.api;
 import com.botdarr.TestResponse;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
-import mockit.Deencapsulation;
-import mockit.Expectations;
-import mockit.Injectable;
-import mockit.Mocked;
+import mockit.*;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -16,6 +14,16 @@ import java.util.Collections;
 import java.util.List;
 
 public class AddStrategyTests {
+  @BeforeClass
+  public static void beforeAllTests() {
+    new MockUp<ApiRequests>() {
+      @Mock
+      public int getMaxResultsToShow() {
+        //mock out the max results to show which we will override in each test
+        return 0;
+      }
+    };
+  }
   @Test
   public void addWithSearchId_noMoviesFound_errorResponse() throws Exception {
     MockAddStrategy mockAddStrategy = getMockAddStrategy();

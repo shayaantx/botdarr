@@ -21,6 +21,24 @@ Made this simple slack/discord/telegram bot so I could access radarr, sonarr, an
 - [x] Slack
 - [x] Telegram
 
+## Currently Supported Feature's
+
+- [x] Add movie by search string or tmdb id
+- [x] Add show by search string or tvdb id
+- [x] Add artist by search string or foreign artist id (available in search results)
+- [x] Show downloads for movies, show, or artists
+- [x] Configurable value for amount of downloads to show
+- [x] Configurable value for amount of results to show during searches
+- [x] Configurable value for max number of movies, shows, and artists per user
+- [x] Configurable command prefix (i.e., /help, $help, !help)
+- [x] Lookup torrents for movies and force download
+- [x] (discord/slack only) Thumbs up reaction will add search results 
+- [x] User requests audited to local database
+- [ ] Cancel/blacklist existing downloads
+- [ ] Episode/season search
+- [ ] Album/song search
+- [ ] Run bot in mode where all 3 chat clients work in same process (right now you would need 3 separate processes/containers)
+
 ## Discord Bot Installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Discord-Bot
@@ -168,58 +186,8 @@ botdarr:
 
 ## Usage
 
-* Type /help in discord to get information about commands and what is supported
-* Type /movies help in discord to get information about movie commands
+* Type /help in your configured chat client to get information about commands and what is supported
 * Notifications will appear indicating the current downloads (based on your configuration for max downloads), their status, and their time remaining.
-* (discord only for now) When you react to movie/show results with add commands in the result with a "thumbs up" the content will be added.
-
+* When you search for content (i.e., /movie title add History of Dumb People) if too many results are returned you will be presented with multiple results. You can either use the thumbs up reaction (in discord or slack) or copy the add command (which will be embedded in the result) into the chat client.
+* The success of the bot depends a lot on how diverse your trackers you use in radarr, sonarr, lidarr and your quality profiles. If you have a trackers with little content or very restrictive quality profiles, a lot of content will never actually get added. The bot can't do anything about this.
 <br/>
-
-## Radarr Tips
-
-1. Just cause you add a movie successfully does not mean the movie will show up instantly or at all
-   - The way radarr works is you search for a film, then add it, then radarr will start searching through all the configured indexers for a torrent
-   - that matches the configure quality profiles the admin user has set. i.e., if there is only a CAM version of the film you want out there
-   - but the master user of radarr has configured to disallow CAM quality, then it will not download.
-   - If you use "movie find downloads TITLE" or "movie find all downloads TITLE" it can show you the downloads available through radarr for your requested/existing film.
-   - Although this functionality is not complete yet, as movies with similar titles will conflict and not show you downloads.
-   - I also need to somehow add functionality to let you force specific downloads as well.
-
-2. /movie title add
-   - This command will specifically try to add a movie based on title alone. Sometimes there are movies that have same titles or very similar titles
-   - When the title cannot be added by title alone, multiple movies will be returned. Embedded in the results is a command to add the movie with an id
-   - The command will look something "movie add John Wick: Chapter 4 603692". This command uses the movie title plus the TMDBID to add the movie
-
-3. /movie profiles
-   - and this profile is used when identifying downloads.
-   - This command shows you all the profiles available in radarr, it does NOT tell you which is the default profile. The default profile is configured by the bot admin
-   - and this profile is used when identifying downloads.
-
-4. /movie find new
-   - This command uses radarr search api to identify new films.
-   - Embedded in the results are commands to add the films directly, like "movie add Ad Astra 570820"
-
-5. /movie find existing
-   - This command finds any existing films and gives you information about them.
-   - It will tell you if the movie has been downloaded and if the radarr has the file.
-
-
-## Sonarr Tips
-
-1. Just like radarr, when you add a show with sonarr it doesn't automatically mean the show will magically appear. It really depends
-  - on how many trackers your sonarr installation has and how diverse the content within said trackers is.
-
-TODO: need to add more tips for sonarr  
-  
-<br/>
-
-## Lidarr Tips
-
-TODO:
-
-## Stuff I might add in the future
-
-1. Interactive season search/download (only available in v3 sonarr)
-2. Per episode search/download
-3. Cancelling/blacklisting downloads (movies, tvshows, artists, or albums)
-4. When I implement lidarr support I want to search by song instead of just artist/album (since lidarr doesn't support song search)
