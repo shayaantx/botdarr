@@ -193,8 +193,10 @@ botdarr:
   ![](https://raw.githubusercontent.com/shayaantx/botdarr/development/images/search-results.png)
 * The success of the bot depends a lot on how diverse your trackers you use in radarr, sonarr, lidarr and your quality profiles. If you have a trackers with little content or very restrictive quality profiles, a lot of content will never actually get added. The bot can't do anything about this.
 * Example commands:
-  * /movie title add Lion King
+  * /movie title add Lion Fling
   * /show title add One Piece
+  * /movie find new zombies
+  * /artist find new Linkin Flarp
   * /movie downloads
   * /show downloads
   * /help
