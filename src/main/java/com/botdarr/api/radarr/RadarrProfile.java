@@ -7,7 +7,7 @@ import java.util.List;
 public class RadarrProfile implements KeyBased<String> {
   @Override
   public String getKey() {
-    return name;
+    return name.toLowerCase();
   }
 
   public String getName() {
