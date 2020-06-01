@@ -25,7 +25,7 @@ def getNextVersion() {
   print "version=" + latestVersion;
   def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() };
   print "major=" + major + ",minor=" + minor + ",patch=" + patch;
-  return "${major}.${minor}.${patch}";
+  return "${major}.${minor}.${patch + 1}";
 }
 
 node {
