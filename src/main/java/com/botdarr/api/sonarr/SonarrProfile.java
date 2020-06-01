@@ -7,7 +7,7 @@ import java.util.List;
 public class SonarrProfile implements KeyBased<String> {
   @Override
   public String getKey() {
-    return name;
+    return name.toLowerCase();
   }
 
   public String getName() {
