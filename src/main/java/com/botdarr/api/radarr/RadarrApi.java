@@ -277,11 +277,6 @@ public class RadarrApi implements Api {
       public ChatClientResponse getResponse(RadarrMovie item) {
         return chatClientResponseBuilder.getMovieResponse(item);
       }
-
-      @Override
-      protected void cacheContent(RadarrMovie addContent) {
-        RADARR_CACHE.add(addContent);
-      }
     };
   }
 
@@ -327,6 +322,8 @@ public class RadarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return chatClientResponseBuilder.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
+        //cache data after a successful request
+        RADARR_CACHE.add(radarrMovie);
         LogManager.getLogger("AuditLog").info("User " + username + " added " + radarrMovie.getTitle());
         apiRequests.auditRequest(apiRequestType, username, radarrMovie.getTitle());
         return chatClientResponseBuilder.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());

@@ -22,7 +22,6 @@ public abstract class AddStrategy<T> {
   public abstract String getItemId(T item);
   public abstract ChatClientResponse addContent(T content);
   public abstract ChatClientResponse getResponse(T item);
-  protected abstract void cacheContent(T addContent);
 
   public ChatClientResponse addWithSearchId(String searchText, String id) {
     try {
@@ -41,7 +40,6 @@ public abstract class AddStrategy<T> {
             return chatClientResponseBuilder.createErrorMessage(this.contentDisplayName + " already exists");
           }
           ChatClientResponse chatClientResponse = addContent(item);
-          cacheContent(item);
           return chatClientResponse;
         }
       }

@@ -81,7 +81,6 @@ public class AddStrategyTests {
       mockAddStrategy.getItemId(movie); times = 1; result = searchId;
       mockAddStrategy.doesItemExist(movie); times = 1; result = false;
       mockAddStrategy.addContent(movie); times = 1; result = expectedResponse;
-      mockAddStrategy.cacheContent(movie); times = 1;
     }};
     ChatClientResponse chatClientResponse = mockAddStrategy.addWithSearchId(searchText, searchId);
     Assert.assertNotNull(chatClientResponse);
@@ -286,11 +285,6 @@ public class AddStrategyTests {
     @Override
     public ChatClientResponse getResponse(Object item) {
       return null;
-    }
-
-    @Override
-    protected void cacheContent(Object addContent) {
-
     }
   }
 }

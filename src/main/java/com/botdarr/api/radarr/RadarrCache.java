@@ -42,7 +42,7 @@ public class RadarrCache {
     for (Long tmdbId : addUpdatedMovies) {
       RadarrMovie radarrMovie = existingTmdbIdsToMovies.get(tmdbId);
       if (radarrMovie != null) {
-        existingMovieTitles.add(radarrMovie.getTitle());
+        existingMovieTitles.add(radarrMovie.getTitle().toLowerCase());
       }
     }
     existingTmdbIdsToMovies.keySet().retainAll(addUpdatedMovies);

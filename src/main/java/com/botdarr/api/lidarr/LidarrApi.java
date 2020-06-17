@@ -199,11 +199,6 @@ public class LidarrApi implements Api {
       public ChatClientResponse getResponse(LidarrArtist item) {
         return chatClientResponseBuilder.getArtistResponse(item);
       }
-
-      @Override
-      protected void cacheContent(LidarrArtist addContent) {
-        LIDARR_CACHE.addArtist(addContent);
-      }
     };
   }
 
@@ -293,6 +288,8 @@ public class LidarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return chatClientResponseBuilder.createErrorMessage("Could not add artist, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
+        //cache artist after successful response
+        LIDARR_CACHE.addArtist(lidarrArtist);
         LogManager.getLogger("AuditLog").info("User " + username + " added " + lidarrArtist.getArtistName());
         apiRequests.auditRequest(apiRequestType, username, lidarrArtist.getArtistName());
         return chatClientResponseBuilder.createSuccessMessage("Artist " + lidarrArtist.getArtistName() + " added, lidarr-detail=" + response.getStatusLine().getReasonPhrase());

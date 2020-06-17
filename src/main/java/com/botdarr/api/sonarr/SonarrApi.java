@@ -188,11 +188,6 @@ public class SonarrApi implements Api {
       public ChatClientResponse getResponse(SonarrShow item) {
         return chatClientResponseBuilder.getShowResponse(item);
       }
-
-      @Override
-      protected void cacheContent(SonarrShow addContent) {
-        SONARR_CACHE.add(addContent);
-      }
     };
   }
 
@@ -245,6 +240,8 @@ public class SonarrApi implements Api {
         if (statusCode != 200 && statusCode != 201) {
           return chatClientResponseBuilder.createErrorMessage("Could not add show, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
+        //cache show after successful request
+        SONARR_CACHE.add(sonarrShow);
         LogManager.getLogger("AuditLog").info("User " + username + " added " + title);
         apiRequests.auditRequest(apiRequestType, username, title);
         return chatClientResponseBuilder.createSuccessMessage("Show " + title + " added, sonarr-detail=" + response.getStatusLine().getReasonPhrase());

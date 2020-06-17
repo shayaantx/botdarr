@@ -50,12 +50,12 @@ public class SonarrCache {
     for (Long tvdbId : addUpdatedTvdbShowIds) {
       SonarrShow sonarrShow = existingTvdbIdsToMovies.get(tvdbId);
       if (sonarrShow != null) {
-        existingShowTitles.add(sonarrShow.getTitle());
+        existingShowTitles.add(sonarrShow.getTitle().toLowerCase());
         existingTvRageIds.add(sonarrShow.getTvRageId());
         existingTvmazeIds.add(sonarrShow.getTvMazeId());
       }
     }
-    existingShowTitlesToSonarrId.keySet().retainAll(addUpdatedTvdbShowIds);
+    existingShowTitlesToSonarrId.keySet().retainAll(existingShowTitles);
     existingTvdbIdsToMovies.keySet().retainAll(addUpdatedTvdbShowIds);
     existingTvrageIdsToMovies.keySet().retainAll(existingTvRageIds);
     existingTvmazeIdsToMovies.keySet().retainAll(existingTvmazeIds);
