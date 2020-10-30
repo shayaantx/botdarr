@@ -99,7 +99,8 @@ public enum ChatClientType {
         ChatClientResponseBuilder<DiscordResponse> responseChatClientResponseBuilder = new DiscordResponseBuilder();
         ApisAndCommandConfig config = buildConfig(responseChatClientResponseBuilder);
 
-        JDA jda = new JDABuilder(Config.getProperty(Config.Constants.DISCORD_TOKEN)).addEventListeners(new ListenerAdapter() {
+
+        JDA jda = JDABuilder.createDefault((Config.getProperty(Config.Constants.DISCORD_TOKEN))).addEventListeners(new ListenerAdapter() {
           @Override
           public void onGenericEvent(@Nonnull GenericEvent event) {
             super.onGenericEvent(event);
