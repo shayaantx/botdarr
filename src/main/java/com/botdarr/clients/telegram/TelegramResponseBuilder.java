@@ -10,7 +10,6 @@ import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.*;
 import com.botdarr.utilities.ListUtils;
 import j2html.tags.DomContent;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.util.Strings;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
@@ -21,7 +20,6 @@ import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public class TelegramResponseBuilder implements ChatClientResponseBuilder<TelegramResponse> {
@@ -114,7 +112,6 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
       }
       domContents.add(code(statusMessageBuilder.toString()));
     }
-    domContents.add(b("Cancel download command - " + "show cancel download " + showQueue.getId()));
     return new TelegramResponse(domContents);
   }
 
@@ -174,30 +171,6 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
   public TelegramResponse createSuccessMessage(String message) {
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(u(b("Success! - " + message)));
-    return new TelegramResponse(domContents);
-  }
-
-  @Override
-  public TelegramResponse getTorrentResponses(RadarrTorrent radarrTorrent, String movieTitle) {
-    List<DomContent> domContents = new ArrayList<>();
-    domContents.add(b("Title - " + radarrTorrent.getTitle()));
-    domContents.add(text("Torrent - " + radarrTorrent.getGuid()));
-    domContents.add(text("Quality - " + radarrTorrent.getQuality().getQuality().getName()));
-    domContents.add(text("Indexer - " + radarrTorrent.getIndexer()));
-    domContents.add(text("Seeders - " + radarrTorrent.getSeeders()));
-    domContents.add(text("Leechers - " + radarrTorrent.getLeechers()));
-    domContents.add(text("Size - " + FileUtils.byteCountToDisplaySize(radarrTorrent.getSize())));
-    String[] rejections = radarrTorrent.getRejections();
-    if (rejections != null) {
-      StringBuilder rejectionReasons = new StringBuilder();
-      for (String rejection : rejections) {
-        rejectionReasons.append("Rejection Reason - " + rejection + "\n");
-      }
-      domContents.add(code(rejectionReasons.toString()));
-    }
-    String key = radarrTorrent.getGuid() + ":title=" + movieTitle;
-    byte[] encodedBytes = Base64.getEncoder().encode(key.getBytes());
-    domContents.add(u(b("Download hash command - " + "movie hash download " + new String(encodedBytes))));
     return new TelegramResponse(domContents);
   }
 

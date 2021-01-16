@@ -2,6 +2,7 @@ package com.botdarr.api.sonarr;
 
 import com.botdarr.Config;
 import com.botdarr.api.*;
+import com.botdarr.api.radarr.RadarrMovie;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
@@ -64,17 +65,17 @@ public class SonarrApi implements Api {
       public ChatClientResponse getNewOrExistingItem(SonarrShow lookupItem, SonarrShow existingItem, boolean findNew) {
         return chatClientResponseBuilder.getNewOrExistingShow(lookupItem, existingItem, findNew);
       }
+
+      @Override
+      public boolean isPathBlacklisted(SonarrShow item) {
+        for (String path : Config.getExistingItemBlacklistPaths()) {
+          if (item.getPath() != null && item.getPath().startsWith(path)) {
+            return true;
+          }
+        }
+        return false;
+      }
     }.lookup(search, findNew);
-  }
-
-  public List<ChatClientResponse> lookupTorrents(String command, boolean showRejected) {
-    //TODO: implement
-    return null;
-  }
-
-  public List<ChatClientResponse> cancelDownload(long id) {
-    //TODO: implement
-    return null;
   }
 
   public List<ChatClientResponse> getProfiles() {
@@ -88,11 +89,6 @@ public class SonarrApi implements Api {
       profileMessages.add(chatClientResponseBuilder.getShowProfile(sonarrProfile));
     }
     return profileMessages;
-  }
-
-  public List<ChatClientResponse> forceDownload(String command) {
-    //TODO: implement
-    return null;
   }
 
   @Override
@@ -115,7 +111,7 @@ public class SonarrApi implements Api {
 
       @Override
       public List<SonarrProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(SonarrApi.this, SonarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<SonarrProfile>() {
+        return ConnectionHelper.makeGetRequest(SonarrApi.this, SonarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<List<SonarrProfile>>() {
           @Override
           public List<SonarrProfile> onSuccess(String response) {
             List<SonarrProfile> sonarrProfiles = new ArrayList<>();
@@ -253,7 +249,7 @@ public class SonarrApi implements Api {
   }
 
   private List<SonarrShow> lookupShows(String search) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, SonarrUrls.LOOKUP_SERIES, "&term=" + URLEncoder.encode(search, "UTF-8"), new ConnectionHelper.SimpleEntityResponseHandler<SonarrShow>() {
+    return ConnectionHelper.makeGetRequest(this, SonarrUrls.LOOKUP_SERIES, "&term=" + URLEncoder.encode(search, "UTF-8"), new ConnectionHelper.SimpleEntityResponseHandler<List<SonarrShow>>() {
       @Override
       public List<SonarrShow> onSuccess(String response) {
         List<SonarrShow> movies = new ArrayList<>();

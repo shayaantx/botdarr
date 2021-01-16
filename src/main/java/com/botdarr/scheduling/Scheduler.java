@@ -6,9 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class Scheduler {
   public static Scheduler getScheduler() {
@@ -33,7 +31,7 @@ public class Scheduler {
         } catch (Throwable e) {
           LOGGER.error("Error during api notification", e);
         }
-      }, 0, 1, TimeUnit.HOURS);
+      }, 0, 5, TimeUnit.MINUTES);
     }
   }
 
@@ -57,8 +55,16 @@ public class Scheduler {
     }
   }
 
+  public void executeCommand(Callable callable) {
+    if (commandThreadPool == null) {
+      commandThreadPool = Executors.newFixedThreadPool(10);
+    }
+    commandThreadPool.submit(callable);
+  }
+
   private ScheduledFuture notificationFuture;
   private ScheduledFuture cacheFuture;
+  private ExecutorService commandThreadPool;
   private static volatile Scheduler instance;
   private static final Logger LOGGER = LogManager.getLogger();
 }

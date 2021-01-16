@@ -5,6 +5,9 @@ import com.botdarr.Config;
 import com.botdarr.api.lidarr.LidarrApi;
 import com.botdarr.api.radarr.RadarrApi;
 import com.botdarr.api.sonarr.SonarrApi;
+import com.botdarr.clients.matrix.MatrixChatClient;
+import com.botdarr.clients.matrix.MatrixResponse;
+import com.botdarr.clients.matrix.MatrixResponseBuilder;
 import com.botdarr.commands.*;
 import com.botdarr.clients.discord.DiscordChatClient;
 import com.botdarr.clients.discord.DiscordResponse;
@@ -43,12 +46,47 @@ import org.apache.logging.log4j.util.Strings;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 
 public enum ChatClientType {
+  MATRIX() {
+    @Override
+    public void init() throws Exception {
+      MatrixChatClient chatClient = new MatrixChatClient();
+      ChatClientResponseBuilder<MatrixResponse> responseChatClientResponseBuilder = new MatrixResponseBuilder();
+      ApisAndCommandConfig config = buildConfig(responseChatClientResponseBuilder);
+      initScheduling(chatClient, config.apis);
+      chatClient.addListener((roomId, sender, content) -> {
+        Scheduler.getScheduler().executeCommand(() -> {
+          CommandResponse commandResponse =
+            commandProcessor.processMessage(config.commands, content, sender, responseChatClientResponseBuilder);
+          if (commandResponse != null) {
+            chatClient.sendMessage(commandResponse, roomId);
+          }
+          return null;
+        });
+      });
+      chatClient.listen();
+    }
+
+    @Override
+    public boolean isConfigured(Properties properties) {
+      return
+          !Strings.isBlank(properties.getProperty(Config.Constants.MATRIX_USERNAME)) &&
+          !Strings.isBlank(properties.getProperty(Config.Constants.MATRIX_PASSWORD)) &&
+          !Strings.isBlank(properties.getProperty(Config.Constants.MATRIX_ROOM)) &&
+          !Strings.isBlank(properties.getProperty(Config.Constants.MATRIX_HOME_SERVER));
+    }
+
+    @Override
+    public String getReadableName() {
+      return "Matrix";
+    }
+  },
   TELEGRAM() {
     @Override
     public void init() throws Exception {
@@ -66,11 +104,14 @@ public enum ChatClientType {
               //TODO: the telegram api doesn't seem return "from" field in channel posts for some reason
               //for now we leave the author as "telegram" till a better solution arises
               String author = "telegram";
-              CommandResponse commandResponse =
-                commandProcessor.processMessage(config.commands, text, author, responseChatClientResponseBuilder);
-              if (commandResponse != null) {
-                telegramChatClient.sendMessage(commandResponse, message.chat());
-              }
+              Scheduler.getScheduler().executeCommand(() -> {
+                CommandResponse commandResponse =
+                  commandProcessor.processMessage(config.commands, text, author, responseChatClientResponseBuilder);
+                if (commandResponse != null) {
+                  telegramChatClient.sendMessage(commandResponse, message.chat());
+                }
+                return null;
+              });
             }
           }
         } catch (Throwable t) {
@@ -108,7 +149,7 @@ public enum ChatClientType {
 
           @Override
           public void onReady(@Nonnull ReadyEvent event) {
-            LogManager.getLogger("DiscordLog").info("Connected to discord");
+            LogManager.getLogger("com.botdarr.clients.discord").info("Connected to discord");
             ChatClient chatClient = new DiscordChatClient(event.getJDA());
             //start the scheduler threads that send notifications and cache data periodically
             initScheduling(chatClient, config.apis);
@@ -143,7 +184,7 @@ public enum ChatClientType {
           @Override
           public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
             handleCommand(event.getJDA(), event.getMessage().getContentStripped(), event.getAuthor().getName(), event.getChannel().getName());
-            LogManager.getLogger("DiscordLog").debug(event.getMessage().getContentRaw());
+            LogManager.getLogger("com.botdarr.clients.discord").debug(event.getMessage().getContentRaw());
             super.onMessageReceived(event);
           }
 
@@ -152,22 +193,25 @@ public enum ChatClientType {
             DiscordChatClient discordChatClient = new DiscordChatClient(jda);
 
             //capture/process command
-            CommandResponse commandResponse = commandProcessor.processMessage(
-              config.commands,
-              message,
-              author,
-              responseChatClientResponseBuilder);
-            if (commandResponse != null) {
-              //then send the response
-              discordChatClient.sendMessage(commandResponse, channelName);
-            }
+            Scheduler.getScheduler().executeCommand(() -> {
+              CommandResponse commandResponse = commandProcessor.processMessage(
+                config.commands,
+                message,
+                author,
+                responseChatClientResponseBuilder);
+              if (commandResponse != null) {
+                //then send the response
+                discordChatClient.sendMessage(commandResponse, channelName);
+              }
+              return null;
+            });
           }
 
           private static final String THUMBS_UP_EMOTE = "\uD83D\uDC4D";
         }).build();
         jda.awaitReady();
       } catch (Throwable e) {
-        LogManager.getLogger("DiscordLog").error("Error caught during main", e);
+        LogManager.getLogger("com.botdarr.clients.discord").error("Error caught during main", e);
         throw e;
       }
     }
@@ -232,24 +276,27 @@ public enum ChatClientType {
                   }
                 }
               } catch (Exception e) {
-                LogManager.getLogger("SlackLog").error("Error fetching conversation history", e);
+                LogManager.getLogger("com.botdarr.clients.slack").error("Error fetching conversation history", e);
               }
             }
           }
-          LogManager.getLogger("SlackLog").debug(json);
+          LogManager.getLogger("com.botdarr.clients.slack").debug(json);
         }
 
         private void handleCommand(String text, String userId, String channel) {
-          //capture/process the command
-          CommandResponse commandResponse = commandProcessor.processMessage(
-            config.commands,
-            text,
-            userId,
-            responseChatClientResponseBuilder);
-          if (commandResponse != null) {
-            //then send the response
-            slackChatClient.sendMessage(commandResponse, channel);
-          }
+          Scheduler.getScheduler().executeCommand(() -> {
+            //capture/process the command
+            CommandResponse commandResponse = commandProcessor.processMessage(
+              config.commands,
+              text,
+              userId,
+              responseChatClientResponseBuilder);
+            if (commandResponse != null) {
+              //then send the response
+              slackChatClient.sendMessage(commandResponse, channel);
+            }
+            return null;
+          });
         }
       });
 

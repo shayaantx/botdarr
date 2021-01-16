@@ -11,14 +11,12 @@ import com.botdarr.commands.*;
 import com.botdarr.utilities.ListUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.Base64;
 import java.util.List;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
@@ -113,7 +111,6 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
         }
       }
     }
-    embedBuilder.addField("Cancel download command", "show cancel download " + showQueue.getId(), true);
     return new DiscordResponse(embedBuilder.build());
   }
 
@@ -131,8 +128,6 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
         }
       }
     }
-    //TODO: implement
-    //embedBuilder.addField("Cancel download command", "movie cancel download " + radarrQueue.getId(), true);
     return new DiscordResponse(embedBuilder.build());
   }
 
@@ -149,29 +144,6 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
         }
       }
     }
-    return new DiscordResponse(embedBuilder.build());
-  }
-
-  @Override
-  public DiscordResponse getTorrentResponses(RadarrTorrent radarrTorrent, String movieTitle) {
-    EmbedBuilder embedBuilder = new EmbedBuilder();
-    embedBuilder.addField("Title", radarrTorrent.getTitle(), false);
-    embedBuilder.addField("Torrent", radarrTorrent.getGuid(), false);
-    embedBuilder.addField("Quality", radarrTorrent.getQuality().getQuality().getName(), true);
-    embedBuilder.addField("Indexer", radarrTorrent.getIndexer(), true);
-    embedBuilder.addField("Seeders", "" + radarrTorrent.getSeeders(), true);
-    embedBuilder.addField("Leechers", "" + radarrTorrent.getLeechers(), true);
-    embedBuilder.addField("Size", "" + FileUtils.byteCountToDisplaySize(radarrTorrent.getSize()), true);
-    String[] rejections = radarrTorrent.getRejections();
-    if (rejections != null) {
-      embedBuilder.addBlankField(false);
-      for (String rejection : rejections) {
-        embedBuilder.addField("Rejection Reason", rejection, false);
-      }
-    }
-    String key = radarrTorrent.getGuid() + ":title=" + movieTitle;
-    byte[] encodedBytes = Base64.getEncoder().encode(key.getBytes());
-    embedBuilder.addField("Download hash command", "movie hash download " + new String(encodedBytes), true);
     return new DiscordResponse(embedBuilder.build());
   }
 

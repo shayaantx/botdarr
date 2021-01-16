@@ -5,7 +5,6 @@ import com.botdarr.api.lidarr.LidarrQueueRecord;
 import com.botdarr.api.radarr.RadarrMovie;
 import com.botdarr.api.radarr.RadarrProfile;
 import com.botdarr.api.radarr.RadarrQueue;
-import com.botdarr.api.radarr.RadarrTorrent;
 import com.botdarr.api.sonarr.SonarrProfile;
 import com.botdarr.api.sonarr.SonarrQueue;
 import com.botdarr.api.sonarr.SonarrShow;
@@ -74,11 +73,6 @@ public class TestResponseBuilder implements ChatClientResponseBuilder<TestRespon
   @Override
   public TestResponse createSuccessMessage(String message) {
     return new TestResponse(message);
-  }
-
-  @Override
-  public TestResponse getTorrentResponses(RadarrTorrent radarrTorrent, String movieTitle) {
-    return new TestResponse();
   }
 
   @Override

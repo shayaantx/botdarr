@@ -52,7 +52,7 @@ public class CommandProcessor {
     if (!Strings.isEmpty(configuredPrefix)) {
       return configuredPrefix;
     }
-    return "/";
+    return "!";
   }
 
   private static final Logger LOGGER = LogManager.getLogger(CommandProcessor.class);

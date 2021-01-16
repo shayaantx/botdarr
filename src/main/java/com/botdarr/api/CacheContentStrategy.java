@@ -21,7 +21,7 @@ public abstract class CacheContentStrategy<T, Z> {
 
   public void cacheData() {
     List<Z> itemsAddedUpdated = new ArrayList<>();
-    ConnectionHelper.makeGetRequest(this.api, this.url, new ConnectionHelper.SimpleEntityResponseHandler<T>() {
+    ConnectionHelper.makeGetRequest(this.api, this.url, new ConnectionHelper.SimpleEntityResponseHandler<List<T>>() {
       @Override
       public List<T> onSuccess(String response) throws Exception {
         JsonParser parser = new JsonParser();

@@ -3,7 +3,7 @@
 
 # Summary
 
-Made this simple slack/discord/telegram bot so I could access radarr, sonarr, and lidarr all from a multiple slack/discord/telegram channels without a UI/server.
+Made this simple slack/discord/telegram/matrix bot so I could access radarr, sonarr, and lidarr all from a multiple slack/discord/telegram/matrix channels without a UI/server.
 
 <br/>
 
@@ -20,6 +20,7 @@ Made this simple slack/discord/telegram bot so I could access radarr, sonarr, an
 - [x] Discord
 - [x] Slack
 - [x] Telegram
+- [x] Matrix
 
 ## Currently Supported Feature's
 
@@ -34,11 +35,12 @@ Made this simple slack/discord/telegram bot so I could access radarr, sonarr, an
 - [x] Configurable value for url base for radarr, sonarr, and lidarr
 - [x] Lookup torrents for movies and force download
 - [x] (discord/slack only) Thumbs up reaction will add search results 
-- [x] User requests audited to local database
+- [x] User requests audited to local database\
+- [x] Blacklist content by paths from showing up in searches
 - [ ] Cancel/blacklist existing downloads
 - [ ] Episode/season search
 - [ ] Album/song search
-- [ ] Run bot in mode where all 3 chat clients work in same process (right now you would need 3 separate processes/containers)
+- [ ] Run bot in mode where all 4 chat clients work in same process (right now you would need 4 separate processes/containers)
 
 ## Discord Bot Installation
 
@@ -53,6 +55,10 @@ See https://github.com/shayaantx/botdarr/wiki/Install-Slack-Bot
 ## Telegram bot installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Telegram-Bot
+
+## Matrix bot installation
+
+See https://github.com/shayaantx/botdarr/wiki/Install-Matrix-Bot
 
 ## Jar installation/Configuration
 
@@ -69,26 +75,35 @@ Radarr seems to return a 200 http code, not actually add the movie, and return j
 the api url with your radarr url base. So MAKE SURE you account for this in your config/setup.
 ```
 # your discord bot token
-discord-token=
+#discord-token=
 # the discord channel(s) you want the bot installed on
-discord-channels=
+#discord-channels=
 
 # Your slack bot oauth authentication token
-slack-bot-token=
+#slack-bot-token=
 # Your slack user oauth authentication token
-slack-user-token=
+#slack-user-token=
 # the slack channel(s) you want the bot installed on
-slack-channels=
+#slack-channels=
 
 # Your telegram bot token
-telegram-token=
+#telegram-token=
 # Your actual telegram channels your bot can respond in
 # this should be a list containing the name and id of the channel, i.e., CHANNEL_NAME:CHANNEL_ID
 # to get the channel id, right click any post in private channel and copy post link
 # you should see something like this, https://t.me/c/1408146664/63
 # the id is between c/<id>/<postId>
-# example: plex-channel1:id1,plex-channel2:id2
-telegram-private-channels=
+# example: channel1:id1,channel2:id2
+#telegram-private-channels=
+
+# Your matrix bot user
+#matrix-username=
+# Your matrix bot password
+#matrix-password=
+# The room your matrix bot will send messages in
+#matrix-room=
+# The url of your homeserver
+#matrix-home-server-url=
 
 # your radarr url (i.e., http://SOME-IP:SOME-PORT)
 radarr-url=
@@ -145,9 +160,13 @@ lidarr-url-base=
 # If you set this to any value less than 0, the bot won't startup
 #max-results-to-show=20
 
-# The command prefix (default is /)
+# The command prefix (default is !)
 # Any prefix is allowed (but I haven't tested every single prefix in every client)
-command-prefix=/
+command-prefix=!
+
+# If you want content to NOT appear in searches against your library, you can list blacklisted paths here
+# in comma delimited form, and they will be ignored when building up responses
+#existing-item-paths-blacklist=
 ```
 
 1. Run the jar using java
@@ -187,20 +206,18 @@ botdarr:
 
 ## Usage
 
-* Type /help in your configured chat client to get information about commands and what is supported
+* Type !help in your configured chat client to get information about commands and what is supported
 * Notifications will appear indicating the current downloads (based on your configuration for max downloads), their status, and their time remaining.
-* When you search for content (i.e., /movie title add History of Dumb People) if too many results are returned you will be presented with multiple results. You can either use the thumbs up reaction (in discord or slack) or copy the add command (which will be embedded in the result) into the chat client.
-
-![](https://raw.githubusercontent.com/shayaantx/botdarr/development/images/search-results.png)
-* The success of the bot depends a lot on how diverse your trackers you use in radarr, sonarr, lidarr and your quality profiles. If you have a trackers with little content or very restrictive quality profiles, a lot of content will never actually get added. The bot can't do anything about this.
+* When you search for content (i.e., !movie title add History of Dumb People) if too many results are returned you will be presented with multiple results. You can either use the thumbs up reaction (in discord or slack) or copy the add command (which will be embedded in the result) into the chat client.
 * Example commands:
-  * /movie title add Lion Fling
-  * /show title add One Fliece
-  * /movie find new zombies
-  * /artist find new Linkin Flarp
-  * /movie downloads
-  * /show downloads
-  * /help
-  * /shows help
-  * /movies help
+  * !movie title add Lion Fling
+  * !show title add One Fliece
+  * !movie find new zombies
+  * !artist find new Linkin Flarp
+  * !movie downloads
+  * !show downloads
+  * !help
+  * !shows help
+  * !movies help
+* The default command prefix is !. I chose ! because / (original command prefix) is commonly used by many chat clients and has existing functionality with it that leads to some commands not working nicely.
 <br/>

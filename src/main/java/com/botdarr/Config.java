@@ -7,9 +7,7 @@ import org.apache.logging.log4j.util.Strings;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Config {
@@ -84,6 +82,12 @@ public class Config {
       if (!Strings.isEmpty(configuredPrefix)  && configuredPrefix.length() > 1) {
         throw new RuntimeException("Command prefix must be a single character");
       }
+      if (chatClientType == ChatClientType.SLACK && configuredPrefix.equals("/")) {
+        throw new RuntimeException("Cannot use / command prefix in slack since /help command was deprecated by slack");
+      }
+      if (chatClientType == ChatClientType.MATRIX && configuredPrefix.equals("/")) {
+        throw new RuntimeException("Cannot use / command prefix in matrix since /help command is used by element by default");
+      }
     } catch (Exception ex) {
       LOGGER.error("Error loading properties file", ex);
       throw new RuntimeException(ex);
@@ -110,7 +114,35 @@ public class Config {
     return getConfig().chatClientType;
   }
 
+  public static List<String> getExistingItemBlacklistPaths() {
+    String paths = getProperty(Constants.EXISTING_ITEMS_PATHS_BLACKLIST);
+    if (paths != null && paths.contains(",")) {
+      return Arrays.asList(paths.split(","));
+    }
+    return new ArrayList<String>() {{add(paths);}};
+  }
+
   public static final class Constants {
+    /**
+     * The matrix bot username
+     */
+    public static final String MATRIX_USERNAME = "matrix-username";
+
+    /**
+     * The matrix bot password
+     */
+    public static final String MATRIX_PASSWORD = "matrix-password";
+
+    /**
+     * The matrix room for the bot
+     */
+    public static final String MATRIX_ROOM = "matrix-room";
+
+    /**
+     * The matrix home server for the bot
+     */
+    public static final String MATRIX_HOME_SERVER = "matrix-home-server-url";
+
     /**
      * The telegram auth token
      */
@@ -267,6 +299,11 @@ public class Config {
      * The prefix for all commands
      */
     public static final String COMMAND_PREFIX = "command-prefix";
+
+    /**
+     * The paths of items to blacklist from searches
+     */
+    public static final String EXISTING_ITEMS_PATHS_BLACKLIST = "existing-item-paths-blacklist";
   }
 
   private static String propertiesPath = "config/properties";
