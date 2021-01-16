@@ -2,6 +2,7 @@ package com.botdarr.api.lidarr;
 
 import com.botdarr.Config;
 import com.botdarr.api.*;
+import com.botdarr.api.sonarr.SonarrShow;
 import com.botdarr.api.sonarr.SonarrUrls;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
@@ -65,7 +66,7 @@ public class LidarrApi implements Api {
 
       @Override
       public List<LidarrQualityProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<LidarrQualityProfile>() {
+        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<List<LidarrQualityProfile>>() {
           @Override
           public List<LidarrQualityProfile> onSuccess(String response) {
             List<LidarrQualityProfile> lidarrQualityProfiles = new ArrayList<>();
@@ -95,7 +96,7 @@ public class LidarrApi implements Api {
 
       @Override
       public List<LidarrMetadataProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.METADATA_PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<LidarrMetadataProfile>() {
+        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.METADATA_PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<List<LidarrMetadataProfile>>() {
           @Override
           public List<LidarrMetadataProfile> onSuccess(String response) {
             List<LidarrMetadataProfile> lidarrMetadataProfiles = new ArrayList<>();
@@ -164,6 +165,16 @@ public class LidarrApi implements Api {
       public ChatClientResponse getNewOrExistingItem(LidarrArtist lookupItem, LidarrArtist existingItem, boolean findNew) {
         return chatClientResponseBuilder.getNewOrExistingArtist(lookupItem, existingItem, findNew);
       }
+
+      @Override
+      public boolean isPathBlacklisted(LidarrArtist item) {
+        for (String path : Config.getExistingItemBlacklistPaths()) {
+          if (item.getPath() != null && item.getPath().startsWith(path)) {
+            return true;
+          }
+        }
+        return false;
+      }
     }.lookup(search, findNew);
   }
 
@@ -226,7 +237,7 @@ public class LidarrApi implements Api {
 
   private List<LidarrArtist> lookupArtists(String search) throws Exception {
     return ConnectionHelper.makeGetRequest(this, LidarrUrls.LOOKUP_ARTISTS, "&term=" + URLEncoder.encode(search, "UTF-8"),
-      new ConnectionHelper.SimpleEntityResponseHandler<LidarrArtist>() {
+      new ConnectionHelper.SimpleEntityResponseHandler<List<LidarrArtist>>() {
         @Override
         public List<LidarrArtist> onSuccess(String response) {
           List<LidarrArtist> artists = new ArrayList<>();

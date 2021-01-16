@@ -70,29 +70,6 @@ public class RadarrCommands {
           return new CommandResponse(radarrApi.lookup(searchText, false));
         }
       });
-      add(new BaseCommand("movie find downloads", "movie find downloads <movie-title>",  "Lists all the available (not rejected) torrents for a movie (i.e., movie find downloads TITLE OF MOVIE). " +
-        "You can get the title by using \"movie find existing\". This can be a SLOW operation depending on the number of indexers configured" +
-        " in your Radarr settings and particularly how fast each indexer is. Also these are torrents that have not been marked as rejected based" +
-        " on whatever quality/profile settings are configured in Radarr") {
-        @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
-          validateMovieTitle(searchText);
-          return new CommandResponse(radarrApi.lookupTorrents(searchText, false));
-        }
-      });
-      add(new BaseCommand("movie find all downloads", "movie find all downloads <movie-title>","List all the available torrents for a movie whether they are rejected by radarr or not") {
-        @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
-          validateMovieTitle(searchText);
-          return new CommandResponse(radarrApi.lookupTorrents(searchText, true));
-        }
-      });
-      add(new BaseCommand("movie hash download", "movie hash download <hash>", "Force downloads a movie using a hash string, you can only get from the command 'movie find all downloads'") {
-        @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse(radarrApi.forceDownload(command));
-        }
-      });
       add(new BaseCommand("movie downloads", "Shows all the active movies downloading in radarr") {
         @Override
         public boolean hasArguments() {

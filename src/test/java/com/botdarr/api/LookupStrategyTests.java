@@ -129,5 +129,10 @@ public class LookupStrategyTests {
     public ChatClientResponse getNewOrExistingItem(Object lookupItem, Object existingItem, boolean findNew) {
       return null;
     }
+
+    @Override
+    public boolean isPathBlacklisted(Object item) {
+      return false;
+    }
   }
 }

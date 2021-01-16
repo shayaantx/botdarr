@@ -15,13 +15,11 @@ import com.github.seratch.jslack.api.model.block.ImageBlock;
 import com.github.seratch.jslack.api.model.block.SectionBlock;
 import com.github.seratch.jslack.api.model.block.composition.MarkdownTextObject;
 import com.github.seratch.jslack.api.model.block.composition.PlainTextObject;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.util.Strings;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
@@ -171,9 +169,6 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
           .build());
       }
     }
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Cancel download command - " + "show cancel download " + showQueue.getId()).build())
-      .build());
     return slackResponse;
   }
 
@@ -205,9 +200,6 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
           .build());
       }
     }
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Cancel download command - " + "movie cancel download " + radarrQueue.getId()).build())
-      .build());
     return slackResponse;
   }
 
@@ -262,49 +254,6 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     SlackResponse slackResponse = new SlackResponse();
     slackResponse.addBlock(SectionBlock.builder()
       .text(MarkdownTextObject.builder().text("*Success* - " + message).build())
-      .build());
-    return slackResponse;
-  }
-
-  @Override
-  public SlackResponse getTorrentResponses(RadarrTorrent radarrTorrent, String movieTitle) {
-    SlackResponse slackResponse = new SlackResponse();
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("*Title* - " + radarrTorrent.getTitle()).build())
-      .build());
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Torrent - " + radarrTorrent.getGuid()).build())
-      .build());
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Quality - " + radarrTorrent.getQuality().getQuality().getName()).build())
-      .build());
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Indexer - " + radarrTorrent.getIndexer()).build())
-      .build());
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Seeders - " + radarrTorrent.getSeeders()).build())
-      .build());
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Leechers - " + radarrTorrent.getLeechers()).build())
-      .build());
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Size - " + FileUtils.byteCountToDisplaySize(radarrTorrent.getSize())).build())
-      .build());
-
-    String[] rejections = radarrTorrent.getRejections();
-    if (rejections != null) {
-      List<ContextBlockElement> contextBlockElements = new ArrayList<>();
-      for (String rejection : rejections) {
-        contextBlockElements.add(PlainTextObject.builder().text("Rejection Reason - " + rejection).build());
-      }
-      slackResponse.addBlock(ContextBlock.builder()
-        .elements(contextBlockElements)
-        .build());
-    }
-    String key = radarrTorrent.getGuid() + ":title=" + movieTitle;
-    byte[] encodedBytes = Base64.getEncoder().encode(key.getBytes());
-    slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Download hash command - " + "movie hash download " + new String(encodedBytes)).build())
       .build());
     return slackResponse;
   }

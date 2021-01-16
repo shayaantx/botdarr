@@ -33,7 +33,7 @@ public class ConfigTests {
   public void getConfig_noChatClientsConfigured() throws Exception {
     writeFakePropertiesFile(new Properties());
     expectedException.expect(RuntimeException.class);
-    expectedException.expectMessage("You don't have Discord, Slack, Telegram configured, please configure one");
+    expectedException.expectMessage("You don't have Discord, Matrix, Slack, Telegram configured, please configure one");
     Config.getProperty("");
   }
 

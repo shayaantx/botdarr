@@ -21,12 +21,12 @@ def getChangelistDescription() {
   return description;
 }
 
-def getNextVersion() {
+def getVersion() {
   def latestVersion = readFile "${env.WORKSPACE}/src/main/resources/version.txt"
   print "version=" + latestVersion;
   def (major, minor, patch) = latestVersion.tokenize('.').collect { it.toInteger() };
-  print "next version: major=" + major + ",minor=" + minor + ",patch=" + (patch + 1);
-  return "${major}.${minor}.${patch + 1}";
+  print "version: major=" + major + ",minor=" + minor + ",patch=" + (patch + 1);
+  return "${major}.${minor}.${patch}";
 }
 
 // whether or not to deploy to github & dockerhub
@@ -49,21 +49,11 @@ withCredentials([string(credentialsId: 'botdarr-username', variable: 'botdarr_us
 pipeline {
   agent any
   stages {
-    stage("Checkout") {
-      steps {
-        script {
-          checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github', url: "https://github.com/${username}/botdar.git"]]])
-          env.GIT_COMMIT_MSG = sh (script: 'git log -1 --pretty=%B ${GIT_COMMIT}', returnStdout: true).trim()
-          deploy = !env.GIT_COMMIT_MSG.startsWith("Update version to") && env.BRANCH_NAME == "development";
-        }
-      }
-    }
-
     stage('Prepare docker') {
       steps {
         script {
           fileOperations([fileCreateOperation(fileContent: "${dockerFileContents}", fileName: './Dockerfile')]);
-          tag = getNextVersion();
+          tag = getVersion();
           image = docker.build("botdarr-image", "-f ./Dockerfile .");
         }
       }
@@ -90,7 +80,6 @@ pipeline {
       steps {
         script {                
           image.inside('-u root') {
-            sh "echo ${tag} > ./src/main/resources/version.txt"
             sh './mvnw --no-transfer-progress package -DskipTests'
             archiveArtifacts 'target/botdarr-release.jar'
           }
@@ -98,29 +87,10 @@ pipeline {
       }
     }
     
-    stage('Update version') {
-      when {
-        expression {
-          return deploy
-        }
-      }
-      steps {
-        sshagent(['jenkins-ssh-key-github']) {
-          sh "git remote set-url origin git@github.com:${username}/botdarr.git"
-          sh "git config --global user.name ${username}"
-          sh "git config --global user.email ${email}"
-          sh "ssh -oStrictHostKeyChecking=no ${username}@github.com || true"
-          sh "git add src/main/resources/version.txt"
-          sh "git commit -m \"Update version to ${tag}\""
-          sh "git push origin HEAD:${env.BRANCH_NAME}"
-        }
-      }
-    }
-    
     stage('Create/Upload Release') {
       when {
         expression {
-          return deploy
+          return env.BRANCH_NAME == "development"
         }
       }
       steps {
@@ -140,7 +110,7 @@ pipeline {
     stage('Upload to dockerhub') {
       when {
         expression {
-          return deploy
+          return env.BRANCH_NAME == "development"
         }
       }
       steps {

@@ -5,12 +5,8 @@ import com.botdarr.Config;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.google.gson.Gson;
-import com.sun.jndi.toolkit.url.Uri;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -21,31 +17,54 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class ConnectionHelper {
-  public static <T> List<T> makeGetRequest(Api api, String path, ResponseHandler<T> responseHandler) {
+  public static <T> T makeGetRequest(Api api, String path, ResponseHandler<T> responseHandler) {
     return makeGetRequest(api, path, "", responseHandler);
   }
 
-  public static <T, K> List<T> makePostRequest(Api api, String path, K params, ResponseHandler<T> responseHandler) {
-    try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-      HttpPost post = new HttpPost(api.getApiUrl(path) + params);
-      post.setHeader("X-Api-Key", Config.getProperty(api.getApiToken()));
-      post.setEntity(new StringEntity(new Gson().toJson(params), ContentType.APPLICATION_JSON));
-      try (CloseableHttpResponse response = client.execute(post)) {
+  public static <T> T makeGetRequest(Api api, String path, String params, ResponseHandler<T> responseHandler) {
+    return makeRequest(new RequestHandler() {
+      @Override
+      public HttpRequestBase buildRequest() throws Exception {
+        HttpGet get = new HttpGet(api.getApiUrl(path) + params);
+        get.setHeader("X-Api-Key", Config.getProperty(api.getApiToken()));
+        return get;
+      }
+
+      @Override
+      public boolean turnOnTimeouts() {
+        // all api requests should use timeouts
+        return true;
+      }
+    }, responseHandler);
+  }
+
+  public static <T> T makeRequest(RequestHandler requestHandler, ResponseHandler<T> responseHandler) {
+    RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
+    if (requestHandler.turnOnTimeouts()) {
+      int timeout = 5000;
+      requestConfigBuilder.setConnectTimeout(timeout);
+      requestConfigBuilder.setSocketTimeout(timeout);
+      requestConfigBuilder.setConnectionRequestTimeout(timeout);
+    }
+    try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(requestConfigBuilder.build()).build()) {
+      try (CloseableHttpResponse response = client.execute(requestHandler.buildRequest())) {
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == 200) {
           try {
             return responseHandler.onSuccess(EntityUtils.toString(response.getEntity()));
           } catch (Exception e) {
-            LOGGER.error("Error trying to make post request", e);
+            LOGGER.error("Error trying to process response", e);
             return responseHandler.onException(e);
           }
         } else {
           return responseHandler.onFailure(statusCode, response.getStatusLine().getReasonPhrase());
         }
+      } catch (Exception e) {
+        LOGGER.error("Error trying to execute connection during post request", e);
+        return responseHandler.onException(e);
       }
     } catch (IOException e) {
       LOGGER.error("Error trying to make connection during post request", e);
@@ -53,53 +72,7 @@ public class ConnectionHelper {
     }
   }
 
-  public static <T> List<T> makeGetRequest(Api api, String path, String params, ResponseHandler<T> responseHandler) {
-    try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-      HttpGet get = new HttpGet(api.getApiUrl(path) + params);
-      get.setHeader("X-Api-Key", Config.getProperty(api.getApiToken()));
-      try (CloseableHttpResponse response = client.execute(get)) {
-        int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode == 200) {
-          try {
-            return responseHandler.onSuccess(EntityUtils.toString(response.getEntity()));
-          } catch (Exception e) {
-            LOGGER.error("Error trying to make get request", e);
-            return responseHandler.onException(e);
-          }
-        } else {
-          return responseHandler.onFailure(statusCode, response.getStatusLine().getReasonPhrase());
-        }
-      }
-    } catch (IOException e) {
-      LOGGER.error("Error trying to make connection during get request", e);
-      return responseHandler.onException(e);
-    }
-  }
-
-  public static <T> List<T> makeDeleteRequest(Api api, String path, String params, ResponseHandler<T> responseHandler) {
-    try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-      HttpDelete delete = new HttpDelete(api.getApiUrl(path) + params);
-      delete.setHeader("X-Api-Key", Config.getProperty(api.getApiToken()));
-      try (CloseableHttpResponse response = client.execute(delete)) {
-        int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode == 200) {
-          try {
-            return responseHandler.onSuccess(EntityUtils.toString(response.getEntity()));
-          } catch (Exception e) {
-            LOGGER.error("Error trying to make delete request", e);
-            return responseHandler.onException(e);
-          }
-        } else {
-          return responseHandler.onFailure(statusCode, response.getStatusLine().getReasonPhrase());
-        }
-      }
-    } catch (IOException e) {
-      LOGGER.error("Error trying to make connection during delete request", e);
-      return responseHandler.onException(e);
-    }
-  }
-
-  public static abstract class SimpleMessageEmbedResponseHandler implements ResponseHandler<ChatClientResponse> {
+  public static abstract class SimpleMessageEmbedResponseHandler implements ResponseHandler<List<ChatClientResponse>> {
     public SimpleMessageEmbedResponseHandler(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
       this.chatClientResponseBuilder = chatClientResponseBuilder;
     }
@@ -116,26 +89,32 @@ public class ConnectionHelper {
     private ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   }
 
-  //TODO: add ability to return any object (instead of just a list)
   public static abstract class SimpleEntityResponseHandler<T> implements ResponseHandler<T> {
 
     @Override
-    public List<T> onFailure(int statusCode, String reason) {
-      return Collections.emptyList();
+    public T onFailure(int statusCode, String reason) {
+      return null;
     }
 
     @Override
-    public List<T> onException(Exception e) {
-      return Collections.emptyList();
+    public T onException(Exception e) {
+      return null;
     }
   }
 
-  public static interface ResponseHandler<T> {
-    List<T> onSuccess(String response) throws Exception;
+  public interface RequestHandler {
+    HttpRequestBase buildRequest() throws Exception;
+    default boolean turnOnTimeouts() {
+      return false;
+    }
+  }
 
-    List<T> onFailure(int statusCode, String reason);
+  public interface ResponseHandler<T> {
+    T onSuccess(String response) throws Exception;
 
-    List<T> onException(Exception e);
+    T onFailure(int statusCode, String reason);
+
+    T onException(Exception e);
   }
 
   private static final Logger LOGGER = LogManager.getLogger();
