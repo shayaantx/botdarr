@@ -19,14 +19,22 @@ public abstract class LookupStrategy<T> {
   public abstract T lookupExistingItem(T lookupItem);
   public abstract List<T> lookup(String searchTerm) throws Exception;
   public abstract ChatClientResponse getNewOrExistingItem(T lookupItem, T existingItem, boolean findNew);
+  public abstract boolean isPathBlacklisted(T item);
 
   public List<ChatClientResponse> lookup(String search, boolean findNew) {
     try {
       List<ChatClientResponse> responses = new ArrayList<>();
       List<T> lookupItems = lookup(search);
+      if (lookupItems == null) {
+        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Something failed during lookup for search term=" + search));
+      }
       for (T lookupItem : lookupItems) {
         T existingItem = lookupExistingItem(lookupItem);
         boolean isExistingItem = existingItem != null;
+        if (isExistingItem && isPathBlacklisted(existingItem)) {
+          //skip any items that have blacklisted paths
+          continue;
+        }
         boolean skip = findNew ? isExistingItem : !isExistingItem;
         if (skip) {
           continue;

@@ -53,6 +53,16 @@ public class RadarrApi implements Api {
       public ChatClientResponse getNewOrExistingItem(RadarrMovie lookupItem, RadarrMovie existingItem, boolean findNew) {
         return chatClientResponseBuilder.getNewOrExistingMovie(lookupItem, existingItem, findNew);
       }
+
+      @Override
+      public boolean isPathBlacklisted(RadarrMovie item) {
+        for (String path : Config.getExistingItemBlacklistPaths()) {
+          if (item.getPath() != null && item.getPath().startsWith(path)) {
+            return true;
+          }
+        }
+        return false;
+      }
     }.lookup(search, findNew);
   }
 
@@ -82,74 +92,6 @@ public class RadarrApi implements Api {
     return profileMessages;
   }
 
-  public List<ChatClientResponse> forceDownload(String command) {
-    String decodedKey = new String(Base64.getDecoder().decode(command.getBytes()));
-    //the hash format is guid:title
-    //title couldn't contain : so we find the first occurrence
-    int titleIndex = decodedKey.indexOf("title=");
-    String[] decodedKeyArray = {decodedKey.substring(0, titleIndex - 1), decodedKey.substring(titleIndex + 6)};
-    if (decodedKeyArray.length != 2) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Invalid key=" + decodedKey));
-    }
-
-    String guid = decodedKeyArray[0];
-    String title = decodedKeyArray[1];
-    List<RadarrTorrent> radarrTorrents = lookupTorrents(title);
-
-    if (radarrTorrents.isEmpty()) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Found no movies to force download, title=" + title));
-    }
-
-    for (RadarrTorrent radarrTorrent : radarrTorrents) {
-      if (radarrTorrent.getGuid().equalsIgnoreCase(guid)) {
-        return ConnectionHelper.makePostRequest(this, RadarrUrls.RELEASE_BASE, radarrTorrent, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
-          @Override
-          public List<ChatClientResponse> onSuccess(String response) throws Exception {
-            return Arrays.asList(chatClientResponseBuilder.createSuccessMessage("Forced the download for " + title));
-          }
-        });
-      }
-    }
-    return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not force download movie for title=" + title + ", guid=" + guid));
-  }
-
-  public List<ChatClientResponse> lookupTorrents(String movieTitle, boolean showRejected) {
-    List<RadarrTorrent> radarrTorrents = lookupTorrents(movieTitle);
-    if (radarrTorrents.isEmpty()) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("No downloads available for " + movieTitle + ", make sure you have exact film name."));
-    }
-
-    List<ChatClientResponse> responses = new ArrayList<>();
-    for (RadarrTorrent radarrTorrent : radarrTorrents) {
-      if (!showRejected && radarrTorrent.isRejected()) {
-        //dont show rejected torrents
-        continue;
-      }
-      responses.add(chatClientResponseBuilder.getTorrentResponses(radarrTorrent, movieTitle));
-    }
-
-    if (responses.isEmpty()) {
-      responses.add(chatClientResponseBuilder.createErrorMessage("Torrents were found but all of them were rejected based on your profiles/indexer settings for movie " + movieTitle));
-    }
-
-    return responses;
-  }
-
-  public List<ChatClientResponse> cancelDownload(String command) {
-    try {
-      Long id = Long.valueOf(command);
-      return ConnectionHelper.makeDeleteRequest(this, RadarrUrls.DOWNLOAD_BASE + "/" + id, "&blacklist=true", new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
-        @Override
-        public List<ChatClientResponse> onSuccess(String response) throws Exception {
-          //TODO: implement
-          return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Not implemented yet"));
-        }
-      });
-    } catch (NumberFormatException e) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Require an id value to cancel a download, e=" + e.getMessage()));
-    }
-  }
-
   @Override
   public void sendPeriodicNotifications(ChatClient chatClient) {
     new PeriodicNotificationStrategy(ContentType.MOVIE, getDownloadsStrategy()) {
@@ -170,7 +112,7 @@ public class RadarrApi implements Api {
 
       @Override
       public List<RadarrProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(RadarrApi.this, RadarrUrls.PROFILE_BASE, new ConnectionHelper.SimpleEntityResponseHandler<RadarrProfile>() {
+        return ConnectionHelper.makeGetRequest(RadarrApi.this, RadarrUrls.PROFILE_BASE, new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrProfile>>() {
           @Override
           public List<RadarrProfile> onSuccess(String response) {
             List<RadarrProfile> radarrProfiles = new ArrayList<>();
@@ -212,7 +154,7 @@ public class RadarrApi implements Api {
   }
 
   public List<ChatClientResponse> discover() {
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DISCOVER_MOVIES, new ConnectionHelper.SimpleEntityResponseHandler<ChatClientResponse>() {
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DISCOVER_MOVIES, new ConnectionHelper.SimpleEntityResponseHandler<List<ChatClientResponse>>() {
       @Override
       public List<ChatClientResponse> onSuccess(String response) throws Exception {
         List<ChatClientResponse> recommendedMovies = new ArrayList<>();
@@ -334,34 +276,9 @@ public class RadarrApi implements Api {
     }
   }
 
-  private List<RadarrTorrent> lookupTorrents(String title) {
-    Long id = RADARR_CACHE.getMovieSonarrId(title);
-    if (id == null) {
-      LOGGER.warn("Could not find title id for title " + title);
-      return Collections.emptyList();
-    }
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.RELEASE_BASE, "&movieId=" + id + "&sort_by=releaseWeight&order=asc", new ConnectionHelper.SimpleEntityResponseHandler<RadarrTorrent>() {
-      @Override
-      public List<RadarrTorrent> onSuccess(String response) throws Exception {
-        List<RadarrTorrent> radarrTorrents = new ArrayList<>();
-        if (response == null || response.isEmpty() || response.equalsIgnoreCase("[]")) {
-          LOGGER.warn("Found no response when looking for radarr torrents");
-          return Collections.emptyList();
-        }
-        JsonParser parser = new JsonParser();
-        JsonArray json = parser.parse(response).getAsJsonArray();
-
-        for (int i = 0; i < json.size(); i++) {
-          radarrTorrents.add(new Gson().fromJson(json.get(i), RadarrTorrent.class));
-        }
-        return radarrTorrents;
-      }
-    });
-  }
-
   private List<RadarrMovie> lookupMovies(String search) throws Exception {
     return ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_LOOKUP, "&term=" + URLEncoder.encode(search, "UTF-8"),
-      new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+      new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrMovie>>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) {
         List<RadarrMovie> movies = new ArrayList<>();
@@ -377,7 +294,7 @@ public class RadarrApi implements Api {
 
   private List<RadarrMovie> lookupMoviesById(String tmdbid) throws Exception {
     return ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_LOOKUP_TMDB, "&tmdbId=" + URLEncoder.encode(tmdbid, "UTF-8"),
-      new ConnectionHelper.SimpleEntityResponseHandler<RadarrMovie>() {
+      new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrMovie>>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) {
         List<RadarrMovie> movies = new ArrayList<>();

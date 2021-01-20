@@ -1,12 +1,10 @@
 package com.botdarr.clients;
 
 import com.botdarr.api.lidarr.LidarrArtist;
-import com.botdarr.api.lidarr.LidarrQueue;
 import com.botdarr.api.lidarr.LidarrQueueRecord;
 import com.botdarr.api.radarr.RadarrMovie;
 import com.botdarr.api.radarr.RadarrProfile;
 import com.botdarr.api.radarr.RadarrQueue;
-import com.botdarr.api.radarr.RadarrTorrent;
 import com.botdarr.api.sonarr.SonarrProfile;
 import com.botdarr.api.sonarr.SonarrQueue;
 import com.botdarr.api.sonarr.SonarrShow;
@@ -34,7 +32,6 @@ public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
   T createErrorMessage(String message);
   T createInfoMessage(String message);
   T createSuccessMessage(String message);
-  T getTorrentResponses(RadarrTorrent radarrTorrent, String movieTitle);
   T getShowProfile(SonarrProfile sonarrProfile);
   T getMovieProfile(RadarrProfile radarrProfile);
   T getNewOrExistingShow(SonarrShow sonarrShow, SonarrShow existingShow, boolean findNew);
