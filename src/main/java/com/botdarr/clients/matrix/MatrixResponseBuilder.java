@@ -94,6 +94,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
   public MatrixResponse getShowDownloadResponses(SonarrQueue sonarrShow) {
     MatrixResponse matrixResponse = new MatrixResponse();
     SonarQueueEpisode episode = sonarrShow.getEpisode();
+    matrixResponse.addContent("<b>Title</b> - " + sonarrShow.getSonarrQueueShow().getTitle());
     matrixResponse.addContent("<b>Season/Episode</b> - " + "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber());
     matrixResponse.addContent("<b>Quality</b> - " + sonarrShow.getQuality().getQuality().getName());
     matrixResponse.addContent("<b>Status</b> - " + sonarrShow.getStatus());
