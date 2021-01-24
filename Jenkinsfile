@@ -115,21 +115,6 @@ pipeline {
       }
       steps {
         script {
-          def dockerFileImage = """
-          FROM centos:7
-          RUN yum update; yum clean all; yum -y install java-1.8.0-openjdk-devel.x86_64;
-          ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
-          ENV PATH=$PATH:$JAVA_HOME/bin
-
-          RUN mkdir -p /home/botdarr
-          ADD target/botdarr-release.jar /home/botdarr
-
-          WORKDIR /home/botdarr
-          RUN java -version
-
-          ENTRYPOINT ["java", "-jar", "botdarr-release.jar"]
-          """;
-          fileOperations([fileCreateOperation(fileContent: "${dockerFileImage}", fileName: './DockerfileUpload')]);
           def releaseTag = "latest";
           def imageWithReleaseTag = docker.build("${username}/botdarr:${releaseTag}", "-f ./DockerfileUpload .");
           withDockerRegistry(credentialsId: 'docker-credentials') {
