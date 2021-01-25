@@ -5,15 +5,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SonarrCache {
   public SonarrShow getExistingShowFromTvdbId(long tvdbId) {
-    return existingTvdbIdsToMovies.get(tvdbId);
+    return existingTvdbIdsToShows.get(tvdbId);
   }
 
-  public SonarrShow getExistingShowFromTvrageId(long tvrageId) {
-    return existingTvrageIdsToMovies.get(tvrageId);
-  }
-
-  public SonarrShow getExistingShowFromTvmazeId(long tvmazeId) {
-    return existingTvmazeIdsToMovies.get(tvmazeId);
+  public SonarrShow getExistingShowFromSonarrId(long sonarrId) {
+    return existingSonarrIdsToShows.get(sonarrId);
   }
 
   public boolean doesShowExist(String title) {
@@ -21,10 +17,9 @@ public class SonarrCache {
   }
 
   public void add(SonarrShow show) {
-    existingTvdbIdsToMovies.put(show.getKey(), show);
-    existingTvrageIdsToMovies.put(show.getTvRageId(), show);
-    existingTvmazeIdsToMovies.put(show.getTvMazeId(), show);
+    existingTvdbIdsToShows.put(show.getKey(), show);
     existingShowTitlesToSonarrId.put(show.getTitle().toLowerCase(), show.getId());
+    existingSonarrIdsToShows.put(show.getId(), show);
   }
 
   public Collection<SonarrProfile> getQualityProfiles() {
@@ -45,25 +40,21 @@ public class SonarrCache {
 
   public void removeDeletedShows(List<Long> addUpdatedTvdbShowIds) {
     List<String> existingShowTitles = new ArrayList<>();
-    List<Long> existingTvRageIds = new ArrayList<>();
-    List<Long> existingTvmazeIds = new ArrayList<>();
+    List<Long> existingShowIds = new ArrayList<>();
     for (Long tvdbId : addUpdatedTvdbShowIds) {
-      SonarrShow sonarrShow = existingTvdbIdsToMovies.get(tvdbId);
+      SonarrShow sonarrShow = existingTvdbIdsToShows.get(tvdbId);
       if (sonarrShow != null) {
         existingShowTitles.add(sonarrShow.getTitle().toLowerCase());
-        existingTvRageIds.add(sonarrShow.getTvRageId());
-        existingTvmazeIds.add(sonarrShow.getTvMazeId());
+        existingShowIds.add(sonarrShow.getId());
       }
     }
     existingShowTitlesToSonarrId.keySet().retainAll(existingShowTitles);
-    existingTvdbIdsToMovies.keySet().retainAll(addUpdatedTvdbShowIds);
-    existingTvrageIdsToMovies.keySet().retainAll(existingTvRageIds);
-    existingTvmazeIdsToMovies.keySet().retainAll(existingTvmazeIds);
+    existingTvdbIdsToShows.keySet().retainAll(addUpdatedTvdbShowIds);
+    existingSonarrIdsToShows.keySet().retainAll(existingShowIds);
   }
 
   private Map<String, SonarrProfile> existingProfiles = new ConcurrentHashMap<>();
   private Map<String, Long> existingShowTitlesToSonarrId = new ConcurrentHashMap<>();
-  private Map<Long, SonarrShow> existingTvdbIdsToMovies = new ConcurrentHashMap<>();
-  private Map<Long, SonarrShow> existingTvrageIdsToMovies = new ConcurrentHashMap<>();
-  private Map<Long, SonarrShow> existingTvmazeIdsToMovies = new ConcurrentHashMap<>();
+  private Map<Long, SonarrShow> existingTvdbIdsToShows = new ConcurrentHashMap<>();
+  private Map<Long, SonarrShow> existingSonarrIdsToShows = new ConcurrentHashMap<>();
 }

@@ -118,7 +118,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
   @Override
   public TelegramResponse getMovieDownloadResponses(RadarrQueue radarrQueue) {
     List<DomContent> domContents = new ArrayList<>();
-    domContents.add(b(radarrQueue.getRadarrQueueMovie().getTitle()));
+    domContents.add(b(radarrQueue.getTitle()));
     StringBuilder details = new StringBuilder();
     details.append("Quality - " + radarrQueue.getQuality().getQuality().getName() + "\n");
     details.append("Status - " + radarrQueue.getStatus() + "\n");

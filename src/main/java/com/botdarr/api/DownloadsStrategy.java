@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class DownloadsStrategy {
+public abstract class DownloadsStrategy<T> {
   public DownloadsStrategy(Api api,
                            String url,
                            ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder,
@@ -57,7 +57,7 @@ public abstract class DownloadsStrategy {
       }
       chatClientResponses.add(chatClientResponse);
     }
-    if (tooManyDownloads) {
+    if (tooManyDownloads && !chatClientResponses.isEmpty()) {
       chatClientResponses = ListUtils.subList(chatClientResponses, MAX_DOWNLOADS_TO_SHOW);
       chatClientResponses.add(0, chatClientResponseBuilder.createInfoMessage("Too many downloads, limiting results to " + MAX_DOWNLOADS_TO_SHOW));
     }

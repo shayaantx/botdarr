@@ -68,12 +68,7 @@ public class SonarrApi implements Api {
 
       @Override
       public boolean isPathBlacklisted(SonarrShow item) {
-        for (String path : Config.getExistingItemBlacklistPaths()) {
-          if (item.getPath() != null && item.getPath().startsWith(path)) {
-            return true;
-          }
-        }
-        return false;
+        return SonarrApi.this.isPathBlacklisted(item);
       }
     }.lookup(search, findNew);
   }
@@ -198,6 +193,15 @@ public class SonarrApi implements Api {
           LOGGER.error("Series " + showQueue.getSonarrQueueShow().getTitle() + " missing episode info for id " + showQueue.getId());
           return null;
         }
+        SonarrShow sonarrShow = SONARR_CACHE.getExistingShowFromSonarrId(showQueue.getEpisode().getSeriesId());
+        if (sonarrShow == null) {
+          LOGGER.warn("Could not load sonarr show from cache for id " + showQueue.getEpisode().getSeriesId() + " title=" + showQueue.getSonarrQueueShow().getTitle());
+          return null;
+        }
+        if (isPathBlacklisted(sonarrShow)) {
+          //TODO: log
+          return null;
+        }
         return chatClientResponseBuilder.getShowDownloadResponses(showQueue);
       }
     };
@@ -275,6 +279,15 @@ public class SonarrApi implements Api {
       return false;
     }
   };
+
+  private boolean isPathBlacklisted(SonarrShow item) {
+    for (String path : Config.getExistingItemBlacklistPaths()) {
+      if (item.getPath() != null && item.getPath().startsWith(path)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final SonarrCache SONARR_CACHE = new SonarrCache();

@@ -176,7 +176,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
   public SlackResponse getMovieDownloadResponses(RadarrQueue radarrQueue) {
     SlackResponse slackResponse = new SlackResponse();
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("*Title* - " + radarrQueue.getRadarrQueueMovie().getTitle()).build())
+      .text(MarkdownTextObject.builder().text("*Title* - " + radarrQueue.getTitle()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
       .text(MarkdownTextObject.builder().text("Quality - " + radarrQueue.getQuality().getQuality().getName()).build())

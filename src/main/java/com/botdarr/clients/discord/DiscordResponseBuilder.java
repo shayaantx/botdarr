@@ -117,7 +117,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
   @Override
   public DiscordResponse getMovieDownloadResponses(RadarrQueue radarrQueue) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
-    embedBuilder.setTitle(radarrQueue.getRadarrQueueMovie().getTitle());
+    embedBuilder.setTitle(radarrQueue.getTitle());
     embedBuilder.addField("Quality", radarrQueue.getQuality().getQuality().getName(), true);
     embedBuilder.addField("Status", radarrQueue.getStatus(), true);
     embedBuilder.addField("Time Left", radarrQueue.getTimeleft() == null ? "unknown" : radarrQueue.getTimeleft(), true);
