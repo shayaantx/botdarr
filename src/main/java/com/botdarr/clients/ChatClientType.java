@@ -321,8 +321,9 @@ public enum ChatClientType {
 
   void initScheduling(ChatClient chatClient, List<Api> apis) {
     Scheduler scheduler = Scheduler.getScheduler();
-    scheduler.initApiNotifications(apis, chatClient);
+    //make sure to always cache before doing any notifications
     scheduler.initApiCaching(apis);
+    scheduler.initApiNotifications(apis, chatClient);
   }
 
   public abstract void init() throws Exception;

@@ -117,7 +117,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
   @Override
   public MatrixResponse getMovieDownloadResponses(RadarrQueue radarrQueue) {
     MatrixResponse matrixResponse = new MatrixResponse();
-    matrixResponse.addContent("<b>Title</b> - " + radarrQueue.getRadarrQueueMovie().getTitle());
+    matrixResponse.addContent("<b>Title</b> - " + radarrQueue.getTitle());
     matrixResponse.addContent("<b>Quality</b> - " + radarrQueue.getQuality().getQuality().getName());
     matrixResponse.addContent("<b>Status</b> - " + radarrQueue.getStatus());
     matrixResponse.addContent("<b>Time Left</b> - <i>" + (radarrQueue.getTimeleft() == null ? "unknown" : radarrQueue.getTimeleft()) + "</i>");

@@ -17,20 +17,8 @@ public class RadarrQueue {
     this.timeleft = timeleft;
   }
 
-  public long getId() {
-    return id;
-  }
-
-  public void setId(long id) {
-    this.id = id;
-  }
-
   public RadarrQueueStatusMessages[] getStatusMessages() {
     return statusMessages;
-  }
-
-  public void setStatusMessages(RadarrQueueStatusMessages[] statusMessages) {
-    this.statusMessages = statusMessages;
   }
 
   public RadarrProfileQualityItem getQuality() {
@@ -41,18 +29,22 @@ public class RadarrQueue {
     this.quality = quality;
   }
 
-  public RadarrQueueMovie getRadarrQueueMovie() {
-    return movie;
+  public long getMovieId() {
+    return movieId;
   }
 
-  public void setRadarrQueueMovie(RadarrQueueMovie radarrQueueMovie) {
-    this.movie = radarrQueueMovie;
+  public String getTitle() {
+    return title;
+  }
+
+  public void setTitle(String title) {
+    this.title = title;
   }
 
   private String status;
   private String timeleft;
   private RadarrProfileQualityItem quality;
-  private long id;
   private RadarrQueueStatusMessages[] statusMessages;
-  private RadarrQueueMovie movie;
+  private long movieId;
+  private String title;
 }

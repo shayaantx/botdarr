@@ -33,8 +33,13 @@ public class SonarQueueEpisode {
     this.overview = overview;
   }
 
+  public long getSeriesId() {
+    return seriesId;
+  }
+
   private int seasonNumber;
   private int episodeNumber;
   private String title;
   private String overview;
+  private long seriesId;
 }

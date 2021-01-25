@@ -37,8 +37,9 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movies/discover/recommendations")
-      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3");
+      .withPath("/api/v3/importlist/movie")
+      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
+      .withQueryStringParameter("includeRecommendations", "true");
 
     RadarrMovie expectedRadarrMovie = new RadarrMovie();
     expectedRadarrMovie.setTitle("movie1");
@@ -67,8 +68,9 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movies/discover/recommendations")
-      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3");
+      .withPath("/api/v3/importlist/movie")
+      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
+      .withQueryStringParameter("includeRecommendations", "true");
 
     RadarrMovie[] radarrMovies = new RadarrMovie[40];
     for (int i = 0; i < radarrMovies.length; i++) {
@@ -211,7 +213,7 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/queue")
+      .withPath("/api/v3/queue")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3");
 
     //setup expected response in mock server
@@ -219,7 +221,7 @@ public class RadarrApiTests {
       .when(request)
       .respond(HttpResponse.response()
         .withStatusCode(200)
-        .withBody(new Gson().toJson(new RadarrQueue[] {}), MediaType.APPLICATION_JSON));
+        .withBody(new Gson().toJson(new RadarrQueuePage()), MediaType.APPLICATION_JSON));
 
     //trigger api
     CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.downloads());
@@ -239,20 +241,21 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/queue")
+      .withPath("/api/v3/queue")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3");
 
     RadarrQueue radarrQueue = new RadarrQueue();
-    radarrQueue.setId(1);
     radarrQueue.setTimeleft("05:00");
     radarrQueue.setStatus("DOWNLOADING");
 
     //setup expected response in mock server
+    RadarrQueuePage radarrQueuePage = new RadarrQueuePage();
+    radarrQueuePage.setRecords(new ArrayList<RadarrQueue>() {{add(radarrQueue);}});
     mockServerRule.getClient()
       .when(request)
       .respond(HttpResponse.response()
         .withStatusCode(200)
-        .withBody(new Gson().toJson(new RadarrQueue[] {radarrQueue}), MediaType.APPLICATION_JSON));
+        .withBody(new Gson().toJson(radarrQueuePage), MediaType.APPLICATION_JSON));
 
     //trigger api
     CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.downloads());
@@ -264,7 +267,6 @@ public class RadarrApiTests {
     List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //only movie is downloading, verify all properties
     Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals(1, testResponses.get(0).getRadarrQueue().getId());
     Assert.assertEquals("05:00", testResponses.get(0).getRadarrQueue().getTimeleft());
     Assert.assertEquals("DOWNLOADING", testResponses.get(0).getRadarrQueue().getStatus());
   }
