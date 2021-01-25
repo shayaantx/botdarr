@@ -9,11 +9,11 @@ Made this simple slack/discord/telegram/matrix bot so I could access radarr, son
 
 ## Currently Supported API's
 
-- [x] Radarr (v2)
-- [ ] Radarr (v3)
-- [ ] Sonarr (v2)
+- [x] Radarr (v3)
 - [x] Sonarr (v3)
 - [x] Lidarr (v1)
+- [x] ~~Radarr (v2) - no longer supported~~
+- [ ] ~~Sonarr (v2) - no plans to support~~
 
 ## Currently Supported Chat Client's
 
@@ -33,10 +33,10 @@ Made this simple slack/discord/telegram/matrix bot so I could access radarr, son
 - [x] Configurable value for max number of movies, shows, and artists per user
 - [x] Configurable command prefix (i.e., /help, $help, !help)
 - [x] Configurable value for url base for radarr, sonarr, and lidarr
-- [x] Lookup torrents for movies and force download
 - [x] (discord/slack only) Thumbs up reaction will add search results 
 - [x] User requests audited to local database\
 - [x] Blacklist content by paths from showing up in searches
+- [ ] Lookup torrents for movies and force download
 - [ ] Cancel/blacklist existing downloads
 - [ ] Episode/season search
 - [ ] Album/song search

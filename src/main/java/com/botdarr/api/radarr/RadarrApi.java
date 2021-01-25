@@ -56,12 +56,7 @@ public class RadarrApi implements Api {
 
       @Override
       public boolean isPathBlacklisted(RadarrMovie item) {
-        for (String path : Config.getExistingItemBlacklistPaths()) {
-          if (item.getPath() != null && item.getPath().startsWith(path)) {
-            return true;
-          }
-        }
-        return false;
+        return RadarrApi.this.isPathBlacklisted(item);
       }
     }.lookup(search, findNew);
   }
@@ -154,7 +149,7 @@ public class RadarrApi implements Api {
   }
 
   public List<ChatClientResponse> discover() {
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DISCOVER_MOVIES, new ConnectionHelper.SimpleEntityResponseHandler<List<ChatClientResponse>>() {
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DISCOVER_MOVIES, "&includeRecommendations=true", new ConnectionHelper.SimpleEntityResponseHandler<List<ChatClientResponse>>() {
       @Override
       public List<ChatClientResponse> onSuccess(String response) throws Exception {
         List<ChatClientResponse> recommendedMovies = new ArrayList<>();
@@ -178,12 +173,43 @@ public class RadarrApi implements Api {
     });
   }
 
-  private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, RadarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.MOVIE) {
+  private DownloadsStrategy<RadarrMovie> getDownloadsStrategy() {
+    return new DownloadsStrategy<RadarrMovie>(this, RadarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.MOVIE) {
       @Override
       public ChatClientResponse getResponse(JsonElement rawElement) {
         RadarrQueue radarrQueue = new Gson().fromJson(rawElement, RadarrQueue.class);
+        RadarrMovie radarrMovie = RADARR_CACHE.getExistingMovieWithRadarrId(radarrQueue.getMovieId());
+        if (radarrMovie == null) {
+          LOGGER.warn("Could not load radarr movie from cache for id " + radarrQueue.getMovieId() + " title=" + radarrQueue.getTitle());
+          return null;
+        }
+        //the radarr queue title is the title of the actual download, instead of movie title
+        //so we get the real value here
+        radarrQueue.setTitle(radarrMovie.getTitle());
+        if (isPathBlacklisted(radarrMovie)) {
+          //skip any radarr queue items tied to blacklisted content
+          return null;
+        }
+
         return chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue);
+      }
+
+      @Override
+      public List<ChatClientResponse> getContentDownloads() {
+        return ConnectionHelper.makeGetRequest(
+          RadarrApi.this,
+          RadarrUrls.DOWNLOAD_BASE,
+          new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+          @Override
+          public List<ChatClientResponse> onSuccess(String response) {
+            if (response == null || response.isEmpty() || response.equals("{}")) {
+              return new ArrayList<>();
+            }
+            JsonParser parser = new JsonParser();
+            JsonObject json = parser.parse(response).getAsJsonObject();
+            return parseContent(json.get("records").toString());
+          }
+        });
       }
     };
   }
@@ -304,6 +330,15 @@ public class RadarrApi implements Api {
         return movies;
       }
     });
+  }
+
+  private boolean isPathBlacklisted(RadarrMovie item) {
+    for (String path : Config.getExistingItemBlacklistPaths()) {
+      if (item.getPath() != null && item.getPath().startsWith(path)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
