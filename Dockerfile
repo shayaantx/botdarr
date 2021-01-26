@@ -1,8 +1,4 @@
-FROM centos:7
-RUN yum update; yum clean all; yum -y install java-1.8.0-openjdk-devel.x86_64;
-ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
-ENV PATH=$PATH:$JAVA_HOME/bin
-
+FROM openjdk:8
 RUN mkdir -p /home/botdarr
 ADD target/botdarr-release.jar /home/botdarr
 
