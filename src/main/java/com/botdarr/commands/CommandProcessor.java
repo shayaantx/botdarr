@@ -40,7 +40,7 @@ public class CommandProcessor {
         return new CommandResponse(chatClientResponseBuilder.createErrorMessage("Invalid command - type " + commandPrefix + "help for command usage"));
       }
 
-    } catch (Exception e) {
+    } catch (Throwable e) {
       LOGGER.error("Error trying to execute command " + strippedMessage, e);
       return new CommandResponse(chatClientResponseBuilder.createErrorMessage("Error trying to parse command " + strippedMessage  + ", error=" + e.getMessage()));
     }
