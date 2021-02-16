@@ -21,6 +21,7 @@ import com.botdarr.clients.telegram.TelegramChatClient;
 import com.botdarr.clients.telegram.TelegramResponse;
 import com.botdarr.clients.telegram.TelegramResponseBuilder;
 import com.github.seratch.jslack.Slack;
+import com.github.seratch.jslack.api.model.User;
 import com.github.seratch.jslack.api.model.block.LayoutBlock;
 import com.github.seratch.jslack.api.model.block.SectionBlock;
 import com.github.seratch.jslack.api.model.block.composition.MarkdownTextObject;
@@ -244,7 +245,12 @@ public enum ChatClientType {
           SlackMessage slackMessage = new Gson().fromJson(json, SlackMessage.class);
           if (slackMessage.getType() != null) {
             if (slackMessage.getType().equalsIgnoreCase("message")) {
-              handleCommand(slackMessage.getText(), slackChatClient.getUser(slackMessage.getUserId()).getName(), slackMessage.getChannel());
+              User user = slackChatClient.getUser(slackMessage.getUserId());
+              if (user == null) {
+                LOGGER.debug("Could not find user for slack message " + slackMessage);
+                return;
+              }
+              handleCommand(slackMessage.getText(), user.getName(), slackMessage.getChannel());
             } else if (slackMessage.getType().equalsIgnoreCase("reaction_added") && slackMessage.getReaction().equalsIgnoreCase("+1")) {
               //thumbsup = +1 in slack for some reason
               try {
@@ -352,6 +358,9 @@ public enum ChatClientType {
     if (Config.isLidarrEnabled()) {
       commands.addAll(lidarrCommands);
       apis.add(lidarrApi);
+    }
+    if (!Config.getStatusEndpoints().isEmpty()) {
+      commands.add(new StatusCommand<>(responseChatClientResponseBuilder));
     }
     commands.addAll(HelpCommands.getCommands(responseChatClientResponseBuilder, radarrCommands, sonarrCommands, lidarrCommands));
     return new ApisAndCommandConfig(apis, commands);

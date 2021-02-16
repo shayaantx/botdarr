@@ -21,10 +21,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.commands.StatusCommand.STATUS_COMMAND;
+import static com.botdarr.commands.StatusCommand.STATUS_COMMAND_DESCRIPTION;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResponse> {
@@ -61,6 +64,11 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       if (!radarrEnabled && !sonarrEnabled && !lidarrEnabled) {
         slackResponse.addBlock(SectionBlock.builder()
           .text(MarkdownTextObject.builder().text("*No radarr or sonarr or lidarr commands configured, check your properties file and logs*").build())
+          .build());
+      }
+      if (!Config.getStatusEndpoints().isEmpty()) {
+        slackResponse.addBlock(SectionBlock.builder()
+          .text(MarkdownTextObject.builder().text(new CommandProcessor().getPrefix() + STATUS_COMMAND + " - " + STATUS_COMMAND_DESCRIPTION).build())
           .build());
       }
     } catch (IOException e) {
@@ -432,6 +440,20 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
   @Override
   public SlackResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
     return getMovieResponse(radarrMovie);
+  }
+
+  @Override
+  public SlackResponse getStatusCommandResponse(Map<String, Boolean> endpointStatuses) {
+    SlackResponse slackResponse = new SlackResponse();
+    slackResponse.addBlock(SectionBlock.builder()
+      .text(MarkdownTextObject.builder().text("*Endpoint Statuses*").build())
+      .build());
+    for (Map.Entry<String, Boolean> endpointStatusEntry : endpointStatuses.entrySet()) {
+      slackResponse.addBlock(SectionBlock.builder()
+        .text(MarkdownTextObject.builder().text(endpointStatusEntry.getKey() + " - " + (endpointStatusEntry.getValue() ? "\uD83D\uDFE2" : "\uD83D\uDD34")).build())
+        .build());
+    }
+    return slackResponse;
   }
 
   private SlackResponse getListOfCommands(List<Command> commands) {

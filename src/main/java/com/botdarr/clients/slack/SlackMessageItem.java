@@ -17,6 +17,16 @@ public class SlackMessageItem {
     return channel;
   }
 
+  @Override
+  public String toString() {
+    return "SlackMessageItem{" +
+      "type='" + type + '\'' +
+      ", event_ts='" + event_ts + '\'' +
+      ", ts='" + ts + '\'' +
+      ", channel='" + channel + '\'' +
+      '}';
+  }
+
   private String type;
   private String event_ts;
   private String ts;

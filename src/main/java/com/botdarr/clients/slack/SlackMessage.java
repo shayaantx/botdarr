@@ -25,6 +25,18 @@ public class SlackMessage {
     return item;
   }
 
+  @Override
+  public String toString() {
+    return "SlackMessage{" +
+      "type='" + type + '\'' +
+      ", text='" + text + '\'' +
+      ", user='" + user + '\'' +
+      ", channel='" + channel + '\'' +
+      ", reaction='" + reaction + '\'' +
+      ", item=" + item +
+      '}';
+  }
+
   private String type;
   private String text;
   private String user; //slack user id
