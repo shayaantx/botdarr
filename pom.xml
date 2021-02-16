@@ -26,7 +26,7 @@
             <artifactId>slf4j-jdk14</artifactId>
             <version>1.7.30</version>
         </dependency>
-	    <dependency>
+        <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
             <version>4.2.0_168</version>
