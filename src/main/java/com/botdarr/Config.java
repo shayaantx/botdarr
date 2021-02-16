@@ -116,10 +116,13 @@ public class Config {
 
   public static List<String> getExistingItemBlacklistPaths() {
     String paths = getProperty(Constants.EXISTING_ITEMS_PATHS_BLACKLIST);
-    if (paths != null && paths.contains(",")) {
-      return Arrays.asList(paths.split(","));
+    if (paths != null) {
+      if (paths.contains(",")) {
+        return Arrays.asList(paths.split(","));
+      }
+      return new ArrayList<String>() {{add(paths);}};
     }
-    return new ArrayList<String>() {{add(paths);}};
+    return new ArrayList<>();
   }
 
   public static final class Constants {
