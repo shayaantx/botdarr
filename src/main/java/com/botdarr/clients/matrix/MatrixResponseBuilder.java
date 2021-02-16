@@ -12,10 +12,13 @@ import com.botdarr.utilities.ListUtils;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.commands.StatusCommand.STATUS_COMMAND;
+import static com.botdarr.commands.StatusCommand.STATUS_COMMAND_DESCRIPTION;
 
 public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixResponse> {
   @Override
@@ -40,6 +43,10 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
 
       if (!radarrEnabled && !sonarrEnabled && !lidarrEnabled) {
         matrixResponse.addContent("<b>No radarr or sonarr or lidarr commands configured, check your properties file and logs</b>");
+      }
+
+      if (!Config.getStatusEndpoints().isEmpty()) {
+        matrixResponse.addContent("<b>" + new CommandProcessor().getPrefix() + STATUS_COMMAND + "</b> - " + STATUS_COMMAND_DESCRIPTION);
       }
       return matrixResponse;
     } catch (Exception e) {
@@ -258,6 +265,25 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     if (radarrMovie.getRemotePoster() != null && !radarrMovie.getRemotePoster().isEmpty()) {
       matrixResponse.addImage(radarrMovie.getRemotePoster());
     }
+    return matrixResponse;
+  }
+
+  @Override
+  public MatrixResponse getStatusCommandResponse(Map<String, Boolean> endpointStatuses) {
+    MatrixResponse matrixResponse = new MatrixResponse();
+    matrixResponse.addRawContent("<table>");
+    matrixResponse.addRawContent("<thead><tr><td>Endpoint</td><td>Statuses</td></tr></thead>");
+    for (Map.Entry<String, Boolean> endpointStatusEntry : endpointStatuses.entrySet()) {
+      matrixResponse.addRawContent("<tr>");
+      matrixResponse.addRawContent("<td>");
+      matrixResponse.addRawContent(endpointStatusEntry.getKey());
+      matrixResponse.addRawContent("</td>");
+      matrixResponse.addRawContent("<td>");
+      matrixResponse.addRawContent(endpointStatusEntry.getValue() ? "\uD83D\uDFE2" : "\uD83D\uDD34");
+      matrixResponse.addRawContent("</td>");
+      matrixResponse.addRawContent("</tr>");
+    }
+    matrixResponse.addRawContent("</table>");
     return matrixResponse;
   }
 

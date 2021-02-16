@@ -1,9 +1,11 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/twce208g6yb18vgl/branch/development?svg=true)](https://ci.appveyor.com/project/shayaantx/botdarr/branch/development)
+![Build status](https://github.com/shayaantx/botdarr/actions/workflows/development-branch.yml/badge.svg)
+![Docker Pulls](https://img.shields.io/docker/pulls/shayaantx/botdarr)
+![Latest Version](https://img.shields.io/docker/v/shayaantx/botdarr)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 # Summary
 
-Made this simple slack/discord/telegram/matrix bot so I could access radarr, sonarr, and lidarr all from a multiple slack/discord/telegram/matrix channels without a UI/server.
+Made this simple multi chat-client bot to access radarr, sonarr, and lidarr without a UI/server.
 
 <br/>
 
@@ -36,6 +38,7 @@ Made this simple slack/discord/telegram/matrix bot so I could access radarr, son
 - [x] (discord/slack only) Thumbs up reaction will add search results 
 - [x] User requests audited to local database\
 - [x] Blacklist content by paths from showing up in searches
+- [x] Get status of radarr, lidarr, sonarr, and any additional configured endpoints
 - [ ] Lookup torrents for movies and force download
 - [ ] Cancel/blacklist existing downloads
 - [ ] Episode/season search
@@ -170,6 +173,7 @@ botdarr:
 | MAX_DOWNLOADS_TO_SHOW | The max number of downloads to show. If you set this to any value less than or equal to 0, no downloads will show | yes | 20 |
 | MAX_RESULTS_TO_SHOW | The max number of results to show per search command. If you set this to any value less than 0, the bot won't startup | yes | 20 | 
 | COMMAND_PREFIX | The command prefix (default is !). Any prefix is allowed (but I haven't tested every single prefix in every client) | yes | ! | 
+| STATUS_ENDPOINTS | Endpoints that can be used to return statuses via !status command. The endpoints are separated by a comma and each endpoint is in the following format - name:hostname:port | no | | 
     
 <br/>
 

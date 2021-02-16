@@ -1,14 +1,19 @@
 package com.botdarr;
 
 import com.botdarr.clients.ChatClientType;
+import com.botdarr.commands.StatusCommand;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.botdarr.commands.StatusCommand.*;
 
 public class Config {
   private static volatile Config instance;
@@ -79,14 +84,16 @@ public class Config {
       }
 
       String configuredPrefix = properties.getProperty(Config.Constants.COMMAND_PREFIX);
-      if (!Strings.isEmpty(configuredPrefix)  && configuredPrefix.length() > 1) {
-        throw new RuntimeException("Command prefix must be a single character");
-      }
-      if (chatClientType == ChatClientType.SLACK && configuredPrefix.equals("/")) {
-        throw new RuntimeException("Cannot use / command prefix in slack since /help command was deprecated by slack");
-      }
-      if (chatClientType == ChatClientType.MATRIX && configuredPrefix.equals("/")) {
-        throw new RuntimeException("Cannot use / command prefix in matrix since /help command is used by element by default");
+      if (!Strings.isEmpty(configuredPrefix)) {
+        if (configuredPrefix.length() > 1) {
+          throw new RuntimeException("Command prefix must be a single character");
+        }
+        if (chatClientType == ChatClientType.SLACK && configuredPrefix.equals("/")) {
+          throw new RuntimeException("Cannot use / command prefix in slack since /help command was deprecated by slack");
+        }
+        if (chatClientType == ChatClientType.MATRIX && configuredPrefix.equals("/")) {
+          throw new RuntimeException("Cannot use / command prefix in matrix since /help command is used by element by default");
+        }
       }
     } catch (Exception ex) {
       LOGGER.error("Error loading properties file", ex);
@@ -115,12 +122,64 @@ public class Config {
   }
 
   public static List<String> getExistingItemBlacklistPaths() {
-    String paths = getProperty(Constants.EXISTING_ITEMS_PATHS_BLACKLIST);
-    if (paths != null) {
-      if (paths.contains(",")) {
-        return Arrays.asList(paths.split(","));
+    return getCommaDelimitedList(getProperty(Constants.EXISTING_ITEMS_PATHS_BLACKLIST));
+  }
+
+  public static List<StatusEndPoint> getStatusEndpoints() {
+    List<String> endpoints = getCommaDelimitedList(getProperty(Constants.STATUS_ENDPOINTS));
+    List<StatusEndPoint> statusEndPoints = new ArrayList<>();
+    if (!endpoints.isEmpty()) {
+      for (String endpoint : endpoints) {
+        String[] splitEndpoint = endpoint.split(":");
+        if (splitEndpoint.length != 3) {
+          LOGGER.warn("Status endpoint not formatted correctly, usage - name:hostname:port, endpoint=" + endpoint);
+        }
+        statusEndPoints.add(new StatusEndPoint(splitEndpoint[0], splitEndpoint[1], Integer.valueOf(splitEndpoint[2])));
       }
-      return new ArrayList<String>() {{add(paths);}};
+    }
+    StatusEndPoint endpoint;
+    if (isLidarrEnabled()) {
+      endpoint = getDomain(Constants.LIDARR_URL, "lidarr");
+      if (endpoint != null) {
+        statusEndPoints.add(endpoint);
+      }
+    }
+    if (isRadarrEnabled()) {
+      endpoint = getDomain(Constants.RADARR_URL, "radarr");
+      if (endpoint != null) {
+        statusEndPoints.add(endpoint);
+      }
+    }
+    if (isSonarrEnabled()) {
+      endpoint = getDomain(Constants.SONARR_URL, "sonarr");
+      if (endpoint != null) {
+        statusEndPoints.add(endpoint);
+      }
+    }
+    return statusEndPoints;
+  }
+
+  private static StatusEndPoint getDomain(String constant, String name) {
+    try {
+      URI uri = new URI(getProperty(constant));
+      int port = uri.getPort();
+      if (port == -1) {
+        port = uri.getHost().startsWith("https") ? 443 : 80;
+      }
+      return new StatusEndPoint(name, uri.getHost(), port);
+    } catch (URISyntaxException e) {
+      LOGGER.error("Error trying to get uri for " + constant, e);
+    }
+    return null;
+  }
+
+  private static List<String> getCommaDelimitedList(String list) {
+    if (!Strings.isEmpty(list) && list.contains(",")) {
+      if (list.contains(",")) {
+        return Arrays.asList(list.split(","));
+      } else {
+        return new ArrayList<String>() {{add(list);}};
+      }
     }
     return new ArrayList<>();
   }
@@ -307,6 +366,11 @@ public class Config {
      * The paths of items to blacklist from searches
      */
     public static final String EXISTING_ITEMS_PATHS_BLACKLIST = "existing-item-paths-blacklist";
+
+    /**
+     * The additional status endpoints to check
+     */
+    public static final String STATUS_ENDPOINTS = "status-endpoints";
   }
 
   private static String propertiesPath = "config/properties";

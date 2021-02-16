@@ -19,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.*;
 
 public class RadarrApi implements Api {
@@ -282,8 +283,8 @@ public class RadarrApi implements Api {
       }
       try (CloseableHttpResponse response = client.execute(post)) {
         if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Respone=" + response.toString());
-          LOGGER.debug("Response content=" + IOUtils.toString(response.getEntity().getContent()));
+          LOGGER.debug("Response=" + response.toString());
+          LOGGER.debug("Response content=" + IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
           LOGGER.debug("Reason=" + response.getStatusLine().toString());
         }
         int statusCode = response.getStatusLine().getStatusCode();

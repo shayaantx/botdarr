@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
@@ -38,6 +39,7 @@ public interface ChatClientResponseBuilder<T extends ChatClientResponse> {
   T getNewOrExistingMovie(RadarrMovie lookupMovie, RadarrMovie existingMovie, boolean findNew);
   T getNewOrExistingArtist(LidarrArtist lookupArtist, LidarrArtist existingArtist, boolean findNew);
   T getDiscoverableMovies(RadarrMovie radarrMovie);
+  T getStatusCommandResponse(Map<String, Boolean> endpointStatuses);
 
   static String getVersion() throws IOException {
     ClassLoader classloader = Thread.currentThread().getContextClassLoader();

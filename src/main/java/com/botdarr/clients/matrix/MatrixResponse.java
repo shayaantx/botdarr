@@ -10,6 +10,10 @@ public class MatrixResponse implements ChatClientResponse {
     this.content.append(content + " </br>");
   }
 
+  public void addRawContent(String content) {
+    this.content.append(content);
+  }
+
   public void addImage(String imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty()) {
       return;
