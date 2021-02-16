@@ -84,7 +84,7 @@ public class ConnectionHelper {
 
     @Override
     public List<ChatClientResponse> onException(Exception e) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Requested failed with exception, e=" + e.getMessage()));
+      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Requested failed with exception, e=" + e.getMessage() + ",class=" + e.getClass()));
     }
     private ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   }

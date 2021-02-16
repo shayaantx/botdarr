@@ -44,7 +44,7 @@ public abstract class AddStrategy<T> {
         }
       }
       return chatClientResponseBuilder.createErrorMessage("Could not find " + contentDisplayName + " with search text=" + searchText + " and id=" + id);
-    } catch (Exception e) {
+    } catch (Throwable e) {
       LOGGER.error("Error trying to add " + contentDisplayName, e);
       return chatClientResponseBuilder.createErrorMessage("Error adding content, e=" + e.getMessage());
     }
@@ -80,7 +80,7 @@ public abstract class AddStrategy<T> {
         return Arrays.asList(chatClientResponseBuilder.createInfoMessage("No new " + contentDisplayName + "s found, check existing " + contentDisplayName + "s"));
       }
       return restOfItems;
-    } catch (Exception e) {
+    } catch (Throwable e) {
       LOGGER.error("Error trying to add " + contentDisplayName, e);
       return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error trying to add " + contentDisplayName + ", for search text=" + searchText + ", e=" + e.getMessage()));
     }
