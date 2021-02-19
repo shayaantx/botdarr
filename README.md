@@ -101,14 +101,20 @@ botdarr:
     image: shayaantx/botdarr:latest
     container_name: botdarr
     environment:
-       DISCORD_TOKEN: "blahblah"
-       DISCORD_CHANNELS: "channel1"
+       DISCORD_TOKEN: blahblah
+       DISCORD_CHANNELS: channel1
+       RADARR_URL: http://172.168.1.196:8989
+       RADARR_TOKEN: 5958585858jggfdsjjg
+       RADARR_DEFAULT_PROFILE: profile1
+       RADARR_PATH: /some-path
     volumes:
        - <BOTDARR_HOME>/logs:/home/botdarr/logs
        - <BOTDARR_HOME>/database:/home/botdarr/database
 ```
 
 ### Environment Variable configuration
+
+#### Chat Client Variables
 
 | Environment Variable | Description | Required | Default | 
 | :---: | :---: | :---: | :---: |
@@ -123,22 +129,39 @@ botdarr:
 | MATRIX_PASSWORD | The matrix bot password | yes - if you use matrix |
 | MATRIX_ROOM | The comma delimited list of matrix rooms you want to send/receive messages from | yes - if you use matrix |
 | MATRIX_HOME_SERVER_URL | The url of your homeserver | yes - if you use matrix |
-| RADARR_URL | The url of your radarr instance | no |
-| RADARR_TOKEN | The radarr api key (get this from Radarr->Settings->General) | no |
-| RADARR_DEFAULT_PROFILE | The radarr quality profile (should be already configured in radarr) | no |
-| RADARR_PATH | Where your radarr movies should go (if you add/update them) | no |
+    
+
+#### Radarr
+| Environment Variable | Description | Required | Default | 
+| :---: | :---: | :---: | :---: |
+| RADARR_URL | The url of your radarr instance | yes - if you use radarr |
+| RADARR_TOKEN | The radarr api key (get this from Radarr->Settings->General) | yes - if you use radarr |
+| RADARR_DEFAULT_PROFILE | The radarr quality profile (should be already configured in radarr) | yes - if you use radarr |
+| RADARR_PATH | Where your radarr movies should go (if you add/update them) | yes - if you use radarr |
 | RADARR_URL_BASE | Only populate this if you use a custom radarr url base (which is configurable in Radarr->Settings->General->URL Base) don't include prefix/suffix slashes | no |
-| SONARR_URL | The url of your sonarr instance | no |
-| SONARR_TOKEN | The sonarr api key (get this from Sonarr->Settings->General) | no |
-| SONARR_DEFAULT_PROFILE | The sonarr quality profile (should be already configured in sonarr) | no |
-| SONARR_PATH | Where your sonarr shows should go (if you add/update them) | no |
+
+#### Sonarr
+| Environment Variable | Description | Required | Default | 
+| :---: | :---: | :---: | :---: |
+| SONARR_URL | The url of your sonarr instance | yes - if you use sonarr |
+| SONARR_TOKEN | The sonarr api key (get this from Sonarr->Settings->General) | yes - if you use sonarr |
+| SONARR_DEFAULT_PROFILE | The sonarr quality profile (should be already configured in sonarr) | yes - if you use sonarr |
+| SONARR_PATH | Where your sonarr shows should go (if you add/update them) | yes - if you use sonarr |
 | SONARR_URL_BASE | Only populate this if you use a custom sonarr url base (which is configurable in Sonarr->Settings->General->URL Base) don't include prefix/suffix slashes | no |
-| LIDARR_URL | The url of your lidarr instance | no |
-| LIDARR_TOKEN | The lidarr api key (get this from Lidarr->Settings->General) | no |
-| LIDARR_DEFAULT_QUALITY_PROFILE | The lidarr default quality profile (should be already configured in lidarr) | no |
-| LIDARR_DEFAULT_METADATA_PROFILE | The lidarr default metadata profile (should be already configured in lidarr) | no |
-| LIDARR_PATH | Where your lidarr artists/music should go (if you add/update them) | no |
+
+#### Lidarr
+| Environment Variable | Description | Required | Default | 
+| :---: | :---: | :---: | :---: |
+| LIDARR_URL | The url of your lidarr instance | yes - if you use lidarr |
+| LIDARR_TOKEN | The lidarr api key (get this from Lidarr->Settings->General) | yes - if you use lidarr |
+| LIDARR_DEFAULT_QUALITY_PROFILE | The lidarr default quality profile (should be already configured in lidarr) | yes - if you use lidarr |
+| LIDARR_DEFAULT_METADATA_PROFILE | The lidarr default metadata profile (should be already configured in lidarr) | yes - if you use lidarr |
+| LIDARR_PATH | Where your lidarr artists/music should go (if you add/update them) | yes - if you use lidarr |
 | LIDARR_URL_BASE | Only populate this if you use a custom lidarr url base (which is configurable in Lidarr->Settings->General->URL Base) don't include prefix/suffix slashes | no |
+
+#### Misc
+| Environment Variable | Description | Required | Default | 
+| :---: | :---: | :---: | :---: |
 | MAX_REQUESTS_THRESHOLD | The threshold type for max requests. i.e., WEEK, MONTH, DAY (WEEK is from monday to sunday) | no |
 | MAX_ARTIST_REQUESTS_PER_USER | The max number of artist requests per user per month, day, or week | no |
 | MAX_SHOW_REQUESTS_PER_USER | The max number of show requests per user per month, day, or week | no |
