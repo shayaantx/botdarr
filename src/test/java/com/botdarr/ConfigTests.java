@@ -1,6 +1,7 @@
 package com.botdarr;
 
 import mockit.Deencapsulation;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,6 +10,8 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 public class ConfigTests {
@@ -18,8 +21,33 @@ public class ConfigTests {
   }
 
   @Test
+  public void getCommaDelimitedList_emptyItemsReturnEmptyList() {
+    Assert.assertEquals(Collections.emptyList(), Config.getCommaDelimitedList(""));
+  }
+
+  @Test
+  public void getCommaDelimitedList_nullItemsReturnEmptyList() {
+    Assert.assertEquals(Collections.emptyList(), Config.getCommaDelimitedList(null));
+  }
+
+  @Test
+  public void getCommaDelimitedList_singleItemReturnListWithItem() {
+    List<String> items = Config.getCommaDelimitedList("item1");
+    Assert.assertEquals(1, items.size());
+    Assert.assertEquals("item1", items.get(0));
+  }
+
+  @Test
+  public void getCommaDelimitedList_multipleItemsSplitByCommaReturnItemsInList() {
+    List<String> items = Config.getCommaDelimitedList("item1,item2");
+    Assert.assertEquals(2, items.size());
+    Assert.assertEquals("item1", items.get(0));
+    Assert.assertEquals("item2", items.get(1));
+  }
+
+  @Test
   public void getConfig_invalidCommandPrefixConfigured() throws Exception {
-  Properties properties = new Properties();
+    Properties properties = new Properties();
     properties.put("discord-token", "#$F#$#");
     properties.put("discord-channels", "channel1");
     properties.put("command-prefix", "//");

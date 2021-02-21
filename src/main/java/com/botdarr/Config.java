@@ -173,8 +173,8 @@ public class Config {
     return null;
   }
 
-  private static List<String> getCommaDelimitedList(String list) {
-    if (!Strings.isEmpty(list) && list.contains(",")) {
+  protected static List<String> getCommaDelimitedList(String list) {
+    if (!Strings.isEmpty(list)) {
       if (list.contains(",")) {
         return Arrays.asList(list.split(","));
       } else {
