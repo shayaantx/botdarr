@@ -12,6 +12,7 @@ import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.Command;
 
 import java.util.List;
+import java.util.Map;
 
 public class TestResponseBuilder implements ChatClientResponseBuilder<TestResponse> {
 
@@ -108,5 +109,10 @@ public class TestResponseBuilder implements ChatClientResponseBuilder<TestRespon
   @Override
   public TestResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
     return new TestResponse(radarrMovie);
+  }
+
+  @Override
+  public TestResponse getStatusCommandResponse(Map<String, Boolean> endpointStatuses) {
+    return new TestResponse();
   }
 }

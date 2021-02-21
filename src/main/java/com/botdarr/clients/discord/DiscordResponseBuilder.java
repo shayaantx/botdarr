@@ -11,17 +11,18 @@ import com.botdarr.commands.*;
 import com.botdarr.utilities.ListUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.commands.StatusCommand.STATUS_COMMAND;
+import static com.botdarr.commands.StatusCommand.STATUS_COMMAND_DESCRIPTION;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class DiscordResponseBuilder implements ChatClientResponseBuilder<DiscordResponse> {
@@ -51,6 +52,9 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
 
     if (!radarrEnabled && !sonarrEnabled && !lidarrEnabled) {
       embedBuilder.appendDescription("No radarr or sonarr or lidarr commands configured, check your properties file and logs");
+    }
+    if (!Config.getStatusEndpoints().isEmpty()) {
+      embedBuilder.addField(new CommandProcessor().getPrefix() + STATUS_COMMAND, STATUS_COMMAND_DESCRIPTION, false);
     }
     return new DiscordResponse(embedBuilder.build());
   }
@@ -251,6 +255,16 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
   }
 
   @Override
+  public DiscordResponse getStatusCommandResponse(Map<String, Boolean> endpointStatuses) {
+    EmbedBuilder embedBuilder = new EmbedBuilder();
+    embedBuilder.setTitle("Endpoint Statuses");
+    for (Map.Entry<String, Boolean> endpointStatusEntry : endpointStatuses.entrySet()) {
+      embedBuilder.addField(endpointStatusEntry.getKey(), endpointStatusEntry.getValue() ? "\uD83D\uDFE2" : "\uD83D\uDD34", false);
+    }
+    return new DiscordResponse(embedBuilder.build());
+  }
+
+  @Override
   public DiscordResponse createErrorMessage(String message) {
     return new DiscordResponse(createErrorMessageEmbed(message));
   }
@@ -293,6 +307,4 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     }
     return new DiscordResponse(embedBuilder.build());
   }
-
-  private static final Logger LOGGER = LogManager.getLogger("DiscordLog");
 }
