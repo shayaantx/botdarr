@@ -58,12 +58,30 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Build and Push Docker Image
+    - name: Build/Push Docker Images
       uses: docker/build-push-action@v2
       with:
         context: .
         file: ./Dockerfile
         push: true
+        platforms: linux/amd64,linux/arm64
         tags: |
           shayaantx/botdarr:latest
           shayaantx/botdarr:${{ env.VERSION }}
+    - name: Creater builder
+      run: |
+        docker buildx version
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        docker buildx create --name multiarch --driver docker-container --use
+        docker buildx inspect --bootstrap
+    - name: Build/Push arm32v7 Docker Image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        builder: multiarch
+        file: ./Dockerfile-armv7
+        push: true
+        platforms: linux/arm/v7
+        tags: |
+          shayaantx/botdarr:latest-arm32v7
+          shayaantx/botdarr:${{ env.VERSION }}-arm32v7
