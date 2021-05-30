@@ -1,6 +1,6 @@
-![Build status](https://github.com/shayaantx/botdarr/actions/workflows/development-branch.yml/badge.svg)
-![Docker Pulls](https://img.shields.io/docker/pulls/shayaantx/botdarr)
-![Latest Version](https://img.shields.io/docker/v/shayaantx/botdarr)
+[![Build status](https://github.com/shayaantx/botdarr/actions/workflows/development-branch.yml/badge.svg)](https://github.com/shayaantx/botdarr/actions/workflows/development-branch.yml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/shayaantx/botdarr)](https://hub.docker.com/repository/docker/shayaantx/botdarr)
+[![Latest Version](https://img.shields.io/docker/v/shayaantx/botdarr/latest)](https://github.com/shayaantx/botdarr/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 # Summary
