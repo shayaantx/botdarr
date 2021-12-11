@@ -9,7 +9,7 @@ Made this simple multi chat-client bot to access radarr, sonarr, and lidarr with
 
 <br/>
 
-## Currently Supported API's
+## Currently, Supported API's
 
 - [x] Radarr (v3)
 - [x] Sonarr (v3)
@@ -17,14 +17,14 @@ Made this simple multi chat-client bot to access radarr, sonarr, and lidarr with
 - [x] ~~Radarr (v2) - no longer supported~~
 - [ ] ~~Sonarr (v2) - no plans to support~~
 
-## Currently Supported Chat Client's
+## Currently, Supported Chat Client's
 
 - [x] Discord
 - [x] Slack
 - [x] Telegram
 - [x] Matrix
 
-## Currently Supported Feature's
+## Currently, Supported Feature's
 
 - [x] Add movie by search string or tmdb id
 - [x] Add show by search string or tvdb id
