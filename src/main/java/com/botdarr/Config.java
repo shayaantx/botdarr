@@ -216,6 +216,11 @@ public class Config {
     public static final String TELEGRAM_PRIVATE_CHANNELS = "telegram-private-channels";
 
     /**
+     * The telegram private group(s) to send notifications to
+     */
+    public static final String TELEGRAM_PRIVATE_GROUPS = "telegram-private-groups";
+
+    /**
      * The discord bot token
      */
     public static final String DISCORD_TOKEN = "discord-token";

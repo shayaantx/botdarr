@@ -89,6 +89,10 @@ public enum ChatClientType {
     }
   },
   TELEGRAM() {
+    private boolean isUsingChannels() {
+      String telegramGroups = Config.getProperty(Config.Constants.TELEGRAM_PRIVATE_GROUPS);
+      return telegramGroups == null || telegramGroups.isEmpty();
+    }
     @Override
     public void init() throws Exception {
       ChatClientResponseBuilder<TelegramResponse> responseChatClientResponseBuilder = new TelegramResponseBuilder();
@@ -99,7 +103,7 @@ public enum ChatClientType {
       telegramChatClient.addUpdateListener(list -> {
         try {
           for (Update update : list) {
-            com.pengrad.telegrambot.model.Message message = update.channelPost();
+            com.pengrad.telegrambot.model.Message message = isUsingChannels() ? update.channelPost() : update.message();
             if (message != null) {
               String text = message.text();
               //TODO: the telegram api doesn't seem return "from" field in channel posts for some reason
@@ -124,9 +128,13 @@ public enum ChatClientType {
 
     @Override
     public boolean isConfigured(Properties properties) {
-      return
-        !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_TOKEN)) &&
-        !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_PRIVATE_CHANNELS));
+      boolean isTelegramConfigured = !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_TOKEN));
+      boolean telegramPrivateChannelsExist = !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_PRIVATE_CHANNELS));
+      boolean telegramPrivateGroupsExist = !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_PRIVATE_GROUPS));
+      if (isTelegramConfigured && telegramPrivateChannelsExist && telegramPrivateGroupsExist) {
+        throw new RuntimeException("Cannot configure telegram for private channels and groups, you must pick one or the other");
+      }
+      return isTelegramConfigured && (telegramPrivateChannelsExist || telegramPrivateGroupsExist);
     }
 
     @Override
