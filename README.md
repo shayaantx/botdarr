@@ -125,6 +125,7 @@ botdarr:
 | DISCORD_CHANNELS | The actual discord channel(s) the bot lives in | yes - if you use discord |
 | TELEGRAM_TOKEN | The telegram bot token (don't share) | yes - if you use telegram |
 | TELEGRAM_PRIVATE_CHANNELS | Your actual telegram channels your bot can respond in. This should be a list containing the name and id of the channel, i.e., CHANNEL_NAME:CHANNEL_ID to get the channel id, right click any post in private channel and copy post link you should see something like this, https://t.me/c/1408146664/63 the id is between c/<id>/<postId> example: plex-channel1:id1,plex-channel2:id2 | yes - if you use telegram |
+| TELEGRAM_PRIVATE_GROUPS | Your actual telegram groups your bot can respond in. This should be a list containing the name and id of the group, i.e., GROUP_NAME:GROUP_ID to get the channel id, right click any post in private group and copy post link (you need to enable message history for this) you should see something like this, https://t.me/c/1408146664/63 the id is between c/<id>/<postId> example: plex-group1:id1,plex-group2:id2 | yes - if you use telegram |
 | SLACK_BOT_TOKEN | The slack bot oauth authentication token (don't share) | yes - if you use slack |
 | SLACK_USER_TOKEN | The slack user oauth authentication token | yes - if you use slack |
 | SLACK_CHANNELS | The actual slack channel(s) you want to post slack messages to | yes - if you use slack |

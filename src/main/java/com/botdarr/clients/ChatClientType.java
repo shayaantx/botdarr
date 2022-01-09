@@ -104,7 +104,7 @@ public enum ChatClientType {
         try {
           for (Update update : list) {
             com.pengrad.telegrambot.model.Message message = isUsingChannels() ? update.channelPost() : update.message();
-            if (message != null) {
+            if (message != null && !Strings.isEmpty(message.text())) {
               String text = message.text();
               //TODO: the telegram api doesn't seem return "from" field in channel posts for some reason
               //for now we leave the author as "telegram" till a better solution arises
