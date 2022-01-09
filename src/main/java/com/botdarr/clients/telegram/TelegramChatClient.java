@@ -14,6 +14,7 @@ import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.SendResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +54,14 @@ public class TelegramChatClient implements ChatClient<TelegramResponse> {
     }
   }
 
+  private String getMessageEndpoint() {
+    String channels = Config.getProperty(Config.Constants.TELEGRAM_PRIVATE_CHANNELS);
+    if (Strings.isBlank(channels)) {
+      return Config.getProperty(Config.Constants.TELEGRAM_PRIVATE_GROUPS);
+    }
+    return channels;
+  }
+
   private void sendTelegramMessage(long id, String html) {
     SendResponse sendResponse = bot.execute(new SendMessage(id, html).parseMode(ParseMode.HTML));
     if (LOGGER.isDebugEnabled() && sendResponse.errorCode() == 0) {
@@ -64,7 +73,7 @@ public class TelegramChatClient implements ChatClient<TelegramResponse> {
   }
 
   private void sendMessages(MessageSender messageSender, Chat chat) {
-    Set<String> configTelegramChannels = Sets.newHashSet(Splitter.on(',').trimResults().split(Config.getProperty(Config.Constants.TELEGRAM_PRIVATE_CHANNELS)));
+    Set<String> configTelegramChannels = Sets.newHashSet(Splitter.on(',').trimResults().split(getMessageEndpoint()));
     Map<String, String> supportedTelegramChannels = new HashMap<>();
     for (String channel : configTelegramChannels) {
       String[] fields = channel.split(":");

@@ -19,6 +19,7 @@ if [ ! -e "$propertiesFile" ]; then
 
     [[ ! -z "${TELEGRAM_TOKEN}" ]] && addConfiguration "telegram-token" "${TELEGRAM_TOKEN}" "${propertiesFile}"
     [[ ! -z "${TELEGRAM_PRIVATE_CHANNELS}" ]] && addConfiguration "telegram-private-channels" "${TELEGRAM_PRIVATE_CHANNELS}" "${propertiesFile}"
+    [[ ! -z "${TELEGRAM_PRIVATE_GROUPS}" ]] && addConfiguration "telegram-private-groups" "${TELEGRAM_PRIVATE_GROUPS}" "${propertiesFile}"
 
     [[ ! -z "${SLACK_BOT_TOKEN}" ]] && addConfiguration "slack-bot-token" "${SLACK_BOT_TOKEN}" "${propertiesFile}"
     [[ ! -z "${SLACK_USER_TOKEN}" ]] && addConfiguration "slack-user-token" "${SLACK_USER_TOKEN}" "${propertiesFile}"

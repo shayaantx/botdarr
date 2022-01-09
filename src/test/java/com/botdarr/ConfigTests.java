@@ -78,6 +78,18 @@ public class ConfigTests {
     Config.getProperty("");
   }
 
+  @Test
+  public void getConfig_telegramGroupsAndChannelsConfigured() throws Exception {
+    Properties properties = new Properties();
+    properties.put("telegram-token", "%H$$54j45i");
+    properties.put("telegram-private-channels", "channel1:459349");
+    properties.put("telegram-private-groups", "group1:459349");
+    writeFakePropertiesFile(properties);
+    expectedException.expect(RuntimeException.class);
+    expectedException.expectMessage("Cannot configure telegram for private channels and groups, you must pick one or the other");
+    Config.getProperty("");
+  }
+
   private void writeFakePropertiesFile(Properties properties) throws Exception {
     File propertiesFile = new File(temporaryFolder.getRoot(), "properties");
     Deencapsulation.setField(Config.class, "propertiesPath", propertiesFile.getPath());

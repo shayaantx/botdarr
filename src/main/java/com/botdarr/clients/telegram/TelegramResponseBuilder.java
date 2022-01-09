@@ -128,7 +128,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     StringBuilder details = new StringBuilder();
     details.append("Quality - " + radarrQueue.getQuality().getQuality().getName() + "\n");
     details.append("Status - " + radarrQueue.getStatus() + "\n");
-    details.append("Time Left - " + radarrQueue.getTimeleft() == null ? "unknown" : radarrQueue.getTimeleft() + "\n");
+    details.append("Time Left - " + (radarrQueue.getTimeleft() == null ? "unknown" : radarrQueue.getTimeleft() + "\n"));
     if (radarrQueue.getStatusMessages() != null) {
       for (RadarrQueueStatusMessages statusMessage : radarrQueue.getStatusMessages()) {
         for (String message : statusMessage.getMessages()) {
@@ -146,7 +146,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     domContents.add(b(lidarrQueueRecord.getTitle()));
     StringBuilder details = new StringBuilder();
     details.append("Status - " + lidarrQueueRecord.getStatus() + "\n");
-    details.append("Time Left - " + lidarrQueueRecord.getTimeleft() == null ? "unknown" : lidarrQueueRecord.getTimeleft() + "\n");
+    details.append("Time Left - " + (lidarrQueueRecord.getTimeleft() == null ? "unknown" : lidarrQueueRecord.getTimeleft() + "\n"));
     if (lidarrQueueRecord.getStatusMessages() != null) {
       //limit messages to 5, since lidarr can really throw a ton of status messages
       for (LidarrQueueStatusMessage statusMessage : ListUtils.subList(lidarrQueueRecord.getStatusMessages(), 5)) {
