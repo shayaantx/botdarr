@@ -7,6 +7,9 @@ import com.botdarr.utilities.ListUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.apache.http.conn.HttpHostConnectException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +41,14 @@ public abstract class DownloadsStrategy<T> {
 
   public List<ChatClientResponse> getContentDownloads() {
     return ConnectionHelper.makeGetRequest(this.api, this.url, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+
+      @Override
+      public List<ChatClientResponse> onConnectException(HttpHostConnectException e) {
+        String message = "Error trying to connect to " + DownloadsStrategy.this.api.getApiUrl(DownloadsStrategy.this.url);
+        LOGGER.error(message);
+        return Collections.emptyList();
+      }
+
       @Override
       public List<ChatClientResponse> onSuccess(String response) {
         return parseContent(response);
@@ -69,4 +80,5 @@ public abstract class DownloadsStrategy<T> {
   private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
   private final ContentType contentType;
+  private static Logger LOGGER = LogManager.getLogger();
 }

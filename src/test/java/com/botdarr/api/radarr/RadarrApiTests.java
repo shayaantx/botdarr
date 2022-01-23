@@ -3,7 +3,6 @@ package com.botdarr.api.radarr;
 import com.botdarr.Config;
 import com.botdarr.TestResponse;
 import com.botdarr.TestResponseBuilder;
-import com.botdarr.api.radarr.*;
 import com.botdarr.commands.CommandResponse;
 import com.google.gson.Gson;
 import mockit.Deencapsulation;

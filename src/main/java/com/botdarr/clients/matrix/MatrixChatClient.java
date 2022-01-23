@@ -12,6 +12,7 @@ import com.botdarr.commands.CommandResponse;
 import com.botdarr.connections.ConnectionHelper;
 import com.google.gson.Gson;
 import org.apache.http.client.methods.*;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.logging.log4j.LogManager;
@@ -290,6 +291,11 @@ public class MatrixChatClient implements ChatClient<MatrixResponse> {
     public T onException(Exception e) {
       LOGGER.error("Error trying to make matrix request", e);
       return null;
+    }
+
+    @Override
+    public T onConnectException(HttpHostConnectException e) {
+      return onException(e);
     }
   }
 

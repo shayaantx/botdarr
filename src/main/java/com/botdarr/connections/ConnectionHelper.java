@@ -6,6 +6,7 @@ import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -59,17 +60,25 @@ public class ConnectionHelper {
         } else {
           return responseHandler.onFailure(statusCode, response.getStatusLine().getReasonPhrase());
         }
+      } catch (HttpHostConnectException e) {
+        LOGGER.error("Error trying to connect during request", e);
+        return responseHandler.onConnectException(e);
       } catch (Exception e) {
-        LOGGER.error("Error trying to execute connection during post request", e);
+        LOGGER.error("Error trying to execute connection during request", e);
         return responseHandler.onException(e);
       }
     } catch (IOException e) {
-      LOGGER.error("Error trying to make connection during post request", e);
+      LOGGER.error("Error trying to make connection during request", e);
       return responseHandler.onException(e);
     }
   }
 
   public static abstract class SimpleMessageEmbedResponseHandler implements ResponseHandler<List<ChatClientResponse>> {
+    @Override
+    public List<ChatClientResponse> onConnectException(HttpHostConnectException e) {
+      return onException(e);
+    }
+
     public SimpleMessageEmbedResponseHandler(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
       this.chatClientResponseBuilder = chatClientResponseBuilder;
     }
@@ -97,6 +106,11 @@ public class ConnectionHelper {
     public T onException(Exception e) {
       return null;
     }
+
+    @Override
+    public T onConnectException(HttpHostConnectException e) {
+      return null;
+    }
   }
 
   public interface RequestHandler {
@@ -112,6 +126,8 @@ public class ConnectionHelper {
     T onFailure(int statusCode, String reason);
 
     T onException(Exception e);
+
+    T onConnectException(HttpHostConnectException e);
   }
 
   private static final Logger LOGGER = LogManager.getLogger();
