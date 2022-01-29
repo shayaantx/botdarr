@@ -1,32 +1,33 @@
 package com.botdarr.api;
 
-import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.commands.responses.CommandResponse;
+import com.botdarr.commands.responses.ErrorResponse;
+import com.botdarr.commands.responses.InfoResponse;
 import com.botdarr.utilities.ListUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class LookupStrategy<T> {
-  public LookupStrategy(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder, ContentType contentType) {
-    this.chatClientResponseBuilder = chatClientResponseBuilder;
+  public LookupStrategy(ContentType contentType) {
     this.contentType = contentType;
   }
 
   public abstract T lookupExistingItem(T lookupItem);
   public abstract List<T> lookup(String searchTerm) throws Exception;
-  public abstract ChatClientResponse getNewOrExistingItem(T lookupItem, T existingItem, boolean findNew);
+  public abstract CommandResponse getExistingItem(T existingItem);
+  public abstract CommandResponse getNewItem(T lookupItem);
   public abstract boolean isPathBlacklisted(T item);
 
-  public List<ChatClientResponse> lookup(String search, boolean findNew) {
+  public List<CommandResponse> lookup(String search, boolean findNew) {
     try {
-      List<ChatClientResponse> responses = new ArrayList<>();
+      List<CommandResponse> responses = new ArrayList<>();
       List<T> lookupItems = lookup(search);
       if (lookupItems == null) {
-        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Something failed during lookup for search term=" + search));
+        return Collections.singletonList(new ErrorResponse("Something failed during lookup for search term=" + search));
       }
       for (T lookupItem : lookupItems) {
         T existingItem = lookupExistingItem(lookupItem);
@@ -35,27 +36,26 @@ public abstract class LookupStrategy<T> {
           //skip any items that have blacklisted paths
           continue;
         }
-        boolean skip = findNew ? isExistingItem : !isExistingItem;
+        boolean skip = findNew == isExistingItem;
         if (skip) {
           continue;
         }
-        responses.add(getNewOrExistingItem(lookupItem, existingItem, findNew));
+        responses.add(isExistingItem ? getExistingItem(existingItem) : getNewItem(lookupItem));
       }
       if (responses.size() == 0) {
-        return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Could not find any " + (findNew ? "new" : "existing") + " " + this.contentType.getDisplayName() + "s for search term=" + search));
+        return Collections.singletonList(new ErrorResponse("Could not find any " + (findNew ? "new" : "existing") + " " + this.contentType.getDisplayName() + "s for search term=" + search));
       }
       if (responses.size() > MAX_RESULTS_TO_SHOW) {
         responses = ListUtils.subList(responses, MAX_RESULTS_TO_SHOW);
-        responses.add(0, chatClientResponseBuilder.createInfoMessage("Too many " + this.contentType.getDisplayName() + "s found, limiting results to " + MAX_RESULTS_TO_SHOW));
+        responses.add(0, new InfoResponse("Too many " + this.contentType.getDisplayName() + "s found, limiting results to " + MAX_RESULTS_TO_SHOW));
       }
       return responses;
     } catch (Exception e) {
       LOGGER.error("Error trying to lookup " + this.contentType.getDisplayName() + ", searchText=" + search, e);
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Error looking up " + this.contentType.getDisplayName() + ", e=" + e.getMessage()));
+      return Collections.singletonList(new ErrorResponse("Error looking up " + this.contentType.getDisplayName() + ", e=" + e.getMessage()));
     }
   }
 
-  private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static Logger LOGGER = LogManager.getLogger();
   private final int MAX_RESULTS_TO_SHOW = new ApiRequests().getMaxResultsToShow();
   private final ContentType contentType;

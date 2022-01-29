@@ -3,10 +3,8 @@ package com.botdarr.api.lidarr;
 import com.botdarr.Config;
 import com.botdarr.api.*;
 import com.botdarr.api.sonarr.SonarrUrls;
-import com.botdarr.clients.ChatClient;
-import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.CommandContext;
+import com.botdarr.commands.responses.*;
 import com.botdarr.connections.ConnectionHelper;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,10 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class LidarrApi implements Api {
-  public LidarrApi(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
-    this.chatClientResponseBuilder = chatClientResponseBuilder;
-  }
-
   @Override
   public String getUrlBase() {
     return Config.getProperty(Config.Constants.LIDARR_URL_BASE);
@@ -41,18 +35,8 @@ public class LidarrApi implements Api {
   }
 
   @Override
-  public List<ChatClientResponse> downloads() {
+  public List<CommandResponse> downloads() {
     return getDownloadsStrategy().downloads();
-  }
-
-  @Override
-  public void sendPeriodicNotifications(ChatClient chatClient) {
-    new PeriodicNotificationStrategy(ContentType.ARTIST, getDownloadsStrategy()) {
-      @Override
-      public void sendToConfiguredChannels(List downloads) {
-        chatClient.sendToConfiguredChannels(downloads);
-      }
-    }.sendPeriodicNotifications();
   }
 
   @Override
@@ -140,16 +124,16 @@ public class LidarrApi implements Api {
     return Config.Constants.LIDARR_TOKEN;
   }
 
-  public ChatClientResponse addArtistWithId(String id, String artistName) {
+  public CommandResponse addArtistWithId(String id, String artistName) {
     return getArtistAddStrategy().addWithSearchId(artistName, id);
   }
 
-  public List<ChatClientResponse> addArtist(String artistToSearch) {
+  public List<CommandResponse> addArtist(String artistToSearch) {
     return getArtistAddStrategy().addWithSearchTitle(artistToSearch);
   }
 
-  public List<ChatClientResponse> lookupArtists(String search, boolean findNew) {
-    return new LookupStrategy<LidarrArtist>(chatClientResponseBuilder, ContentType.ARTIST) {
+  public List<CommandResponse> lookupArtists(String search, boolean findNew) {
+    return new LookupStrategy<LidarrArtist>(ContentType.ARTIST) {
 
       @Override
       public LidarrArtist lookupExistingItem(LidarrArtist lookupItem) {
@@ -162,8 +146,13 @@ public class LidarrApi implements Api {
       }
 
       @Override
-      public ChatClientResponse getNewOrExistingItem(LidarrArtist lookupItem, LidarrArtist existingItem, boolean findNew) {
-        return chatClientResponseBuilder.getNewOrExistingArtist(lookupItem, existingItem, findNew);
+      public CommandResponse getExistingItem(LidarrArtist existingItem) {
+        return new ExistingMusicArtistResponse(existingItem);
+      }
+
+      @Override
+      public CommandResponse getNewItem(LidarrArtist lookupItem) {
+        return new NewMusicArtistResponse(lookupItem);
       }
 
       @Override
@@ -179,7 +168,7 @@ public class LidarrApi implements Api {
   }
 
   private AddStrategy<LidarrArtist> getArtistAddStrategy() {
-    return new AddStrategy<LidarrArtist>(chatClientResponseBuilder, ContentType.ARTIST) {
+    return new AddStrategy<LidarrArtist>(ContentType.ARTIST) {
       @Override
       public List<LidarrArtist> lookupContent(String search) throws Exception {
         return lookupArtists(search);
@@ -202,30 +191,29 @@ public class LidarrApi implements Api {
       }
 
       @Override
-      public ChatClientResponse addContent(LidarrArtist content) {
+      public CommandResponse addContent(LidarrArtist content) {
         return addArtist(content);
       }
 
       @Override
-      public ChatClientResponse getResponse(LidarrArtist item) {
-        return chatClientResponseBuilder.getArtistResponse(item);
+      public CommandResponse getResponse(LidarrArtist item) {
+        return new MusicArtistResponse(item);
       }
     };
   }
 
   private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, LidarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.ARTIST) {
+    return new DownloadsStrategy(this, LidarrUrls.DOWNLOAD_BASE, ContentType.ARTIST) {
       @Override
-      public ChatClientResponse getResponse(JsonElement rawElement) {
+      public CommandResponse getResponse(JsonElement rawElement) {
         LidarrQueueRecord lidarrQueueRecord = new Gson().fromJson(rawElement, LidarrQueueRecord.class);
-        Integer artistId = lidarrQueueRecord.getArtistId();
-        return chatClientResponseBuilder.getArtistDownloadResponses(lidarrQueueRecord);
+        return new MusicArtistDownloadResponse(lidarrQueueRecord);
       }
       @Override
-      public List<ChatClientResponse> getContentDownloads() {
-        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.DOWNLOAD_BASE, new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+      public List<CommandResponse> getContentDownloads() {
+        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.DOWNLOAD_BASE, new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
           @Override
-          public List<ChatClientResponse> onSuccess(String response) {
+          public List<CommandResponse> onSuccess(String response) {
             JsonParser parser = new JsonParser();
             JsonObject json = parser.parse(response).getAsJsonObject();
             return parseContent(json.get("records").toString());
@@ -252,20 +240,20 @@ public class LidarrApi implements Api {
     );
   }
 
-  private ChatClientResponse addArtist(LidarrArtist lidarrArtist) {
+  private CommandResponse addArtist(LidarrArtist lidarrArtist) {
     lidarrArtist.setMonitored(true);
     lidarrArtist.setRootFolderPath(Config.getProperty(Config.Constants.LIDARR_PATH) + "/");
 
     String lidarrProfileName = Config.getProperty(Config.Constants.LIDARR_DEFAULT_QUALITY_PROFILE);
     LidarrQualityProfile lidarrQualityProfile = LIDARR_CACHE.getQualityProfile(lidarrProfileName.toLowerCase());
     if (lidarrQualityProfile == null) {
-      return chatClientResponseBuilder.createErrorMessage("Could not find lidarr profile for default " + lidarrProfileName);
+      return new ErrorResponse("Could not find lidarr profile for default " + lidarrProfileName);
     }
 
     String lidarrMetadataProfileName = Config.getProperty(Config.Constants.LIDARR_DEFAULT_METADATA_PROFILE);
     LidarrMetadataProfile lidarrMetadataProfile = LIDARR_CACHE.getMetadataProfile(lidarrMetadataProfileName.toLowerCase());
     if (lidarrMetadataProfile == null) {
-      return chatClientResponseBuilder.createErrorMessage("Could not find lidarr metadata profile for default " + lidarrProfileName);
+      return new ErrorResponse("Could not find lidarr metadata profile for default " + lidarrProfileName);
     }
     lidarrArtist.setMetadataProfileId(lidarrMetadataProfile.getId());
     lidarrArtist.setQualityProfileId(lidarrQualityProfile.getId());
@@ -290,7 +278,7 @@ public class LidarrApi implements Api {
       ApiRequestType apiRequestType = ApiRequestType.ARTIST;
       if (apiRequests.checkRequestLimits(apiRequestType) && !apiRequests.canMakeRequests(apiRequestType, username)) {
         ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
-        return chatClientResponseBuilder.createErrorMessage("Could not add artist, user " + username + " has exceeded max artist requests for " + requestThreshold.getReadableName());
+        return new ErrorResponse("Could not add artist, user " + username + " has exceeded max artist requests for " + requestThreshold.getReadableName());
       }
       try (CloseableHttpResponse response = client.execute(post)) {
         if (LOGGER.isDebugEnabled()) {
@@ -300,21 +288,20 @@ public class LidarrApi implements Api {
         }
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode != 200 && statusCode != 201) {
-          return chatClientResponseBuilder.createErrorMessage("Could not add artist, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
+          return new ErrorResponse("Could not add artist, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
         //cache artist after successful response
         LIDARR_CACHE.addArtist(lidarrArtist);
         LogManager.getLogger("AuditLog").info("User " + username + " added " + lidarrArtist.getArtistName());
         apiRequests.auditRequest(apiRequestType, username, lidarrArtist.getArtistName());
-        return chatClientResponseBuilder.createSuccessMessage("Artist " + lidarrArtist.getArtistName() + " added, lidarr-detail=" + response.getStatusLine().getReasonPhrase());
+        return new SuccessResponse("Artist " + lidarrArtist.getArtistName() + " added, lidarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
       LOGGER.error("Error trying to add artist", e);
-      return chatClientResponseBuilder.createErrorMessage("Error adding artist, error=" + e.getMessage());
+      return new ErrorResponse("Error adding artist, error=" + e.getMessage());
     }
   }
 
-  private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final LidarrCache LIDARR_CACHE = new LidarrCache();
   public static final String ADD_ARTIST_COMMAND_FIELD_PREFIX = "Add artist command";
 }

@@ -2,11 +2,8 @@ package com.botdarr.api.sonarr;
 
 import com.botdarr.Config;
 import com.botdarr.api.*;
-import com.botdarr.api.radarr.RadarrMovie;
-import com.botdarr.clients.ChatClient;
-import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.CommandContext;
+import com.botdarr.commands.responses.*;
 import com.botdarr.connections.ConnectionHelper;
 import com.google.gson.*;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -21,10 +18,6 @@ import java.net.URLEncoder;
 import java.util.*;
 
 public class SonarrApi implements Api {
-  public SonarrApi(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
-    this.chatClientResponseBuilder = chatClientResponseBuilder;
-  }
-
   @Override
   public String getUrlBase() {
     return Config.getProperty(Config.Constants.SONARR_URL_BASE);
@@ -36,20 +29,20 @@ public class SonarrApi implements Api {
   }
 
   @Override
-  public List<ChatClientResponse> downloads() {
+  public List<CommandResponse> downloads() {
     return getDownloadsStrategy().downloads();
   }
 
-  public ChatClientResponse addWithId(String searchText, String id) {
+  public CommandResponse addWithId(String searchText, String id) {
     return getAddStrategy().addWithSearchId(searchText, id);
   }
 
-  public List<ChatClientResponse> addWithTitle(String searchText) {
+  public List<CommandResponse> addWithTitle(String searchText) {
     return getAddStrategy().addWithSearchTitle(searchText);
   }
 
-  public List<ChatClientResponse> lookup(String search, boolean findNew) {
-    return new LookupStrategy<SonarrShow>(chatClientResponseBuilder, ContentType.SHOW) {
+  public List<CommandResponse> lookup(String search, boolean findNew) {
+    return new LookupStrategy<SonarrShow>(ContentType.SHOW) {
 
       @Override
       public SonarrShow lookupExistingItem(SonarrShow lookupItem) {
@@ -62,8 +55,13 @@ public class SonarrApi implements Api {
       }
 
       @Override
-      public ChatClientResponse getNewOrExistingItem(SonarrShow lookupItem, SonarrShow existingItem, boolean findNew) {
-        return chatClientResponseBuilder.getNewOrExistingShow(lookupItem, existingItem, findNew);
+      public CommandResponse getExistingItem(SonarrShow existingItem) {
+        return new ExistingShowResponse(existingItem);
+      }
+
+      @Override
+      public CommandResponse getNewItem(SonarrShow lookupItem) {
+        return new NewShowResponse(lookupItem);
       }
 
       @Override
@@ -73,27 +71,17 @@ public class SonarrApi implements Api {
     }.lookup(search, findNew);
   }
 
-  public List<ChatClientResponse> getProfiles() {
+  public List<CommandResponse> getProfiles() {
     Collection<SonarrProfile> profiles = SONARR_CACHE.getQualityProfiles();
     if (profiles == null || profiles.isEmpty()) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Found 0 profiles, please setup Sonarr with at least one profile"));
+      return Collections.singletonList(new ErrorResponse("Found 0 profiles, please setup Sonarr with at least one profile"));
     }
 
-    List<ChatClientResponse> profileMessages = new ArrayList<>();
+    List<CommandResponse> profileMessages = new ArrayList<>();
     for (SonarrProfile sonarrProfile : profiles) {
-      profileMessages.add(chatClientResponseBuilder.getShowProfile(sonarrProfile));
+      profileMessages.add(new ShowProfileResponse(sonarrProfile));
     }
     return profileMessages;
-  }
-
-  @Override
-  public void sendPeriodicNotifications(ChatClient chatClient) {
-    new PeriodicNotificationStrategy(ContentType.SHOW, getDownloadsStrategy()) {
-      @Override
-      public void sendToConfiguredChannels(List downloads) {
-        chatClient.sendToConfiguredChannels(downloads);
-      }
-    }.sendPeriodicNotifications();
   }
 
   @Override
@@ -148,7 +136,7 @@ public class SonarrApi implements Api {
   }
 
   private AddStrategy<SonarrShow> getAddStrategy() {
-    return new AddStrategy<SonarrShow>(chatClientResponseBuilder, ContentType.SHOW) {
+    return new AddStrategy<SonarrShow>(ContentType.SHOW) {
       @Override
       public List<SonarrShow> lookupContent(String search) throws Exception {
         return lookupShows(search);
@@ -171,21 +159,21 @@ public class SonarrApi implements Api {
       }
 
       @Override
-      public ChatClientResponse addContent(SonarrShow content) {
+      public CommandResponse addContent(SonarrShow content) {
         return addShow(content);
       }
 
       @Override
-      public ChatClientResponse getResponse(SonarrShow item) {
-        return chatClientResponseBuilder.getShowResponse(item);
+      public CommandResponse getResponse(SonarrShow item) {
+        return new ShowResponse(item);
       }
     };
   }
 
   private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, SonarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.SHOW) {
+    return new DownloadsStrategy(this, SonarrUrls.DOWNLOAD_BASE, ContentType.SHOW) {
       @Override
-      public ChatClientResponse getResponse(JsonElement rawElement) {
+      public CommandResponse getResponse(JsonElement rawElement) {
         SonarrQueue showQueue = new Gson().fromJson(rawElement, SonarrQueue.class);
         SonarQueueEpisode episode = showQueue.getEpisode();
         if (episode == null) {
@@ -199,15 +187,15 @@ public class SonarrApi implements Api {
           return null;
         }
         if (isPathBlacklisted(sonarrShow)) {
-          //TODO: log
+          LOGGER.warn("The following show is blacklisted: " + sonarrShow.getTitle() + " from being displayed in downloads");
           return null;
         }
-        return chatClientResponseBuilder.getShowDownloadResponses(showQueue);
+        return new ShowDownloadResponse(showQueue);
       }
     };
   }
 
-  private ChatClientResponse addShow(SonarrShow sonarrShow) {
+  private CommandResponse addShow(SonarrShow sonarrShow) {
     String title = sonarrShow.getTitle();
     //make sure we specify where the show should get downloaded
     sonarrShow.setPath(Config.getProperty(Config.Constants.SONARR_PATH) + "/" + title);
@@ -219,7 +207,7 @@ public class SonarrApi implements Api {
     String sonarrProfileName = Config.getProperty(Config.Constants.SONARR_DEFAULT_PROFILE);
     SonarrProfile sonarrProfile = SONARR_CACHE.getProfile(sonarrProfileName.toLowerCase());
     if (sonarrProfile == null) {
-      return chatClientResponseBuilder.createErrorMessage("Could not find sonarr profile for default " + sonarrProfile);
+      return new ErrorResponse("Could not find sonarr profile for default " + sonarrProfile);
     }
     sonarrShow.setQualityProfileId((int) sonarrProfile.getId());
     String username = CommandContext.getConfig().getUsername();
@@ -227,7 +215,7 @@ public class SonarrApi implements Api {
     ApiRequestType apiRequestType = ApiRequestType.SHOW;
     if (apiRequests.checkRequestLimits(apiRequestType) && !apiRequests.canMakeRequests(apiRequestType, username)) {
       ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
-      return chatClientResponseBuilder.createErrorMessage("Could not add show, user " + username + " has exceeded max show requests for " + requestThreshold.getReadableName());
+      return new ErrorResponse("Could not add show, user " + username + " has exceeded max show requests for " + requestThreshold.getReadableName());
     }
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl(SonarrUrls.SERIES_BASE));
@@ -238,17 +226,17 @@ public class SonarrApi implements Api {
       try (CloseableHttpResponse response = client.execute(post)) {
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode != 200 && statusCode != 201) {
-          return chatClientResponseBuilder.createErrorMessage("Could not add show, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
+          return new ErrorResponse("Could not add show, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
         //cache show after successful request
         SONARR_CACHE.add(sonarrShow);
         LogManager.getLogger("AuditLog").info("User " + username + " added " + title);
         apiRequests.auditRequest(apiRequestType, username, title);
-        return chatClientResponseBuilder.createSuccessMessage("Show " + title + " added, sonarr-detail=" + response.getStatusLine().getReasonPhrase());
+        return new SuccessResponse("Show " + title + " added, sonarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
       LOGGER.error("Error trying to add show=" + title, e);
-      return chatClientResponseBuilder.createErrorMessage("Error adding show=" + title + ", error=" + e.getMessage());
+      return new ErrorResponse("Error adding show=" + title + ", error=" + e.getMessage());
     }
   }
 
@@ -267,7 +255,7 @@ public class SonarrApi implements Api {
     });
   }
 
-  private ExclusionStrategy excludeUnnecessaryFields = new ExclusionStrategy() {
+  private final ExclusionStrategy excludeUnnecessaryFields = new ExclusionStrategy() {
     @Override
     public boolean shouldSkipField(FieldAttributes fieldAttributes) {
       //profileId breaks the post request to /series for some reason and I don't believe its a required field
@@ -289,7 +277,6 @@ public class SonarrApi implements Api {
     return false;
   }
 
-  private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
   public static final String ADD_SHOW_COMMAND_FIELD_PREFIX = "Add show command";
 }

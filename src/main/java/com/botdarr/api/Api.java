@@ -4,6 +4,8 @@ import com.botdarr.Config;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.clients.discord.DiscordResponse;
+import com.botdarr.commands.responses.CommandResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -26,12 +28,7 @@ public interface Api {
   /**
    * Gets all the in-progress downloads
    */
-  List<ChatClientResponse> downloads();
-
-  /**
-   * Notifications that are sent every 10 minutes
-   */
-  void sendPeriodicNotifications(ChatClient chatClient);
+  List<CommandResponse> downloads();
 
   /**
    * Data cached from jda directly in the api

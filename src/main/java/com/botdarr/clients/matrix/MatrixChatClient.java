@@ -8,7 +8,6 @@ import com.botdarr.clients.matrix.transactions.sync.MatrixSyncEvent;
 import com.botdarr.clients.matrix.transactions.sync.MatrixSyncJoinRoom;
 import com.botdarr.clients.matrix.transactions.sync.MatrixSyncResponse;
 import com.botdarr.clients.matrix.transactions.sync.MatrixSyncRooms;
-import com.botdarr.commands.CommandResponse;
 import com.botdarr.connections.ConnectionHelper;
 import com.google.gson.Gson;
 import org.apache.http.client.methods.*;
@@ -58,17 +57,8 @@ public class MatrixChatClient implements ChatClient<MatrixResponse> {
     }
   }
 
-  public void sendMessage(CommandResponse<MatrixResponse> commandResponse, String roomId) {
-    if (commandResponse.getSingleChatClientResponse() != null) {
-      sendMatrixResponse(commandResponse.getSingleChatClientResponse(), roomId);
-
-    } else if (commandResponse.getMultipleChatClientResponses() != null) {
-      for (MatrixResponse response : commandResponse.getMultipleChatClientResponses()) {
-        sendMatrixResponse(response, roomId);
-      }
-    } else {
-      //TODO: err
-    }
+  public void sendMessage(MatrixResponse response, String roomId) {
+    sendMatrixResponse(response, roomId);
   }
 
   public void addListener(MatrixMessageListener listener) {

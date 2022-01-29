@@ -1,7 +1,7 @@
 package com.botdarr.api;
 
 import com.botdarr.Config;
-import com.botdarr.database.Bootstrap;
+import com.botdarr.database.DatabaseBootstrap;
 import com.botdarr.database.DatabaseHelper;
 import mockit.*;
 import org.junit.Assert;
@@ -169,7 +169,7 @@ public class ApiRequestsTests {
   private void testRequestThreshold(int maxRequestsToAdd, int maxRequestsAllowed, String threshold, boolean expectExceedsThreshold) throws Exception {
     //create temporary database
     new MockedDatabase(temporaryFolder.newFile());
-    Bootstrap.init();
+    DatabaseBootstrap.init();
 
     ApiRequests apiRequests = new ApiRequests();
     String username = "user1";

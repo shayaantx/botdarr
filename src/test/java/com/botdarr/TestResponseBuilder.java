@@ -1,118 +1,122 @@
 package com.botdarr;
 
-import com.botdarr.api.lidarr.LidarrArtist;
-import com.botdarr.api.lidarr.LidarrQueueRecord;
-import com.botdarr.api.radarr.RadarrMovie;
-import com.botdarr.api.radarr.RadarrProfile;
-import com.botdarr.api.radarr.RadarrQueue;
-import com.botdarr.api.sonarr.SonarrProfile;
-import com.botdarr.api.sonarr.SonarrQueue;
-import com.botdarr.api.sonarr.SonarrShow;
 import com.botdarr.clients.ChatClientResponseBuilder;
-import com.botdarr.commands.Command;
+import com.botdarr.commands.responses.*;
 
-import java.util.List;
-import java.util.Map;
-
-public class TestResponseBuilder implements ChatClientResponseBuilder<TestResponse> {
+public class TestResponseBuilder implements ChatClientResponseBuilder<TestClientResponse> {
 
   @Override
-  public TestResponse getHelpResponse() {
-    return new TestResponse();
+  public TestClientResponse build(HelpResponse helpResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getMusicHelpResponse(List<Command> lidarCommands) {
-    return new TestResponse();
+  public TestClientResponse build(MusicHelpResponse musicHelpResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getMoviesHelpResponse(List<Command> radarrCommands) {
-    return new TestResponse();
+  public TestClientResponse build(MoviesHelpResponse moviesHelpResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getShowsHelpResponse(List<Command> sonarrCommands) {
-    return new TestResponse();
+  public TestClientResponse build(ShowsHelpResponse showsHelpResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getShowResponse(SonarrShow show) {
-    return new TestResponse();
+  public TestClientResponse build(ShowResponse showResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getArtistResponse(LidarrArtist lidarrArtist) {
-    return new TestResponse();
+  public TestClientResponse build(MusicArtistResponse musicArtistResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getShowDownloadResponses(SonarrQueue sonarrShow) {
-    return new TestResponse();
+  public TestClientResponse build(MovieResponse movieResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getMovieDownloadResponses(RadarrQueue radarrQueue) {
-    return new TestResponse(radarrQueue);
+  public TestClientResponse build(ShowDownloadResponse showDownloadResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getArtistDownloadResponses(LidarrQueueRecord lidarrQueueRecord) {
-    return new TestResponse();
+  public TestClientResponse build(MovieDownloadResponse movieDownloadResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse createErrorMessage(String message) {
-    return new TestResponse(message);
+  public TestClientResponse build(MusicArtistDownloadResponse musicArtistDownloadResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse createInfoMessage(String message) {
-    return new TestResponse(message);
+  public TestClientResponse build(ErrorResponse errorResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse createSuccessMessage(String message) {
-    return new TestResponse(message);
+  public TestClientResponse build(InfoResponse infoResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getShowProfile(SonarrProfile sonarrProfile) {
-    return new TestResponse();
+  public TestClientResponse build(SuccessResponse successResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getMovieProfile(RadarrProfile radarrProfile) {
-    return new TestResponse();
+  public TestClientResponse build(ShowProfileResponse showProfileResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getNewOrExistingShow(SonarrShow sonarrShow, SonarrShow existingShow, boolean findNew) {
-    return new TestResponse();
+  public TestClientResponse build(MovieProfileResponse movieProfileResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getNewOrExistingMovie(RadarrMovie lookupMovie, RadarrMovie existingMovie, boolean findNew) {
-    return new TestResponse(lookupMovie);
+  public TestClientResponse build(NewShowResponse newShowResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getNewOrExistingArtist(LidarrArtist lookupArtist, LidarrArtist existingArtist, boolean findNew) {
-    return new TestResponse();
+  public TestClientResponse build(ExistingShowResponse existingShowResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getMovieResponse(RadarrMovie radarrMovie) {
-    return new TestResponse(radarrMovie);
+  public TestClientResponse build(NewMovieResponse newMovieResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getDiscoverableMovies(RadarrMovie radarrMovie) {
-    return new TestResponse(radarrMovie);
+  public TestClientResponse build(ExistingMovieResponse existingMovieResponse) {
+    return new TestClientResponse();
   }
 
   @Override
-  public TestResponse getStatusCommandResponse(Map<String, Boolean> endpointStatuses) {
-    return new TestResponse();
+  public TestClientResponse build(NewMusicArtistResponse newMusicArtistResponse) {
+    return new TestClientResponse();
+  }
+
+  @Override
+  public TestClientResponse build(ExistingMusicArtistResponse exitingMusicArtistResponse) {
+    return new TestClientResponse();
+  }
+
+  @Override
+  public TestClientResponse build(DiscoverMovieResponse discoverMovieResponse) {
+    return new TestClientResponse();
+  }
+
+  @Override
+  public TestClientResponse build(StatusCommandResponse statusCommandResponse) {
+    return new TestClientResponse();
   }
 }

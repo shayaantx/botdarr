@@ -1,11 +1,11 @@
 package com.botdarr.api.radarr;
 
 import com.botdarr.Config;
-import com.botdarr.TestResponse;
-import com.botdarr.TestResponseBuilder;
-import com.botdarr.commands.CommandResponse;
+import com.botdarr.TestCommandResponse;
+import com.botdarr.commands.responses.*;
 import com.google.gson.Gson;
 import mockit.Deencapsulation;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.mockserver.junit.MockServerRule;
@@ -32,8 +32,8 @@ public class RadarrApiTests {
   }
 
   @Test
-  public <T extends TestResponse> void discover_existingMoviesNotReturned() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void discover_existingMoviesNotReturned() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/importlist/movie")
@@ -51,20 +51,22 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(new RadarrMovie[] {expectedRadarrMovie}), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.discover());
+    List<CommandResponse> commandResponse = radarrApi.discover();
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
-    Assert.assertEquals(testResponses.size(), 1);
-    Assert.assertEquals(expectedRadarrMovie.getTitle(), testResponses.get(0).getRadarrMovie().getTitle());
+    Assert.assertEquals(commandResponse.size(), 1);
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new DiscoverMovieResponse(expectedRadarrMovie),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void discover_maxResults() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void discover_maxResults() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/importlist/movie")
@@ -86,20 +88,19 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(radarrMovies), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.discover());
+    List<CommandResponse> commandResponse = radarrApi.discover();
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //verify the max (20) even though the mock server returned 40 (see above)
-    Assert.assertEquals(20, testResponses.size());
+    Assert.assertEquals(20, commandResponse.size());
   }
 
   @Test
-  public <T extends TestResponse> void lookup_maxResults() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void lookup_maxResults() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/movie/lookup")
@@ -121,22 +122,24 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(radarrMovies), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.lookup("searchTerm", true));
+    List<CommandResponse> commandResponse = radarrApi.lookup("searchTerm", true);
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //verify the max (20) even though the mock server returned 40 (see above)
-    Assert.assertEquals(21, testResponses.size());
+    Assert.assertEquals(21, commandResponse.size());
     //verify the first message is a message about the fact too many movies were returned by the server
-    Assert.assertEquals(testResponses.get(0).getResponseMessage(), "Too many movies found, limiting results to 20");
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new InfoResponse("Too many movies found, limiting results to 20"),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void lookup_existingMoviesNotReturned() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void lookup_existingMoviesNotReturned() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/movie/lookup")
@@ -158,21 +161,23 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(new RadarrMovie[] {expectedRadarrMovie}), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.lookup("searchTerm", true));
+    List<CommandResponse> commandResponse = radarrApi.lookup("searchTerm", true);
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //there should only be 1 response stating no new movies could be found
-    Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("Could not find any new movies for search term=searchTerm", testResponses.get(0).getResponseMessage());
+    Assert.assertEquals(1, commandResponse.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ErrorResponse("Could not find any new movies for search term=searchTerm"),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void lookup_existingMoviesReturned() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void lookup_existingMoviesReturned() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/movie/lookup")
@@ -194,22 +199,23 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(new RadarrMovie[] {expectedRadarrMovie}), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.lookup("searchTerm", false));
+    List<CommandResponse> commandResponse = radarrApi.lookup("searchTerm", false);
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //since we looking up not new films, existing movies can be returned, and should be the only result
-    Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals(expectedRadarrMovie.getTitle(), testResponses.get(0).getRadarrMovie().getTitle());
-    Assert.assertEquals(expectedRadarrMovie.getTmdbId(), testResponses.get(0).getRadarrMovie().getTmdbId());
+    Assert.assertEquals(1, commandResponse.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ExistingMovieResponse(expectedRadarrMovie),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void downloads_noDownloadsFound() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void downloads_noDownloadsFound() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/queue")
@@ -223,29 +229,42 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(new RadarrQueuePage()), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.downloads());
+    List<CommandResponse> commandResponse = radarrApi.downloads();
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //since nothing is downloading we should only get back 1 response with a message about no downloads
-    Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("No movies downloading", testResponses.get(0).getResponseMessage());
+    Assert.assertEquals(1, commandResponse.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(new InfoResponse("No movies downloading"),
+                    commandResponse.get(0)));
   }
 
   @Test
-  public <T extends TestResponse> void downloads_downloadsFound() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void downloads_downloadsFound() {
+    RadarrApi radarrApi = new RadarrApi();
+    RadarrCache radarrCache = new RadarrCache();
+    Deencapsulation.setField(radarrApi, "RADARR_CACHE", radarrCache);
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/queue")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3");
 
+    long radarrMovieId = 1;
+    String radarrMovieTitle = "title1";
+
     RadarrQueue radarrQueue = new RadarrQueue();
     radarrQueue.setTimeleft("05:00");
     radarrQueue.setStatus("DOWNLOADING");
+    radarrQueue.setMovieId(radarrMovieId);
+    radarrQueue.setTitle(radarrMovieTitle);
+
+    RadarrMovie existingMovie = new RadarrMovie();
+    existingMovie.setId(radarrMovieId);
+    existingMovie.setTitle(radarrMovieTitle);
+    radarrCache.add(existingMovie);
 
     //setup expected response in mock server
     RadarrQueuePage radarrQueuePage = new RadarrQueuePage();
@@ -257,22 +276,23 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(radarrQueuePage), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.downloads());
+    List<CommandResponse> commandResponse = radarrApi.downloads();
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //only movie is downloading, verify all properties
-    Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("05:00", testResponses.get(0).getRadarrQueue().getTimeleft());
-    Assert.assertEquals("DOWNLOADING", testResponses.get(0).getRadarrQueue().getStatus());
+    Assert.assertEquals(1, commandResponse.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new MovieDownloadResponse(radarrQueue),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void addWithTitle_noMoviesFound() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void addWithTitle_noMoviesFound() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/movie/lookup")
@@ -287,21 +307,23 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(new RadarrMovie[] {}), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithTitle("searchTerm"));
+    List<CommandResponse> commandResponse = radarrApi.addWithTitle("searchTerm");
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //no movies should be found, the only response should be a message
-    Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("No movies found", testResponses.get(0).getResponseMessage());
+    Assert.assertEquals(1, commandResponse.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new InfoResponse("No movies found"),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void addWithTitle_foundExistingMovieWithSingleResult() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void addWithTitle_foundExistingMovieWithSingleResult() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/movie/lookup")
@@ -323,21 +345,23 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(new RadarrMovie[] {expectedRadarrMovie}), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithTitle("searchTerm"));
+    List<CommandResponse> commandResponse = radarrApi.addWithTitle("searchTerm");
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //no movies should be found, the only response should be a message
-    Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("movie already exists", testResponses.get(0).getResponseMessage());
+    Assert.assertEquals(1, commandResponse.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ErrorResponse("movie already exists"),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void addWithTitle_foundExistingMovieWithMultipleResults() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void addWithTitle_foundExistingMovieWithMultipleResults() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/movie/lookup")
@@ -364,21 +388,23 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(new RadarrMovie[] {expectedRadarrMovie, expectedRadarrMovie2}), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithTitle("movie1"));
+    List<CommandResponse> commandResponse = radarrApi.addWithTitle("movie1");
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //no movies should be found, the only response should be a message
-    Assert.assertEquals(1, testResponses.size());
-    Assert.assertEquals("No new movies found, check existing movies", testResponses.get(0).getResponseMessage());
+    Assert.assertEquals(1, commandResponse.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new InfoResponse("No new movies found, check existing movies"),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void addWithTitle_foundManyResultsLimitedToMax() {
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+  public <T extends TestCommandResponse> void addWithTitle_foundManyResultsLimitedToMax() {
+    RadarrApi radarrApi = new RadarrApi();
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/movie/lookup")
@@ -401,42 +427,43 @@ public class RadarrApiTests {
         .withBody(new Gson().toJson(radarrMovies.toArray()), MediaType.APPLICATION_JSON));
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithTitle("movie"));
+    List<CommandResponse> commandResponse = radarrApi.addWithTitle("movie");
 
     //verify request was sent
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //even though we sent 30 movies, the default api limit is 20
     //with the first message being a message about too many movies found added to the list (making the length 21)
-    Assert.assertEquals(21, testResponses.size());
-    Assert.assertEquals("Too many movies found, please narrow search or increase max results to show", testResponses.get(0).getResponseMessage());
+    Assert.assertEquals(21, commandResponse.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new InfoResponse("Too many movies found, please narrow search or increase max results to show"),
+                    commandResponse.get(0), false, null, true));
   }
 
   @Test
-  public <T extends TestResponse> void downloads_downloadsFoundButConfiguredToShowNone() {
+  public <T extends TestCommandResponse> void downloads_downloadsFoundButConfiguredToShowNone() {
     Properties properties = getDefaultProperties();
     properties.put("max-downloads-to-show", "0");
     writeFakePropertiesFile(properties);
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+    RadarrApi radarrApi = new RadarrApi();
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.downloads());
+    List<CommandResponse> commandResponse = radarrApi.downloads();
 
     //verify response data
-    List<TestResponse> testResponses = commandResponse.getMultipleChatClientResponses();
     //only movie is downloading, but our config explicitly states no downloads should be shown
-    Assert.assertEquals(0, testResponses.size());
+    Assert.assertEquals(0, commandResponse.size());
   }
 
   @Test
-  public <T extends TestResponse> void addWithId_movieAlreadyExists() {
+  public <T extends TestCommandResponse> void addWithId_movieAlreadyExists() {
     RadarrMovie existingMovie = getRadarrMovie(1, 2, "movie1");
     List<RadarrMovie> radarrMovies = new ArrayList<>();
     radarrMovies.add(existingMovie);
 
-    RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
+    RadarrApi radarrApi = new RadarrApi();
     RadarrCache radarrCache = Deencapsulation.getField(radarrApi, "RADARR_CACHE");
     radarrCache.add(existingMovie);
 
@@ -455,11 +482,13 @@ public class RadarrApiTests {
       .respond(expectedResponse);
 
     //trigger api
-    CommandResponse<TestResponse> commandResponse = new CommandResponse(radarrApi.addWithId("movie1", "2"));
+    CommandResponse commandResponse = radarrApi.addWithId("movie1", "2");
 
     //verify response data
-    TestResponse testResponses = commandResponse.getSingleChatClientResponse();
-    Assert.assertEquals("movie already exists", testResponses.getResponseMessage());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ErrorResponse("movie already exists"),
+                    commandResponse, false, null, true));
   }
 
   private RadarrMovie getRadarrMovie(long id, long tmdbId, String title) {

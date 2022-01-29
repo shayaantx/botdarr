@@ -2,10 +2,8 @@ package com.botdarr.api.radarr;
 
 import com.botdarr.Config;
 import com.botdarr.api.*;
-import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.CommandContext;
-import com.botdarr.clients.ChatClient;
-import com.botdarr.clients.ChatClientResponse;
+import com.botdarr.commands.responses.*;
 import com.botdarr.connections.ConnectionHelper;
 import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
@@ -22,10 +20,6 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 public class RadarrApi implements Api {
-  public RadarrApi(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
-    this.chatClientResponseBuilder = chatClientResponseBuilder;
-  }
-
   @Override
   public String getUrlBase() {
     return Config.getProperty(Config.Constants.RADARR_URL_BASE);
@@ -36,8 +30,8 @@ public class RadarrApi implements Api {
     return getApiUrl(Config.Constants.RADARR_URL, Config.Constants.RADARR_TOKEN, "v3/" + path);
   }
 
-  public List<ChatClientResponse> lookup(String search, boolean findNew) {
-    return new LookupStrategy<RadarrMovie>(chatClientResponseBuilder, ContentType.MOVIE) {
+  public List<CommandResponse> lookup(String search, boolean findNew) {
+    return new LookupStrategy<RadarrMovie>(ContentType.MOVIE) {
 
       @Override
       public RadarrMovie lookupExistingItem(RadarrMovie lookupItem) {
@@ -50,8 +44,13 @@ public class RadarrApi implements Api {
       }
 
       @Override
-      public ChatClientResponse getNewOrExistingItem(RadarrMovie lookupItem, RadarrMovie existingItem, boolean findNew) {
-        return chatClientResponseBuilder.getNewOrExistingMovie(lookupItem, existingItem, findNew);
+      public CommandResponse getExistingItem(RadarrMovie existingItem) {
+        return new ExistingMovieResponse(existingItem);
+      }
+
+      @Override
+      public CommandResponse getNewItem(RadarrMovie lookupItem) {
+        return new NewMovieResponse(lookupItem);
       }
 
       @Override
@@ -62,39 +61,29 @@ public class RadarrApi implements Api {
   }
 
   @Override
-  public List<ChatClientResponse> downloads() {
+  public List<CommandResponse> downloads() {
     return getDownloadsStrategy().downloads();
   }
 
-  public List<ChatClientResponse> addWithTitle(String searchText) {
+  public List<CommandResponse> addWithTitle(String searchText) {
     return getAddStrategy().addWithSearchTitle(searchText);
   }
 
-  public ChatClientResponse addWithId(String searchText, String tmdbId) {
+  public CommandResponse addWithId(String searchText, String tmdbId) {
     return getAddStrategy().addWithSearchId(searchText, tmdbId);
   }
 
-  public List<ChatClientResponse> getProfiles() {
+  public List<CommandResponse> getProfiles() {
     Collection<RadarrProfile> profiles = RADARR_CACHE.getQualityProfiles();
     if (profiles == null || profiles.isEmpty()) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Found 0 profiles, please setup Radarr with at least one profile"));
+      return Collections.singletonList(new ErrorResponse("Found 0 profiles, please setup Radarr with at least one profile"));
     }
 
-    List<ChatClientResponse> profileMessages = new ArrayList<>();
+    List<CommandResponse> profileMessages = new ArrayList<>();
     for (RadarrProfile radarrProfile : profiles) {
-      profileMessages.add(chatClientResponseBuilder.getMovieProfile(radarrProfile));
+      profileMessages.add(new MovieProfileResponse(radarrProfile));
     }
     return profileMessages;
-  }
-
-  @Override
-  public void sendPeriodicNotifications(ChatClient chatClient) {
-    new PeriodicNotificationStrategy(ContentType.MOVIE, getDownloadsStrategy()) {
-      @Override
-      public void sendToConfiguredChannels(List downloads) {
-        chatClient.sendToConfiguredChannels(downloads);
-      }
-    }.sendPeriodicNotifications();
   }
 
   @Override
@@ -148,11 +137,11 @@ public class RadarrApi implements Api {
     return Config.Constants.RADARR_TOKEN;
   }
 
-  public List<ChatClientResponse> discover() {
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DISCOVER_MOVIES, "&includeRecommendations=true", new ConnectionHelper.SimpleEntityResponseHandler<List<ChatClientResponse>>() {
+  public List<CommandResponse> discover() {
+    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DISCOVER_MOVIES, "&includeRecommendations=true", new ConnectionHelper.SimpleEntityResponseHandler<List<CommandResponse>>() {
       @Override
-      public List<ChatClientResponse> onSuccess(String response) throws Exception {
-        List<ChatClientResponse> recommendedMovies = new ArrayList<>();
+      public List<CommandResponse> onSuccess(String response) throws Exception {
+        List<CommandResponse> recommendedMovies = new ArrayList<>();
         if (response == null || response.isEmpty() || response.equalsIgnoreCase("[]")) {
           LOGGER.warn("Found no response when looking for movie recommendations");
           return Collections.emptyList();
@@ -166,17 +155,17 @@ public class RadarrApi implements Api {
             break;
           }
           RadarrMovie radarrMovie = new Gson().fromJson(json.get(i), RadarrMovie.class);
-          recommendedMovies.add(chatClientResponseBuilder.getDiscoverableMovies(radarrMovie));
+          recommendedMovies.add(new DiscoverMovieResponse(radarrMovie));
         }
         return recommendedMovies;
       }
     });
   }
 
-  private DownloadsStrategy<RadarrMovie> getDownloadsStrategy() {
-    return new DownloadsStrategy<RadarrMovie>(this, RadarrUrls.DOWNLOAD_BASE, chatClientResponseBuilder, ContentType.MOVIE) {
+  private DownloadsStrategy getDownloadsStrategy() {
+    return new DownloadsStrategy(this, RadarrUrls.DOWNLOAD_BASE, ContentType.MOVIE) {
       @Override
-      public ChatClientResponse getResponse(JsonElement rawElement) {
+      public CommandResponse getResponse(JsonElement rawElement) {
         RadarrQueue radarrQueue = new Gson().fromJson(rawElement, RadarrQueue.class);
         RadarrMovie radarrMovie = RADARR_CACHE.getExistingMovieWithRadarrId(radarrQueue.getMovieId());
         if (radarrMovie == null) {
@@ -191,17 +180,17 @@ public class RadarrApi implements Api {
           return null;
         }
 
-        return chatClientResponseBuilder.getMovieDownloadResponses(radarrQueue);
+        return new MovieDownloadResponse(radarrQueue);
       }
 
       @Override
-      public List<ChatClientResponse> getContentDownloads() {
+      public List<CommandResponse> getContentDownloads() {
         return ConnectionHelper.makeGetRequest(
           RadarrApi.this,
           RadarrUrls.DOWNLOAD_BASE,
-          new ConnectionHelper.SimpleMessageEmbedResponseHandler(chatClientResponseBuilder) {
+          new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
           @Override
-          public List<ChatClientResponse> onSuccess(String response) {
+          public List<CommandResponse> onSuccess(String response) {
             if (response == null || response.isEmpty() || response.equals("{}")) {
               return new ArrayList<>();
             }
@@ -215,7 +204,7 @@ public class RadarrApi implements Api {
   }
 
   private AddStrategy<RadarrMovie> getAddStrategy() {
-    return new AddStrategy<RadarrMovie>(chatClientResponseBuilder, ContentType.MOVIE) {
+    return new AddStrategy<RadarrMovie>(ContentType.MOVIE) {
       @Override
       public List<RadarrMovie> lookupContent(String search)  throws Exception {
         return lookupMovies(search);
@@ -237,18 +226,18 @@ public class RadarrApi implements Api {
       }
 
       @Override
-      public ChatClientResponse addContent(RadarrMovie content) {
+      public CommandResponse addContent(RadarrMovie content) {
         return addMovie(content);
       }
 
       @Override
-      public ChatClientResponse getResponse(RadarrMovie item) {
-        return chatClientResponseBuilder.getMovieResponse(item);
+      public CommandResponse getResponse(RadarrMovie item) {
+        return new MovieResponse(item);
       }
     };
   }
 
-  private ChatClientResponse addMovie(RadarrMovie radarrMovie) {
+  private CommandResponse addMovie(RadarrMovie radarrMovie) {
     //make sure we specify where the movie should get downloaded
     radarrMovie.setRootFolderPath(Config.getProperty(Config.Constants.RADARR_PATH));
     //make sure the movie is monitored
@@ -257,7 +246,7 @@ public class RadarrApi implements Api {
     String radarrProfileName = Config.getProperty(Config.Constants.RADARR_DEFAULT_PROFILE);
     RadarrProfile radarrProfile = RADARR_CACHE.getProfile(radarrProfileName.toLowerCase());
     if (radarrProfile == null) {
-      return chatClientResponseBuilder.createErrorMessage("Could not find radarr profile for default " + radarrProfileName);
+      return new ErrorResponse("Could not find radarr profile for default " + radarrProfileName);
     }
     radarrMovie.setQualityProfileId((int) radarrProfile.getId());
 
@@ -269,7 +258,7 @@ public class RadarrApi implements Api {
       post.setEntity(new StringEntity(json));
 
       if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("Client request=" + post.toString());
+        LOGGER.debug("Client request=" + post);
         LOGGER.debug("Client data=" + (json));
       }
 
@@ -278,7 +267,7 @@ public class RadarrApi implements Api {
       ApiRequestType apiRequestType = ApiRequestType.MOVIE;
       if (apiRequests.checkRequestLimits(apiRequestType) && !apiRequests.canMakeRequests(apiRequestType, username)) {
         ApiRequestThreshold requestThreshold = ApiRequestThreshold.valueOf(Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD));
-        return chatClientResponseBuilder.createErrorMessage("Could not add movie, user " + username + " has exceeded max movie requests for " + requestThreshold.getReadableName());
+        return new ErrorResponse("Could not add movie, user " + username + " has exceeded max movie requests for " + requestThreshold.getReadableName());
       }
       try (CloseableHttpResponse response = client.execute(post)) {
         if (LOGGER.isDebugEnabled()) {
@@ -288,17 +277,17 @@ public class RadarrApi implements Api {
         }
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode != 200 && statusCode != 201) {
-          return chatClientResponseBuilder.createErrorMessage("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
+          return new ErrorResponse("Could not add movie, status-code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
         }
         //cache data after a successful request
         RADARR_CACHE.add(radarrMovie);
         LogManager.getLogger("AuditLog").info("User " + username + " added " + radarrMovie.getTitle());
         apiRequests.auditRequest(apiRequestType, username, radarrMovie.getTitle());
-        return chatClientResponseBuilder.createSuccessMessage("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
+        return new SuccessResponse("Movie " + radarrMovie.getTitle() + " added, radarr-detail=" + response.getStatusLine().getReasonPhrase());
       }
     } catch (IOException e) {
       LOGGER.error("Error trying to add movie", e);
-      return chatClientResponseBuilder.createErrorMessage("Error adding movie, error=" + e.getMessage());
+      return new ErrorResponse("Error adding movie, error=" + e.getMessage());
     }
   }
 
@@ -341,7 +330,6 @@ public class RadarrApi implements Api {
     return false;
   }
 
-  private final ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
-  private static final RadarrCache RADARR_CACHE = new RadarrCache();
+  private static RadarrCache RADARR_CACHE = new RadarrCache();
   public static final String ADD_MOVIE_COMMAND_FIELD_PREFIX = "Add movie command";
 }

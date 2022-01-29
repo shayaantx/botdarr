@@ -1,17 +1,19 @@
 package com.botdarr.commands;
 
-import com.botdarr.clients.ChatClientResponse;
+import com.botdarr.commands.responses.CommandResponse;
+
+import java.util.List;
 
 public interface Command {
-  public String getCommandText();
-  public String getDescription();
-  public String getIdentifier();
-  public default String getCommandUsage() {
+  String getCommandText();
+  String getDescription();
+  String getIdentifier();
+  default String getCommandUsage() {
     return "";
   }
-  public default boolean hasArguments() {
+  default boolean hasArguments() {
     //by default all commands have arguments unless explicitly overridden
     return true;
   }
-  public CommandResponse<? extends ChatClientResponse> execute(String command);
+  List<CommandResponse> execute(String command);
 }

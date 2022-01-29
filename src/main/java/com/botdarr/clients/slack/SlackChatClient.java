@@ -2,7 +2,6 @@ package com.botdarr.clients.slack;
 
 import com.botdarr.Config;
 import com.botdarr.clients.ChatClient;
-import com.botdarr.commands.CommandResponse;
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.methods.SlackApiException;
 import com.github.seratch.jslack.api.methods.request.chat.ChatPostMessageRequest;
@@ -88,16 +87,6 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
         }
       }
     }, channel);
-  }
-
-  public void sendMessage(CommandResponse<SlackResponse> commandResponse, String targetChannel) {
-    if (commandResponse.getSingleChatClientResponse() != null) {
-      sendMessage(commandResponse.getSingleChatClientResponse(), targetChannel);
-    } else if (commandResponse.getMultipleChatClientResponses() != null) {
-      sendMessage(commandResponse.getMultipleChatClientResponses(), targetChannel);
-    } else {
-      //TODO: err
-    }
   }
 
   public List<Message> getPublicMessages(SlackMessage slackMessage) throws IOException, SlackApiException {

@@ -13,7 +13,7 @@ public class TelegramResponse implements ChatClientResponse {
   public String getHtml() {
     StringBuilder stringBuilder = new StringBuilder();
     for (DomContent domContent : domContent) {
-      stringBuilder.append(domContent.render() + "\n");
+      stringBuilder.append(domContent.render()).append("\n");
     }
     return stringBuilder.toString();
   }

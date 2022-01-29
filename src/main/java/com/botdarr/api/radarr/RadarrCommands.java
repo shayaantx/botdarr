@@ -1,11 +1,13 @@
-package com.botdarr.commands;
+package com.botdarr.api.radarr;
 
-import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.api.radarr.RadarrApi;
+import com.botdarr.commands.BaseCommand;
+import com.botdarr.commands.Command;
+import com.botdarr.commands.CommandProcessor;
+import com.botdarr.commands.responses.CommandResponse;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class RadarrCommands {
@@ -18,14 +20,14 @@ public class RadarrCommands {
         }
 
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse<>(radarrApi.discover());
+        public List<CommandResponse> execute(String command) {
+          return radarrApi.discover();
         }
       });
       add(new BaseCommand("movie id add", "movie id add <movie-title> <movie-tmdbid>", "Adds a movie using search text and tmdb id (i.e., movie id add John Wick 484737). The easiest" +
         " way to use this command is to use \"movie find new TITLE\", then the results will contain the movie add command for you") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
+        public List<CommandResponse> execute(String command) {
           int lastSpace = command.lastIndexOf(" ");
           if (lastSpace == -1) {
             throw new RuntimeException("Missing expected arguments - usage: movie id add MOVIE_TITLE_HERE MOVIE_ID_HERE");
@@ -34,15 +36,15 @@ public class RadarrCommands {
           String id = command.substring(lastSpace + 1);
           validateMovieTitle(searchText);
           validateMovieId(id);
-          return new CommandResponse(radarrApi.addWithId(searchText, id));
+          return Collections.singletonList(radarrApi.addWithId(searchText, id));
         }
       });
       add(new BaseCommand("movie title add", "movie title add <movie-title>", "Adds a movie with just a title. Since many movies can have same title or very similar titles, the trakt" +
         " search can return multiple movies, if we detect multiple new films, we will return those films, otherwise we will add the single film.") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
+        public List<CommandResponse> execute(String searchText) {
           validateMovieTitle(searchText);
-          return new CommandResponse(radarrApi.addWithTitle(searchText));
+          return radarrApi.addWithTitle(searchText);
         }
       });
       add(new BaseCommand("movie profiles", "Displays all the profiles available to search for movies under (i.e., movie title add MOVIE_TITLE_HERE)") {
@@ -52,22 +54,22 @@ public class RadarrCommands {
         }
 
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse(radarrApi.getProfiles());
+        public List<CommandResponse> execute(String command) {
+          return radarrApi.getProfiles();
         }
       });
       add(new BaseCommand("movie find new", "movie find new <movie-title>", "Finds a new movie using radarr (i.e., movie find new John Wick)") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
+        public List<CommandResponse> execute(String searchText) {
           validateMovieTitle(searchText);
-          return new CommandResponse(radarrApi.lookup(searchText, true));
+          return radarrApi.lookup(searchText, true);
         }
       });
       add(new BaseCommand("movie find existing", "movie find existing <movie-title>", "Finds an existing movie using radarr (i.e., movie find existing Princess Fudgecake)") {
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String searchText) {
+        public List<CommandResponse> execute(String searchText) {
           validateMovieTitle(searchText);
-          return new CommandResponse(radarrApi.lookup(searchText, false));
+          return radarrApi.lookup(searchText, false);
         }
       });
       add(new BaseCommand("movie downloads", "Shows all the active movies downloading in radarr") {
@@ -77,8 +79,8 @@ public class RadarrCommands {
         }
 
         @Override
-        public CommandResponse<? extends ChatClientResponse> execute(String command) {
-          return new CommandResponse(radarrApi.downloads());
+        public List<CommandResponse> execute(String command) {
+          return radarrApi.downloads();
         }
       });
     }};

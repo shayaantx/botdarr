@@ -2,9 +2,13 @@ package com.botdarr.scheduling;
 
 import com.botdarr.api.Api;
 import com.botdarr.clients.ChatClient;
+import com.botdarr.clients.ChatClientResponse;
+import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.commands.responses.CommandResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -21,12 +25,16 @@ public class Scheduler {
   }
 
 
-  public void initApiNotifications(List<Api> apis, ChatClient chatClient) {
+  public <T extends ChatClientResponse> void initApiNotifications(List<Api> apis, ChatClient<T> chatClient, ChatClientResponseBuilder<T> responseBuilder) {
     if (notificationFuture == null) {
       notificationFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(() -> {
         try {
           for (Api api : apis) {
-            api.sendPeriodicNotifications(chatClient);
+            List<CommandResponse> downloads = api.downloads();
+            for (CommandResponse commandResponse : downloads) {
+              T response = commandResponse.convertToChatClientResponse(responseBuilder);
+              chatClient.sendToConfiguredChannels(Collections.singletonList(response));
+            }
           }
         } catch (Throwable e) {
           LOGGER.error("Error during api notification", e);
