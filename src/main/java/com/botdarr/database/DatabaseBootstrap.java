@@ -10,11 +10,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class Bootstrap {
-  private Bootstrap() {}
+public class DatabaseBootstrap {
+  private DatabaseBootstrap() {}
 
   public static void init() {
-    Bootstrap bootstrap = new Bootstrap();
+    DatabaseBootstrap bootstrap = new DatabaseBootstrap();
     if (!bootstrap.databaseExists()) {
       bootstrap.createDatabase();
     }

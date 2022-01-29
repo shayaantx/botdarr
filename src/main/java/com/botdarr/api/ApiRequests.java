@@ -17,7 +17,7 @@ public class ApiRequests {
     String maxDownloadsToShow = Config.getProperty(Config.Constants.MAX_DOWNLOADS_TO_SHOW);
     if (!Strings.isEmpty(maxDownloadsToShow)) {
       try {
-        return Integer.valueOf(maxDownloadsToShow);
+        return Integer.parseInt(maxDownloadsToShow);
       } catch (NumberFormatException e) {
         LOGGER.error("Invalid max downloads to show configuration", e);
       }
@@ -29,7 +29,7 @@ public class ApiRequests {
     String maxResultsToShow = Config.getProperty(Config.Constants.MAX_RESULTS_TO_SHOW);
     if (!Strings.isEmpty(maxResultsToShow)) {
       try {
-        return Integer.valueOf(maxResultsToShow);
+        return Integer.parseInt(maxResultsToShow);
       } catch (NumberFormatException e) {
         LOGGER.error("Invalid max results to show configuration", e);
       }
@@ -48,8 +48,7 @@ public class ApiRequests {
     try {
       ApiRequestThreshold.valueOf(maxRequestsThreshold);
     } catch (Exception e) {
-      String allRequestThresholds = Arrays.asList(ApiRequestThreshold.values())
-        .stream()
+      String allRequestThresholds = Arrays.stream(ApiRequestThreshold.values())
         .sorted(Comparator.comparing(ApiRequestThreshold::getReadableName))
         .map(ApiRequestThreshold::getReadableName)
         .collect(Collectors.joining(", "));

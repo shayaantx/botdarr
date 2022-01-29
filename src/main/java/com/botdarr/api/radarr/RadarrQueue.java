@@ -33,6 +33,10 @@ public class RadarrQueue {
     return movieId;
   }
 
+  public void setMovieId(long movieId) {
+    this.movieId = movieId;
+  }
+
   public String getTitle() {
     return title;
   }

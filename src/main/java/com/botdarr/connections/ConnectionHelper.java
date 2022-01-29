@@ -2,8 +2,8 @@ package com.botdarr.connections;
 
 import com.botdarr.api.Api;
 import com.botdarr.Config;
-import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.commands.responses.CommandResponse;
+import com.botdarr.commands.responses.ErrorResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.conn.HttpHostConnectException;
@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class ConnectionHelper {
@@ -73,26 +73,24 @@ public class ConnectionHelper {
     }
   }
 
-  public static abstract class SimpleMessageEmbedResponseHandler implements ResponseHandler<List<ChatClientResponse>> {
+  public static abstract class SimpleMessageEmbedResponseHandler implements ResponseHandler<List<CommandResponse>> {
     @Override
-    public List<ChatClientResponse> onConnectException(HttpHostConnectException e) {
+    public List<CommandResponse> onConnectException(HttpHostConnectException e) {
       return onException(e);
     }
 
-    public SimpleMessageEmbedResponseHandler(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder) {
-      this.chatClientResponseBuilder = chatClientResponseBuilder;
+    public SimpleMessageEmbedResponseHandler() {
     }
 
     @Override
-    public List<ChatClientResponse> onFailure(int statusCode, String reason) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Request failed with status code=" + statusCode + ", reason=" + reason));
+    public List<CommandResponse> onFailure(int statusCode, String reason) {
+      return Collections.singletonList(new ErrorResponse("Request failed with status code=" + statusCode + ", reason=" + reason));
     }
 
     @Override
-    public List<ChatClientResponse> onException(Exception e) {
-      return Arrays.asList(chatClientResponseBuilder.createErrorMessage("Requested failed with exception, e=" + e.getMessage() + ",class=" + e.getClass()));
+    public List<CommandResponse> onException(Exception e) {
+      return Collections.singletonList(new ErrorResponse("Requested failed with exception, e=" + e.getMessage() + ",class=" + e.getClass()));
     }
-    private ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder;
   }
 
   public static abstract class SimpleEntityResponseHandler<T> implements ResponseHandler<T> {

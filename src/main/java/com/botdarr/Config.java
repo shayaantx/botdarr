@@ -1,7 +1,10 @@
 package com.botdarr;
 
-import com.botdarr.clients.ChatClientType;
-import com.botdarr.commands.StatusCommand;
+import com.botdarr.clients.ChatClientBootstrap;
+import com.botdarr.clients.discord.DiscordBootstrap;
+import com.botdarr.clients.matrix.MatrixBootstrap;
+import com.botdarr.clients.slack.SlackBootstrap;
+import com.botdarr.clients.telegram.TelegramBootstrap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -34,22 +37,22 @@ public class Config {
       properties = new Properties();
       properties.load(input);
 
-      for (ChatClientType possibleChatClientType : ChatClientType.values()) {
-        if (possibleChatClientType.isConfigured(properties) && chatClientType != null) {
+      List<ChatClientBootstrap> availableBootstraps = Arrays.asList(
+              new DiscordBootstrap(),
+              new MatrixBootstrap(),
+              new SlackBootstrap(),
+              new TelegramBootstrap());
+      for (ChatClientBootstrap possibleChatClientType : availableBootstraps) {
+        if (possibleChatClientType.isConfigured(properties) && chatClientBootstrap != null) {
           throw new RuntimeException("You cannot configure more than one chat client");
         }
         if (possibleChatClientType.isConfigured(properties)) {
-          chatClientType = possibleChatClientType;
+          chatClientBootstrap = possibleChatClientType;
         }
       }
 
-      if (chatClientType == null) {
-        String allChatClientTypes = Arrays.asList(ChatClientType.values())
-          .stream()
-          .sorted(Comparator.comparing(ChatClientType::getReadableName))
-          .map(ChatClientType::getReadableName)
-          .collect(Collectors.joining(", "));
-        throw new RuntimeException("You don't have " + allChatClientTypes + " configured, please configure one");
+      if (chatClientBootstrap == null) {
+        throw new RuntimeException("You don't have any chat clients configured, please configure one");
       }
 
       this.isRaddarrEnabled =
@@ -85,15 +88,7 @@ public class Config {
 
       String configuredPrefix = properties.getProperty(Config.Constants.COMMAND_PREFIX);
       if (!Strings.isEmpty(configuredPrefix)) {
-        if (configuredPrefix.length() > 1) {
-          throw new RuntimeException("Command prefix must be a single character");
-        }
-        if (chatClientType == ChatClientType.SLACK && configuredPrefix.equals("/")) {
-          throw new RuntimeException("Cannot use / command prefix in slack since /help command was deprecated by slack");
-        }
-        if (chatClientType == ChatClientType.MATRIX && configuredPrefix.equals("/")) {
-          throw new RuntimeException("Cannot use / command prefix in matrix since /help command is used by element by default");
-        }
+        chatClientBootstrap.validatePrefix(configuredPrefix);
       }
     } catch (Exception ex) {
       LOGGER.error("Error loading properties file", ex);
@@ -117,8 +112,8 @@ public class Config {
     return getConfig().isLidarrEnabled;
   }
 
-  public static ChatClientType getChatClientType() {
-    return getConfig().chatClientType;
+  public static ChatClientBootstrap getChatClientBootstrap() {
+    return getConfig().chatClientBootstrap;
   }
 
   public static List<String> getExistingItemBlacklistPaths() {
@@ -134,7 +129,7 @@ public class Config {
         if (splitEndpoint.length != 3) {
           LOGGER.warn("Status endpoint not formatted correctly, usage - name:hostname:port, endpoint=" + endpoint);
         }
-        statusEndPoints.add(new StatusEndPoint(splitEndpoint[0], splitEndpoint[1], Integer.valueOf(splitEndpoint[2])));
+        statusEndPoints.add(new StatusEndPoint(splitEndpoint[0], splitEndpoint[1], Integer.parseInt(splitEndpoint[2])));
       }
     }
     StatusEndPoint endpoint;
@@ -166,7 +161,7 @@ public class Config {
     try {
       return Integer.parseInt(Config.getProperty(Config.Constants.TIMEOUT));
     } catch (NumberFormatException e) {
-      LOGGER.error("Error parsing timeout", e);
+      LOGGER.trace("Error parsing timeout, using default timeout", e);
     }
     return 5000;
   }
@@ -355,7 +350,7 @@ public class Config {
     public static final String MAX_SHOW_REQUESTS_PER_USER = "max-show-requests-per-user";
 
     /**
-     * The max of artist requests per user per configured threshold
+     * The max amount of artist requests per user per configured threshold
      */
     public static final String MAX_ARTIST_REQUESTS_PER_USER = "max-artist-requests-per-user";
 
@@ -400,6 +395,6 @@ public class Config {
   private final boolean isRaddarrEnabled;
   private final boolean isSonarrEnabled;
   private final boolean isLidarrEnabled;
-  private ChatClientType chatClientType = null;
+  private ChatClientBootstrap chatClientBootstrap = null;
   private static final Logger LOGGER = LogManager.getLogger();
 }

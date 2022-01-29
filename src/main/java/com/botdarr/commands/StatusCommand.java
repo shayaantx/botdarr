@@ -1,26 +1,27 @@
 package com.botdarr.commands;
 
 import com.botdarr.Config;
-import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.commands.responses.CommandResponse;
+import com.botdarr.commands.responses.ErrorResponse;
+import com.botdarr.commands.responses.StatusCommandResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StatusCommand<T extends ChatClientResponse> extends BaseCommand {
-  public StatusCommand(ChatClientResponseBuilder<T> responseChatClientResponseBuilder) {
+public class StatusCommand extends BaseCommand {
+  public StatusCommand() {
     super(STATUS_COMMAND, STATUS_COMMAND_DESCRIPTION);
-    this.responseChatClientResponseBuilder = responseChatClientResponseBuilder;
   }
 
   @Override
-  public CommandResponse<? extends ChatClientResponse> execute(String command) {
+  public List<CommandResponse> execute(String command) {
     List<StatusEndPoint> endpoints = Config.getStatusEndpoints();
     if (!endpoints.isEmpty()) {
       Map<String, Boolean> endpointStatuses = new HashMap<>();
@@ -33,12 +34,10 @@ public class StatusCommand<T extends ChatClientResponse> extends BaseCommand {
           endpointStatuses.put(endPoint.name, false);
         }
       }
-      return new CommandResponse<ChatClientResponse>(responseChatClientResponseBuilder.getStatusCommandResponse(endpointStatuses));
+      return Collections.singletonList(new StatusCommandResponse(endpointStatuses));
     }
-    return new CommandResponse<ChatClientResponse>(
-      responseChatClientResponseBuilder.createErrorMessage("No status endpoints configured"));
+    return Collections.singletonList(new ErrorResponse("No status endpoints configured"));
   }
-  private final ChatClientResponseBuilder<T> responseChatClientResponseBuilder;
 
   public static class StatusEndPoint {
     public StatusEndPoint(String name, String hostname, int port) {

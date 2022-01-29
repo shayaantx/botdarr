@@ -10,7 +10,7 @@ public enum ApiRequestType {
   SHOW(Config.Constants.MAX_SHOW_REQUESTS_PER_USER),
   ARTIST(Config.Constants.MAX_ARTIST_REQUESTS_PER_USER);
 
-  private ApiRequestType(String configProperty) {
+  ApiRequestType(String configProperty) {
     this.maxRequestsPerUserProperty = configProperty;
   }
 
@@ -29,7 +29,7 @@ public enum ApiRequestType {
   }
 
   public int getMaxRequestsAllowed() {
-    return Integer.valueOf(Config.getProperty(maxRequestsPerUserProperty));
+    return Integer.parseInt(Config.getProperty(maxRequestsPerUserProperty));
   }
 
   private final String maxRequestsPerUserProperty;

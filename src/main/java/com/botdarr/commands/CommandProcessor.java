@@ -1,20 +1,20 @@
 package com.botdarr.commands;
 
 import com.botdarr.Config;
-import com.botdarr.api.Api;
 import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.commands.responses.CommandResponse;
+import com.botdarr.commands.responses.ErrorResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
+import java.util.Collections;
 import java.util.List;
 
 public class CommandProcessor {
-  public <T extends ChatClientResponse, Z extends Api> CommandResponse processMessage(List<Command> apiCommands,
-                                                                               String strippedMessage,
-                                                                               String username,
-                                                                               ChatClientResponseBuilder<T> chatClientResponseBuilder) {
+  public <T extends ChatClientResponse> List<CommandResponse> processRequestMessage(List<Command> apiCommands,
+                                                                              String strippedMessage,
+                                                                              String username) {
     try {
       String rawMessage = strippedMessage.toLowerCase();
       String commandPrefix = getPrefix();
@@ -37,12 +37,12 @@ public class CommandProcessor {
             }
           }
         }
-        return new CommandResponse(chatClientResponseBuilder.createErrorMessage("Invalid command - type " + commandPrefix + "help for command usage"));
+        return Collections.singletonList(new ErrorResponse("Invalid command - type " + commandPrefix + "help for command usage"));
       }
 
     } catch (Throwable e) {
       LOGGER.error("Error trying to execute command " + strippedMessage, e);
-      return new CommandResponse(chatClientResponseBuilder.createErrorMessage("Error trying to parse command " + strippedMessage  + ", error=" + e.getMessage()));
+      return Collections.singletonList(new ErrorResponse("Error trying to parse command " + strippedMessage  + ", error=" + e.getMessage()));
     }
     return null;
   }

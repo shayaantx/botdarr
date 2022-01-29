@@ -2,7 +2,6 @@ package com.botdarr.clients.telegram;
 
 import com.botdarr.Config;
 import com.botdarr.clients.ChatClient;
-import com.botdarr.commands.CommandResponse;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.pengrad.telegrambot.TelegramBot;
@@ -42,16 +41,6 @@ public class TelegramChatClient implements ChatClient<TelegramResponse> {
         sendTelegramMessage(chatChannel.id(), telegramResponse.getHtml());
       }
     }, chat);
-  }
-
-  public void sendMessage(CommandResponse<TelegramResponse> commandResponse, Chat chat) {
-    if (commandResponse.getSingleChatClientResponse() != null) {
-      sendMessage(commandResponse.getSingleChatClientResponse(), chat);
-    } else if (commandResponse.getMultipleChatClientResponses() != null) {
-      sendMessage(commandResponse.getMultipleChatClientResponses(), chat);
-    } else {
-      //TODO: err
-    }
   }
 
   private String getMessageEndpoint() {

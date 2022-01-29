@@ -1,11 +1,16 @@
 package com.botdarr.commands;
 
-import com.botdarr.TestResponse;
-import com.botdarr.TestResponseBuilder;
+import com.botdarr.TestCommandResponse;
 import com.botdarr.api.lidarr.LidarrApi;
+import com.botdarr.api.lidarr.LidarrCommands;
 import com.botdarr.api.radarr.RadarrApi;
+import com.botdarr.api.radarr.RadarrCommands;
 import com.botdarr.api.sonarr.SonarrApi;
+import com.botdarr.api.sonarr.SonarrCommands;
+import com.botdarr.commands.responses.CommandResponse;
+import com.botdarr.commands.responses.ErrorResponse;
 import mockit.*;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,7 +98,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validMovieTitleAndIdForAddCommand() {
     new Expectations() {{
-      radarrApi.addWithId("princess5", "46475"); times = 1; result = new TestResponse();
+      radarrApi.addWithId("princess5", "46475"); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!movie id add Princess5 46475");
   }
@@ -101,7 +106,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validMovieWithSpacesInTitleForAddCommand() {
     new Expectations() {{
-      radarrApi.addWithId("princess 5", "46475"); times = 1; result = new TestResponse();
+      radarrApi.addWithId("princess 5", "46475"); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!movie id add Princess 5 46475");
   }
@@ -116,7 +121,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validMovieTitleForAddCommand() {
     new Expectations() {{
-      radarrApi.addWithTitle("princess5"); times = 1; result = new TestResponse();
+      radarrApi.addWithTitle("princess5"); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!movie title add Princess5");
   }
@@ -124,7 +129,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validMovieTitleWithSpacesForAddCommand() {
     new Expectations() {{
-      radarrApi.addWithTitle("princess 5"); times = 1; result = new TestResponse();
+      radarrApi.addWithTitle("princess 5"); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!movie title add Princess 5");
   }
@@ -139,7 +144,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validMovieTitleForFindNewMovieCommand() {
     new Expectations() {{
-      radarrApi.lookup("princess5", true); times = 1; result = new TestResponse();
+      radarrApi.lookup("princess5", true); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!movie find new Princess5");
   }
@@ -147,7 +152,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validMovieTitleWithSpacesForFindNewMovieCommand() {
     new Expectations() {{
-      radarrApi.lookup("princess 5", true); times = 1; result = new TestResponse();
+      radarrApi.lookup("princess 5", true); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!movie find new Princess 5");
   }
@@ -162,7 +167,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validMovieTitleForFindExistingMovieCommand() {
     new Expectations() {{
-      radarrApi.lookup("princess5", false); times = 1; result = new TestResponse();
+      radarrApi.lookup("princess5", false); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!movie find existing Princess5");
   }
@@ -170,7 +175,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validMovieTitleWithSpacesForFindExistingMovieCommand() {
     new Expectations() {{
-      radarrApi.lookup("princess 5", false); times = 1; result = new TestResponse();
+      radarrApi.lookup("princess 5", false); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!movie find existing Princess 5");
   }
@@ -206,7 +211,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validShowTitleAndIdForAddCommand() {
     new Expectations() {{
-      sonarrApi.addWithId("princess5", "46475"); times = 1; result = new TestResponse();
+      sonarrApi.addWithId("princess5", "46475"); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!show id add Princess5 46475");
   }
@@ -221,7 +226,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validShowTitleForAddCommand() {
     new Expectations() {{
-      sonarrApi.addWithTitle("princess5"); times = 1; result = new TestResponse();
+      sonarrApi.addWithTitle("princess5"); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!show title add Princess5");
   }
@@ -229,7 +234,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validShowTitleWithSpacesForAddCommand() {
     new Expectations() {{
-      sonarrApi.addWithTitle("princess 5"); times = 1; result = new TestResponse();
+      sonarrApi.addWithTitle("princess 5"); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!show title add Princess 5");
   }
@@ -244,7 +249,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validShowTitleForFindNewShowCommand() {
     new Expectations() {{
-      sonarrApi.lookup("princess5", true); times = 1; result = new TestResponse();
+      sonarrApi.lookup("princess5", true); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!show find new Princess5");
   }
@@ -252,7 +257,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validShowTitleWithSpacesForFindNewShowCommand() {
     new Expectations() {{
-      sonarrApi.lookup("princess 5", true); times = 1; result = new TestResponse();
+      sonarrApi.lookup("princess 5", true); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!show find new Princess 5");
   }
@@ -267,7 +272,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validShowTitleForFindExistingShowCommand() {
     new Expectations() {{
-      sonarrApi.lookup("princess5", false); times = 1; result = new TestResponse();
+      sonarrApi.lookup("princess5", false); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!show find existing Princess5");
   }
@@ -275,7 +280,7 @@ public class CommandProcessorTests {
   @Test
   public void processMessage_validShowTitleWithSpacesForFindExistingShowCommand() {
     new Expectations() {{
-      sonarrApi.lookup("princess 5", false); times = 1; result = new TestResponse();
+      sonarrApi.lookup("princess 5", false); times = 1; result = new TestCommandResponse();
     }};
     validateValidCommand("!show find existing Princess 5");
   }
@@ -297,19 +302,30 @@ public class CommandProcessorTests {
 
   private void validateValidCommand(String validCommand) {
     CommandProcessor commandProcessor = new CommandProcessor();
-    CommandResponse<TestResponse> commandResponse =
-      commandProcessor.processMessage(getCommandsToTest(), validCommand, "user1", responseBuilder);
-    //we are just making sure no response is returned as another tests validates that part of the command/api
-    if (commandResponse.getSingleChatClientResponse() != null && commandResponse.getSingleChatClientResponse() instanceof TestResponse) {
-      Assert.assertNull(commandResponse.getSingleChatClientResponse().getResponseMessage());
+    List<CommandResponse> commandResponses =
+      commandProcessor.processRequestMessage(getCommandsToTest(), validCommand, "user1");
+    //we are just making sure no error responses are returned since they signify a failure with the command
+    if (commandResponses != null) {
+      for (CommandResponse response: commandResponses) {
+        Assert.assertNotNull(response);
+        Assert.assertNotEquals(ErrorResponse.class, response.getClass());
+      }
     }
   }
 
-  private void validateInvalidCommand(String invalidCommand, String expectedMessage) {
+  private void validateInvalidCommand(String invalidCommand, String expectedErrorResponseString) {
     CommandProcessor commandProcessor = new CommandProcessor();
-    CommandResponse<TestResponse> commandResponse =
-      commandProcessor.processMessage(getCommandsToTest(), invalidCommand, "user1", responseBuilder);
-    Assert.assertEquals(expectedMessage, commandResponse.getSingleChatClientResponse().getResponseMessage());
+    List<CommandResponse> commandResponses =
+            commandProcessor.processRequestMessage(getCommandsToTest(), invalidCommand, "user1");
+    if (commandResponses != null) {
+      Assert.assertEquals(1, commandResponses.size());
+      CommandResponse commandResponse = commandResponses.get(0);
+      Assert.assertNotNull(commandResponse);
+      Assert.assertTrue(
+              EqualsBuilder.reflectionEquals(
+                      new ErrorResponse(expectedErrorResponseString),
+                      commandResponse, false, null, true));
+    }
   }
 
   private void mockCommandPrefix(String prefix) {
@@ -325,7 +341,7 @@ public class CommandProcessorTests {
     List<Command> radarrCommands = RadarrCommands.getCommands(radarrApi);
     List<Command> sonarrCommands = SonarrCommands.getCommands(sonarrApi);
     List<Command> lidarrCommands = LidarrCommands.getCommands(lidarrApi);
-    List<Command> commands = new ArrayList<>(HelpCommands.getCommands(responseBuilder, radarrCommands, sonarrCommands, lidarrCommands));
+    List<Command> commands = new ArrayList<>(HelpCommands.getCommands(radarrCommands, sonarrCommands, lidarrCommands));
     commands.addAll(radarrCommands);
     commands.addAll(sonarrCommands);
     commands.addAll(lidarrCommands);
@@ -340,6 +356,4 @@ public class CommandProcessorTests {
 
   @Injectable
   private LidarrApi lidarrApi;
-
-  private TestResponseBuilder responseBuilder = new TestResponseBuilder();
 }

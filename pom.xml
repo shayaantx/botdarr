@@ -70,8 +70,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.seratch</groupId>
-            <artifactId>jslack</artifactId>
-            <version>3.3.0</version>
+            <artifactId>jslack-lightning</artifactId>
+            <version>3.4.2</version>
         </dependency>
         <dependency>
             <groupId>javax.websocket</groupId>

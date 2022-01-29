@@ -1,9 +1,11 @@
 package com.botdarr.api;
 
-import com.botdarr.TestResponse;
-import com.botdarr.clients.ChatClientResponse;
-import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.TestCommandResponse;
+import com.botdarr.commands.responses.CommandResponse;
+import com.botdarr.commands.responses.ErrorResponse;
+import com.botdarr.commands.responses.InfoResponse;
 import mockit.*;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -35,9 +37,13 @@ public class AddStrategyTests {
       mockAddStrategy.lookupContent(searchText); times = 1; result = Collections.emptyList();
       logger.warn("Search id " + searchId + "yielded no movies, stopping");
       mockAddStrategy.lookupItemById(searchId); times = 1; result = Collections.emptyList();
-      chatClientResponseBuilder.createErrorMessage("No movies found"); times = 1; result = new TestResponse("");
     }};
-    Assert.assertNotNull(mockAddStrategy.addWithSearchId(searchText, searchId));
+    CommandResponse commandResponse = mockAddStrategy.addWithSearchId(searchText, searchId);
+    Assert.assertNotNull(commandResponse);
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ErrorResponse("No movies found"),
+                    commandResponse));
   }
 
   @Test
@@ -50,9 +56,13 @@ public class AddStrategyTests {
       mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(movie);
       mockAddStrategy.getItemId(movie); times = 1; result = searchId;
       mockAddStrategy.doesItemExist(movie); times = 1; result = true;
-      chatClientResponseBuilder.createErrorMessage("movie already exists");
     }};
-    Assert.assertNotNull(mockAddStrategy.addWithSearchId(searchText, searchId));
+    CommandResponse commandResponse = mockAddStrategy.addWithSearchId(searchText, searchId);
+    Assert.assertNotNull(commandResponse);
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ErrorResponse("movie already exists"),
+                    commandResponse));
   }
 
   @Test
@@ -64,9 +74,13 @@ public class AddStrategyTests {
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(movie);
       mockAddStrategy.getItemId(movie); times = 1; result = "unknownId";
-      chatClientResponseBuilder.createErrorMessage("Could not find movie with search text=" + searchText + " and id=" + searchId);
     }};
-    Assert.assertNotNull(mockAddStrategy.addWithSearchId(searchText, searchId));
+    CommandResponse commandResponse = mockAddStrategy.addWithSearchId(searchText, searchId);
+    Assert.assertNotNull(commandResponse);
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ErrorResponse("Could not find movie with search text=" + searchText + " and id=" + searchId),
+                    commandResponse));
   }
 
   @Test
@@ -75,16 +89,16 @@ public class AddStrategyTests {
     String searchText = "searchText1";
     String searchId = "searchId1";
     Object movie = new Object();
-    TestResponse expectedResponse = new TestResponse();
+    TestCommandResponse expectedResponse = new TestCommandResponse();
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(movie);
       mockAddStrategy.getItemId(movie); times = 1; result = searchId;
       mockAddStrategy.doesItemExist(movie); times = 1; result = false;
       mockAddStrategy.addContent(movie); times = 1; result = expectedResponse;
     }};
-    ChatClientResponse chatClientResponse = mockAddStrategy.addWithSearchId(searchText, searchId);
-    Assert.assertNotNull(chatClientResponse);
-    Assert.assertEquals(expectedResponse, chatClientResponse);
+    CommandResponse commandResponse = mockAddStrategy.addWithSearchId(searchText, searchId);
+    Assert.assertNotNull(commandResponse);
+    Assert.assertEquals(expectedResponse, commandResponse);
   }
 
   @Test
@@ -96,9 +110,13 @@ public class AddStrategyTests {
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = expectedException;
       logger.error("Error trying to add movie", expectedException); times = 1;
-      chatClientResponseBuilder.createErrorMessage("Error adding content, e=expected error"); times = 1; result = new TestResponse();
     }};
-    Assert.assertNotNull(mockAddStrategy.addWithSearchId(searchText, searchId));
+    CommandResponse commandResponse = mockAddStrategy.addWithSearchId(searchText, searchId);
+    Assert.assertNotNull(commandResponse);
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ErrorResponse("Error adding content, e=expected error"),
+                    commandResponse));
   }
 
   @Test
@@ -107,9 +125,14 @@ public class AddStrategyTests {
     String searchText = "searchText1";
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = Collections.emptyList();
-      chatClientResponseBuilder.createInfoMessage("No movies found"); times = 1; result = new TestResponse();
     }};
-    Assert.assertNotNull(mockAddStrategy.addWithSearchTitle(searchText));
+    List<CommandResponse> commandResponses = mockAddStrategy.addWithSearchTitle(searchText);
+    Assert.assertNotNull(commandResponses);
+    Assert.assertEquals(1, commandResponses.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new InfoResponse("No movies found"),
+                    commandResponses.get(0)));
   }
 
   @Test
@@ -118,13 +141,16 @@ public class AddStrategyTests {
     String searchText = "searchText1";
     Object foundMovie = new Object();
     new Expectations(mockAddStrategy) {{
-      mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(foundMovie);
+      mockAddStrategy.lookupContent(searchText); times = 1; result = Collections.singletonList(foundMovie);
       mockAddStrategy.doesItemExist(foundMovie); times = 1; result = true;
-      chatClientResponseBuilder.createErrorMessage("movie already exists"); times = 1; result = new TestResponse();
     }};
-    List<ChatClientResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
-    Assert.assertNotNull(responses);
-    Assert.assertEquals(1, responses.size());
+    List<CommandResponse> commandResponses = mockAddStrategy.addWithSearchTitle(searchText);
+    Assert.assertNotNull(commandResponses);
+    Assert.assertEquals(1, commandResponses.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new ErrorResponse("movie already exists"),
+                    commandResponses.get(0)));
   }
 
   @Test
@@ -132,16 +158,16 @@ public class AddStrategyTests {
     MockAddStrategy mockAddStrategy = getMockAddStrategy();
     String searchText = "searchText1";
     Object foundMovie = new Object();
-    TestResponse expectedResponse = new TestResponse();
+    TestCommandResponse expectedResponse = new TestCommandResponse();
     new Expectations(mockAddStrategy) {{
-      mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(foundMovie);
+      mockAddStrategy.lookupContent(searchText); times = 1; result = Collections.singletonList(foundMovie);
       mockAddStrategy.doesItemExist(foundMovie); times = 1; result = false;
       mockAddStrategy.addContent(foundMovie); times = 1; result = expectedResponse;
     }};
-    List<ChatClientResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
-    Assert.assertNotNull(responses);
-    Assert.assertEquals(1, responses.size());
-    Assert.assertEquals(expectedResponse, responses.get(0));
+    List<CommandResponse> commandResponses = mockAddStrategy.addWithSearchTitle(searchText);
+    Assert.assertNotNull(commandResponses);
+    Assert.assertEquals(1, commandResponses.size());
+    Assert.assertEquals(expectedResponse, commandResponses.get(0));
   }
 
   @Test
@@ -150,24 +176,26 @@ public class AddStrategyTests {
     String searchText = "searchText1";
 
     Object foundMovie = new Object();
-    TestResponse foundMovieResponse = new TestResponse();
+    TestCommandResponse foundMovieResponse = new TestCommandResponse();
 
     Object foundMovie2 = new Object();
-    TestResponse foundMovieResponse2 = new TestResponse();
+    TestCommandResponse foundMovieResponse2 = new TestCommandResponse();
 
-    TestResponse expectedResponseInfoMessage = new TestResponse();
+    TestCommandResponse expectedResponseInfoMessage = new TestCommandResponse();
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(foundMovie, foundMovie2);
       mockAddStrategy.doesItemExist(foundMovie); times = 1; result = false;
       mockAddStrategy.getResponse(foundMovie); times = 1; result = foundMovieResponse;
       mockAddStrategy.doesItemExist(foundMovie2); times = 1; result = false;
       mockAddStrategy.getResponse(foundMovie2); times = 1; result = foundMovieResponse2;
-      chatClientResponseBuilder.createInfoMessage("Too many movies found, please narrow search or increase max results to show"); times = 1; result = expectedResponseInfoMessage;
     }};
-    List<ChatClientResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
+    List<CommandResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
     Assert.assertNotNull(responses);
     Assert.assertEquals(3, responses.size());
-    Assert.assertEquals(expectedResponseInfoMessage, responses.get(0));
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new InfoResponse("Too many movies found, please narrow search or increase max results to show"),
+                    responses.get(0)));
     Assert.assertEquals(foundMovieResponse, responses.get(1));
     Assert.assertEquals(foundMovieResponse2, responses.get(2));
   }
@@ -179,24 +207,25 @@ public class AddStrategyTests {
     String searchText = "searchText1";
 
     Object foundMovie = new Object();
-    TestResponse foundMovieResponse = new TestResponse();
+    TestCommandResponse foundMovieResponse = new TestCommandResponse();
 
     Object foundMovie2 = new Object();
-    TestResponse foundMovieResponse2 = new TestResponse();
+    TestCommandResponse foundMovieResponse2 = new TestCommandResponse();
 
-    TestResponse expectedResponseInfoMessage = new TestResponse();
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(foundMovie, foundMovie2);
       mockAddStrategy.doesItemExist(foundMovie); times = 1; result = false;
       mockAddStrategy.getResponse(foundMovie); times = 1; result = foundMovieResponse;
       mockAddStrategy.doesItemExist(foundMovie2); times = 1; result = false;
       mockAddStrategy.getResponse(foundMovie2); times = 1; result = foundMovieResponse2;
-      chatClientResponseBuilder.createInfoMessage("Too many movies found, please narrow search or increase max results to show"); times = 1; result = expectedResponseInfoMessage;
     }};
-    List<ChatClientResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
+    List<CommandResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
     Assert.assertNotNull(responses);
     Assert.assertEquals(2, responses.size());
-    Assert.assertEquals(expectedResponseInfoMessage, responses.get(0));
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new InfoResponse("Too many movies found, please narrow search or increase max results to show"),
+                    responses.get(0)));
     Assert.assertEquals(foundMovieResponse, responses.get(1));
   }
 
@@ -206,16 +235,17 @@ public class AddStrategyTests {
     String searchText = "searchText1";
     Object foundMovie = new Object();
     Object foundMovie2 = new Object();
-    TestResponse expectedResponseInfoMessage = new TestResponse();
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(foundMovie, foundMovie2);
       mockAddStrategy.doesItemExist(any); times = 2; result = true;
-      chatClientResponseBuilder.createInfoMessage("No new movies found, check existing movies"); times = 1; result = expectedResponseInfoMessage;
     }};
-    List<ChatClientResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
+    List<CommandResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
     Assert.assertNotNull(responses);
     Assert.assertEquals(1, responses.size());
-    Assert.assertEquals(expectedResponseInfoMessage, responses.get(0));
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+                    new InfoResponse("No new movies found, check existing movies"),
+                    responses.get(0)));
   }
 
   @Test
@@ -223,20 +253,21 @@ public class AddStrategyTests {
     MockAddStrategy mockAddStrategy = getMockAddStrategy();
     String searchText = "searchText1";
     Exception expectedException = new Exception("expected error");
-    TestResponse expectedResponseErrorMessage = new TestResponse();
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = expectedException;
       logger.error("Error trying to add movie", expectedException); times = 1;
-      chatClientResponseBuilder.createErrorMessage("Error trying to add movie, for search text=" + searchText + ", e=expected error"); times = 1; result = expectedResponseErrorMessage;
     }};
-    List<ChatClientResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
+    List<CommandResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
     Assert.assertNotNull(responses);
     Assert.assertEquals(1, responses.size());
-    Assert.assertEquals(expectedResponseErrorMessage, responses.get(0));
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(
+              new ErrorResponse("Error trying to add movie, for search text=searchText1, e=expected error"),
+              responses.get(0)));
   }
 
   private MockAddStrategy getMockAddStrategy(int maxResultsToShow) {
-    MockAddStrategy mockAddStrategy = new MockAddStrategy(chatClientResponseBuilder, ContentType.MOVIE);
+    MockAddStrategy mockAddStrategy = new MockAddStrategy(ContentType.MOVIE);
     Deencapsulation.setField(mockAddStrategy, "LOGGER", logger);
     Deencapsulation.setField(mockAddStrategy, "MAX_RESULTS_TO_SHOW", maxResultsToShow);
     return mockAddStrategy;
@@ -249,12 +280,9 @@ public class AddStrategyTests {
   @Mocked
   private Logger logger;
 
-  @Injectable
-  private ChatClientResponseBuilder<TestResponse> chatClientResponseBuilder;
-
   private static class MockAddStrategy extends AddStrategy<Object> {
-    public MockAddStrategy(ChatClientResponseBuilder<? extends ChatClientResponse> chatClientResponseBuilder, ContentType contentType) {
-      super(chatClientResponseBuilder, contentType);
+    public MockAddStrategy(ContentType contentType) {
+      super(contentType);
     }
 
     @Override
@@ -278,12 +306,12 @@ public class AddStrategyTests {
     }
 
     @Override
-    public ChatClientResponse addContent(Object content) {
+    public CommandResponse addContent(Object content) {
       return null;
     }
 
     @Override
-    public ChatClientResponse getResponse(Object item) {
+    public CommandResponse getResponse(Object item) {
       return null;
     }
   }
