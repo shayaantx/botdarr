@@ -102,7 +102,7 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movie/lookup")
+      .withPath("/api/v3/movie/lookup")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
       .withQueryStringParameter("term", "searchTerm");
 
@@ -139,7 +139,7 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movie/lookup")
+      .withPath("/api/v3/movie/lookup")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
       .withQueryStringParameter("term", "searchTerm");
 
@@ -175,7 +175,7 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movie/lookup")
+      .withPath("/api/v3/movie/lookup")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
       .withQueryStringParameter("term", "searchTerm");
 
@@ -275,7 +275,7 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movie/lookup")
+      .withPath("/api/v3/movie/lookup")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
       .withQueryStringParameter("term", "searchTerm");
 
@@ -304,7 +304,7 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movie/lookup")
+      .withPath("/api/v3/movie/lookup")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
       .withQueryStringParameter("term", "searchTerm");
 
@@ -315,7 +315,7 @@ public class RadarrApiTests {
     RadarrCache radarrCache = Deencapsulation.getField(radarrApi, "RADARR_CACHE");
     radarrCache.add(expectedRadarrMovie);
 
-    //setup expected response in mock server
+    //setup expected response in mock serverx
     mockServerRule.getClient()
       .when(request)
       .respond(HttpResponse.response()
@@ -340,7 +340,7 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movie/lookup")
+      .withPath("/api/v3/movie/lookup")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
       .withQueryStringParameter("term", "movie1");
 
@@ -381,7 +381,7 @@ public class RadarrApiTests {
     RadarrApi radarrApi = new RadarrApi(new TestResponseBuilder());
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movie/lookup")
+      .withPath("/api/v3/movie/lookup")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
       .withQueryStringParameter("term", "movie");
     List<RadarrMovie> radarrMovies = new ArrayList<>();
@@ -442,7 +442,7 @@ public class RadarrApiTests {
 
     HttpRequest titleRequest = HttpRequest.request()
       .withMethod("GET")
-      .withPath("/api/movie/lookup")
+      .withPath("/api/v3/movie/lookup")
       .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
       .withQueryStringParameter("term", "movie1");
 

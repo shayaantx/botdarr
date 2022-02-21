@@ -195,11 +195,11 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     MatrixResponse matrixResponse = new MatrixResponse();
     matrixResponse.addContent("<u><b>Profile</b></u>");
     matrixResponse.addContent("<b>Name</b> - " + radarrProfile.getName());
-    matrixResponse.addContent("<b>Cutoff</b> - " + radarrProfile.getCutoff().getName());
+    matrixResponse.addContent("<b>Cutoff</b> - " + radarrProfile.getCutoff());
     for (int k = 0; k < radarrProfile.getItems().size(); k++) {
-      RadarrProfileQualityItem sonarrProfileQualityItem = radarrProfile.getItems().get(k);
-      if (sonarrProfileQualityItem.isAllowed()) {
-        matrixResponse.addContent("<b>Quality</b> - Name: " + sonarrProfileQualityItem.getQuality().getName() + ", Resolution: " + sonarrProfileQualityItem.getQuality().getResolution());
+      RadarrProfileQualityItem radarrProfileQualityItem = radarrProfile.getItems().get(k);
+      if (radarrProfileQualityItem.isAllowed() && radarrProfileQualityItem.getQuality() != null) {
+        matrixResponse.addContent("<b>Quality</b> - Name: " + radarrProfileQualityItem.getQuality().getName() + ", Resolution: " + radarrProfileQualityItem.getQuality().getResolution());
       }
     }
     return matrixResponse;
@@ -237,7 +237,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
       matrixResponse.addContent("<b>" + ADD_MOVIE_COMMAND_FIELD_PREFIX + "</b> - " + RadarrCommands.getAddMovieCommandStr(lookupMovie.getTitle(), lookupMovie.getTmdbId()));
     } else {
       matrixResponse.addContent("<b>Id</b> - " + existingMovie.getId());
-      matrixResponse.addContent("<b>Downloaded</b> - " + String.valueOf(existingMovie.isDownloaded()));
+      matrixResponse.addContent("<b>Downloaded</b> - " + String.valueOf((existingMovie.getSizeOnDisk() > 0)));
       matrixResponse.addContent("<b>Has File</b> - " + String.valueOf(existingMovie.isHasFile()));
     }
     matrixResponse.addImage(lookupMovie.getRemotePoster());

@@ -16,7 +16,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -34,7 +33,7 @@ public class RadarrApi implements Api {
 
   @Override
   public String getApiUrl(String path) {
-    return getApiUrl(Config.Constants.RADARR_URL, Config.Constants.RADARR_TOKEN, path);
+    return getApiUrl(Config.Constants.RADARR_URL, Config.Constants.RADARR_TOKEN, "v3/" + path);
   }
 
   public List<ChatClientResponse> lookup(String search, boolean findNew) {
@@ -251,7 +250,7 @@ public class RadarrApi implements Api {
 
   private ChatClientResponse addMovie(RadarrMovie radarrMovie) {
     //make sure we specify where the movie should get downloaded
-    radarrMovie.setPath(Config.getProperty(Config.Constants.RADARR_PATH) + File.separator + radarrMovie.getTitle() + "(" + radarrMovie.getYear() + ")");
+    radarrMovie.setRootFolderPath(Config.getProperty(Config.Constants.RADARR_PATH));
     //make sure the movie is monitored
     radarrMovie.setMonitored(true);
 
@@ -265,7 +264,7 @@ public class RadarrApi implements Api {
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl(RadarrUrls.MOVIE_BASE));
 
-      post.addHeader("content-type", "application/x-www-form-urlencoded");
+      post.addHeader("content-type", "application/json");
       String json = new Gson().toJson(radarrMovie, RadarrMovie.class);
       post.setEntity(new StringEntity(json));
 

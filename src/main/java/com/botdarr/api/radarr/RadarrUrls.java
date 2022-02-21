@@ -1,12 +1,11 @@
 package com.botdarr.api.radarr;
 
 public class RadarrUrls {
-  private static final String V3_BASE = "v3/";
   /**
    * The base download(s) url for get, put, delete requests (which each do different things in radarr)
    * See https://github.com/Radarr/Radarr/wiki/API:Queue
    */
-  public static final String DOWNLOAD_BASE = V3_BASE + "queue";
+  public static final String DOWNLOAD_BASE = "queue";
 
   /**
    * The base movie url for getting and adding movies (get, post requests)
@@ -27,10 +26,10 @@ public class RadarrUrls {
   /**
    * The url for triggering gets requests in radarr to discover new movies
    */
-  public static final String DISCOVER_MOVIES = V3_BASE + "importlist/movie";
+  public static final String DISCOVER_MOVIES = "importlist/movie";
 
   /**
    * The url base for adding, getting, deleting movie profiles
    */
-  public static final String PROFILE_BASE = "profile";
+  public static final String PROFILE_BASE = "/qualityProfile";
 }

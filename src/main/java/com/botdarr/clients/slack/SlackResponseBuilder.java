@@ -304,13 +304,13 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .text(MarkdownTextObject.builder().text("Name - " + radarrProfile.getName()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Cutoff - " + radarrProfile.getCutoff().getName()).build())
+      .text(MarkdownTextObject.builder().text("Cutoff - " + radarrProfile.getCutoff()).build())
       .build());
 
     List<ContextBlockElement> contextBlockElements = new ArrayList<>();
     for (int k = 0; k < radarrProfile.getItems().size(); k++) {
       RadarrProfileQualityItem radarrProfileQualityItem = radarrProfile.getItems().get(k);
-      if (radarrProfileQualityItem.isAllowed()) {
+      if (radarrProfileQualityItem.isAllowed() && radarrProfileQualityItem.getQuality() != null) {
         contextBlockElements.add(PlainTextObject.builder()
           .text("Quality - name=" + radarrProfileQualityItem.getQuality().getName() + ", resolution=" + radarrProfileQualityItem.getQuality().getResolution())
           .build());
@@ -381,7 +381,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
         .text(MarkdownTextObject.builder().text("Id - " + existingMovie.getId()).build())
         .build());
       slackResponse.addBlock(SectionBlock.builder()
-        .text(MarkdownTextObject.builder().text("Downloaded - " + existingMovie.isDownloaded()).build())
+        .text(MarkdownTextObject.builder().text("Downloaded - " + (existingMovie.getSizeOnDisk() > 0)).build())
         .build());
       slackResponse.addBlock(SectionBlock.builder()
         .text(MarkdownTextObject.builder().text("Has File - " + existingMovie.isHasFile()).build())

@@ -11,9 +11,10 @@ Made this simple multi chat-client bot to access radarr, sonarr, and lidarr with
 
 ## Currently, Supported API's
 
-- [x] Radarr (v3)
+- [x] Radarr (v4)
 - [x] Sonarr (v3)
 - [x] Lidarr (v1)
+- [x] ~~Radarr (v3) - no longer supported~~
 - [x] ~~Radarr (v2) - no longer supported~~
 - [ ] ~~Sonarr (v2) - no plans to support~~
 
