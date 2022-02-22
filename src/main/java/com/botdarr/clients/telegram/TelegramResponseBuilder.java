@@ -204,12 +204,12 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b("Profile"));
     domContents.add(text("Name - " + radarrProfile.getName()));
-    domContents.add(text("Cutoff - " + radarrProfile.getCutoff().getName()));
+    domContents.add(text("Cutoff - " + radarrProfile.getCutoff()));
     if (radarrProfile.getItems() != null) {
       StringBuilder qualityItems = new StringBuilder();
       for (int k = 0; k < radarrProfile.getItems().size(); k++) {
         RadarrProfileQualityItem radarrProfileQualityItem = radarrProfile.getItems().get(k);
-        if (radarrProfileQualityItem.isAllowed()) {
+        if (radarrProfileQualityItem.isAllowed() && radarrProfileQualityItem.getQuality() != null) {
           qualityItems.append("Quality - name=" + radarrProfileQualityItem.getQuality().getName() + ", resolution=" + radarrProfileQualityItem.getQuality().getResolution() + "\n");
         }
       }
@@ -247,7 +247,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     } else {
       StringBuilder existingDetails = new StringBuilder();
       existingDetails.append("Id - " + existingMovie.getId() + "\n");
-      existingDetails.append("Downloaded - " + existingMovie.isDownloaded() + "\n");
+      existingDetails.append("Downloaded - " + (existingMovie.getSizeOnDisk() > 0) + "\n");
       existingDetails.append("Has File - " + existingMovie.isHasFile() + "\n");
       domContents.add(code(existingDetails.toString()));
     }

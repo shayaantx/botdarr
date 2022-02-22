@@ -14,7 +14,7 @@ public class RadarrProfile implements KeyBased<String> {
     return name;
   }
 
-  public RadarrProfileCutoff getCutoff() {
+  public int getCutoff() {
     return cutoff;
   }
 
@@ -22,7 +22,7 @@ public class RadarrProfile implements KeyBased<String> {
     this.name = name;
   }
 
-  public void setCutoff(RadarrProfileCutoff cutoff) {
+  public void setCutoff(int cutoff) {
     this.cutoff = cutoff;
   }
 
@@ -43,7 +43,7 @@ public class RadarrProfile implements KeyBased<String> {
   }
 
   private String name;
-  private RadarrProfileCutoff cutoff;
+  private int cutoff;
   private List<RadarrProfileQualityItem> items;
   private long id;
 }

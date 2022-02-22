@@ -175,11 +175,11 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle("Profile");
     embedBuilder.addField("Name", radarrProfile.getName(), false);
-    embedBuilder.addField("Cutoff", radarrProfile.getCutoff().getName(), false);
+    embedBuilder.addField("Cutoff", "" + radarrProfile.getCutoff(), false);
     embedBuilder.addBlankField(false);
     for (int k = 0; k < radarrProfile.getItems().size(); k++) {
       RadarrProfileQualityItem radarrProfileQualityItem = radarrProfile.getItems().get(k);
-      if (radarrProfileQualityItem.isAllowed()) {
+      if (radarrProfileQualityItem.isAllowed() && radarrProfileQualityItem.getQuality() != null) {
         embedBuilder.addField(
           "Quality",
           "name=" + radarrProfileQualityItem.getQuality().getName() + ", resolution=" + radarrProfileQualityItem.getQuality().getResolution(),
@@ -220,7 +220,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
       embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()), false);
     } else {
       embedBuilder.addField("Id", String.valueOf(existingMovie.getId()), false);
-      embedBuilder.addField("Downloaded", String.valueOf(existingMovie.isDownloaded()), false);
+      embedBuilder.addField("Downloaded", String.valueOf((existingMovie.getSizeOnDisk() > 0)), false);
       embedBuilder.addField("Has File", String.valueOf(existingMovie.isHasFile()), false);
     }
     embedBuilder.setImage(radarrMovie.getRemotePoster());
