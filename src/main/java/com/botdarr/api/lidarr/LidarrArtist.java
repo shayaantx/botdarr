@@ -186,12 +186,12 @@ public class LidarrArtist implements KeyBased<String> {
     this.statistics = statistics;
   }
 
-  public String getRootFolderrPath() {
-    return rootFolderrPath;
+  public String getRootFolderPath() {
+    return rootFolderPath;
   }
 
-  public void setRootFolderrPath(String rootFolderrPath) {
-    this.rootFolderrPath = rootFolderrPath;
+  public void setRootFolderPath(String rootFolderPath) {
+    this.rootFolderPath = rootFolderPath;
   }
 
   public String getPath() {
@@ -225,6 +225,6 @@ public class LidarrArtist implements KeyBased<String> {
   private LidarrRating ratings = new LidarrRating();
   private LidarrStatistics statistics = new LidarrStatistics();
   private LidarrAddOptions addOptions = new LidarrAddOptions();
-  private String rootFolderrPath;
+  private String rootFolderPath;
   private String path;
 }

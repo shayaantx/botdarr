@@ -2,7 +2,6 @@ package com.botdarr.api.lidarr;
 
 import com.botdarr.Config;
 import com.botdarr.api.*;
-import com.botdarr.api.sonarr.SonarrShow;
 import com.botdarr.api.sonarr.SonarrUrls;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
@@ -18,7 +17,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -254,8 +252,7 @@ public class LidarrApi implements Api {
 
   private ChatClientResponse addArtist(LidarrArtist lidarrArtist) {
     lidarrArtist.setMonitored(true);
-    lidarrArtist.setPath(Config.getProperty(Config.Constants.LIDARR_PATH) + File.separator + lidarrArtist.getArtistName());
-    lidarrArtist.setRootFolderrPath(Config.getProperty(Config.Constants.LIDARR_PATH));
+    lidarrArtist.setRootFolderPath(Config.getProperty(Config.Constants.LIDARR_PATH) + "/");
 
     String lidarrProfileName = Config.getProperty(Config.Constants.LIDARR_DEFAULT_QUALITY_PROFILE);
     LidarrQualityProfile lidarrQualityProfile = LIDARR_CACHE.getQualityProfile(lidarrProfileName.toLowerCase());
@@ -272,7 +269,7 @@ public class LidarrApi implements Api {
     lidarrArtist.setQualityProfileId(lidarrQualityProfile.getId());
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl(SonarrUrls.ARTIST_BASE));
-      post.addHeader("content-type", "application/x-www-form-urlencoded");
+      post.addHeader("content-type", "application/json");
       String json = new Gson().toJson(lidarrArtist, LidarrArtist.class);
       post.setEntity(new StringEntity(json));
 
