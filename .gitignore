@@ -34,3 +34,5 @@ properties*
 dependency-reduced-pom.xml
 *.jar
 *.db
+
+*.zip

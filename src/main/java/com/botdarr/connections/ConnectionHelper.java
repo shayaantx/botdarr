@@ -42,7 +42,7 @@ public class ConnectionHelper {
   public static <T> T makeRequest(RequestHandler requestHandler, ResponseHandler<T> responseHandler) {
     RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
     if (requestHandler.turnOnTimeouts()) {
-      int timeout = 5000;
+      int timeout = Config.getTimeout();
       requestConfigBuilder.setConnectTimeout(timeout);
       requestConfigBuilder.setSocketTimeout(timeout);
       requestConfigBuilder.setConnectionRequestTimeout(timeout);

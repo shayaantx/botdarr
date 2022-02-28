@@ -1,6 +1,7 @@
 package com.botdarr.api.lidarr;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,7 +13,7 @@ public class LidarrCache {
 
   public void addArtist(LidarrArtist artist) {
     existingForeignArtistIdToArtist.put(artist.getForeignArtistId(), artist);
-    existingArtistNamesToIds.put(artist.getArtistName(), artist.getForeignArtistId());
+    existingArtistNamesToIds.put(artist.getArtistName().toLowerCase(), artist.getForeignArtistId());
   }
 
   public void addQualityProfile(LidarrQualityProfile lidarrQualityProfile) {
@@ -44,7 +45,7 @@ public class LidarrCache {
   }
 
   public void removeDeletedArtists(List<String> addUpdatedArtists) {
-    existingArtistNamesToIds.keySet().retainAll(addUpdatedArtists);
+    existingArtistNamesToIds.values().retainAll(addUpdatedArtists);
     existingForeignArtistIdToArtist.keySet().retainAll(addUpdatedArtists);
   }
 
