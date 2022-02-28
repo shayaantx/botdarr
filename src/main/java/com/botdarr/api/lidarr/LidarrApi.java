@@ -8,6 +8,8 @@ import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.CommandContext;
 import com.botdarr.connections.ConnectionHelper;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -270,11 +272,15 @@ public class LidarrApi implements Api {
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
       HttpPost post = new HttpPost(getApiUrl(SonarrUrls.ARTIST_BASE));
       post.addHeader("content-type", "application/json");
-      String json = new Gson().toJson(lidarrArtist, LidarrArtist.class);
+
+      ObjectMapper mapper = new ObjectMapper();
+      //lidarr for some reason doesn't support raw unicode characters in json parsing (since they should be allowed), so we escape them here
+      mapper.getFactory().configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
+      String json = mapper.writeValueAsString(lidarrArtist);
       post.setEntity(new StringEntity(json));
 
       if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("Client request=" + post.toString());
+        LOGGER.debug("Client request=" + post);
         LOGGER.debug("Client data=" + (json));
       }
 
