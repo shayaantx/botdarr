@@ -176,8 +176,8 @@ botdarr:
 | MAX_DOWNLOADS_TO_SHOW | The max number of downloads to show. If you set this to any value less than or equal to 0, no downloads will show | yes | 20 |
 | MAX_RESULTS_TO_SHOW | The max number of results to show per search command. If you set this to any value less than 0, the bot won't startup | yes | 20 | 
 | COMMAND_PREFIX | The command prefix (default is !). Any prefix is allowed (but I haven't tested every single prefix in every client) | yes | ! | 
-| STATUS_ENDPOINTS | Endpoints that can be used to return statuses via !status command. The endpoints are separated by a comma and each endpoint is in the following format - name:hostname:port | no | | 
-    
+| STATUS_ENDPOINTS | Endpoints that can be used to return statuses via !status command. The endpoints are separated by a comma and each endpoint is in the following format - name:hostname:port | no | |
+| TIMEOUT | The connection/read timeout value (in milliseconds) for all outbound requests | no | 5000 |
 <br/>
 
 ## Usage

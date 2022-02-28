@@ -159,6 +159,18 @@ public class Config {
     return statusEndPoints;
   }
 
+  /**
+   * @return The connection/read timeouts for all outbound requests (in ms)
+   */
+  public static int getTimeout() {
+    try {
+      return Integer.parseInt(Config.getProperty(Config.Constants.TIMEOUT));
+    } catch (NumberFormatException e) {
+      LOGGER.error("Error parsing timeout", e);
+    }
+    return 5000;
+  }
+
   private static StatusEndPoint getDomain(String constant, String name) {
     try {
       URI uri = new URI(getProperty(constant));
@@ -343,7 +355,7 @@ public class Config {
     public static final String MAX_SHOW_REQUESTS_PER_USER = "max-show-requests-per-user";
 
     /**
-     * TODO: doc
+     * The max of artist requests per user per configured threshold
      */
     public static final String MAX_ARTIST_REQUESTS_PER_USER = "max-artist-requests-per-user";
 
@@ -376,6 +388,11 @@ public class Config {
      * The additional status endpoints to check
      */
     public static final String STATUS_ENDPOINTS = "status-endpoints";
+
+    /**
+     * Connection/read timeouts for all outbound requests
+     */
+    public static final String TIMEOUT = "timeout";
   }
 
   private static String propertiesPath = "config/properties";

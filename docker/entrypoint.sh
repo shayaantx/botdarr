@@ -58,6 +58,7 @@ if [ ! -e "$propertiesFile" ]; then
     addConfiguration "max-downloads-to-show" "${MAX_DOWNLOADS_TO_SHOW:-20}" "${propertiesFile}"
     addConfiguration "max-results-to-show" "${MAX_RESULTS_TO_SHOW:-20}" "${propertiesFile}"
     addConfiguration "command-prefix" "${COMMAND_PREFIX:-!}" "${propertiesFile}"
+    addConfiguration "timeout" "${TIMEOUT:-5000}" "${propertiesFile}"
 fi
 
 exec "$@"
