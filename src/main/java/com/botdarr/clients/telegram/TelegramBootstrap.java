@@ -4,11 +4,16 @@ import com.botdarr.Config;
 import com.botdarr.clients.ChatClientBootstrap;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.scheduling.Scheduler;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
 import org.apache.logging.log4j.util.Strings;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 public class TelegramBootstrap extends ChatClientBootstrap {
     private boolean isUsingChannels() {
@@ -53,6 +58,23 @@ public class TelegramBootstrap extends ChatClientBootstrap {
         boolean telegramPrivateGroupsExist = !Strings.isBlank(properties.getProperty(Config.Constants.TELEGRAM_PRIVATE_GROUPS));
         if (isTelegramConfigured && telegramPrivateChannelsExist && telegramPrivateGroupsExist) {
             throw new RuntimeException("Cannot configure telegram for private channels and groups, you must pick one or the other");
+        }
+
+        if (telegramPrivateChannelsExist || telegramPrivateGroupsExist) {
+            String channels = properties.getProperty(Config.Constants.TELEGRAM_PRIVATE_CHANNELS);
+            if (Strings.isBlank(channels)) {
+                channels = properties.getProperty(Config.Constants.TELEGRAM_PRIVATE_GROUPS);
+            }
+            Set<String> configTelegramChannels = Sets.newHashSet(Splitter.on(',').trimResults().split(channels));
+            for (String channel : configTelegramChannels) {
+                String[] fields = channel.split(":");
+                if (fields == null || fields.length == 0) {
+                    throw new RuntimeException("Configured telegram channels not in correct format. i.e., CHANNEL_NAME:ID,CHANNEL_NAME2:ID2");
+                }
+                if (fields[1].startsWith("-100")) {
+                    throw new RuntimeException("Telegram channel or group contains -100, which is not necessary. We automatically add this to your channel at runtime, you can remove it.");
+                }
+            }
         }
         return isTelegramConfigured && (telegramPrivateChannelsExist || telegramPrivateGroupsExist);
     }
