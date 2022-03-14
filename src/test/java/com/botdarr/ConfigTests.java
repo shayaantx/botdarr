@@ -90,6 +90,28 @@ public class ConfigTests {
     Config.getProperty("");
   }
 
+  @Test
+  public void getConfig_telegramChannelIdsContainNegativeOneHundred() throws Exception {
+    Properties properties = new Properties();
+    properties.put("telegram-token", "%H$$54j45i");
+    properties.put("telegram-private-channels", "channel1:-100459349");
+    writeFakePropertiesFile(properties);
+    expectedException.expect(RuntimeException.class);
+    expectedException.expectMessage("Telegram channel or group contains -100, which is not necessary. We automatically add this to your channel at runtime, you can remove it.");
+    Config.getProperty("");
+  }
+
+  @Test
+  public void getConfig_telegramGroupIdsContainNegativeOneHundred() throws Exception {
+    Properties properties = new Properties();
+    properties.put("telegram-token", "%H$$54j45i");
+    properties.put("telegram-private-groups", "group1:-100459349");
+    writeFakePropertiesFile(properties);
+    expectedException.expect(RuntimeException.class);
+    expectedException.expectMessage("Telegram channel or group contains -100, which is not necessary. We automatically add this to your channel at runtime, you can remove it.");
+    Config.getProperty("");
+  }
+
   private void writeFakePropertiesFile(Properties properties) throws Exception {
     File propertiesFile = new File(temporaryFolder.getRoot(), "properties");
     Deencapsulation.setField(Config.class, "propertiesPath", propertiesFile.getPath());
