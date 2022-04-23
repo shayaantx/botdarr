@@ -9,6 +9,7 @@ import com.botdarr.api.sonarr.SonarrApi;
 import com.botdarr.api.sonarr.SonarrCommands;
 import com.botdarr.commands.responses.CommandResponse;
 import com.botdarr.commands.responses.ErrorResponse;
+import com.botdarr.commands.responses.InfoResponse;
 import mockit.*;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.Assert;
@@ -16,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,12 +56,41 @@ public class CommandProcessorTests {
 
   @Test
   public void processMessage_validateMovieDownloadsCommand() {
+    new Expectations() {{
+      radarrApi.downloads(); result = new ArrayList<CommandResponse>(); minTimes = 1;
+    }};
     validateNoArgCommands("!movie downloads");
+    List<CommandResponse> responses = validateValidCommand("!movie downloads");
+    Assert.assertEquals(1, responses.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(new InfoResponse("No movies downloading"),
+                    responses.get(0)));
   }
 
   @Test
   public void processMessage_validateShowDownloadsCommand() {
+    new Expectations() {{
+      sonarrApi.downloads(); result = new ArrayList<CommandResponse>(); minTimes = 1;
+    }};
     validateNoArgCommands("!show downloads");
+    List<CommandResponse> responses = validateValidCommand("!show downloads");
+    Assert.assertEquals(1, responses.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(new InfoResponse("No shows downloading"),
+                    responses.get(0)));
+  }
+
+  @Test
+  public void processMessage_validateMusicDownloadsCommand() {
+    new Expectations() {{
+      lidarrApi.downloads(); result = new ArrayList<CommandResponse>(); minTimes = 1;
+    }};
+    validateNoArgCommands("!music downloads");
+    List<CommandResponse> responses = validateValidCommand("!music downloads");
+    Assert.assertEquals(1, responses.size());
+    Assert.assertTrue(
+            EqualsBuilder.reflectionEquals(new InfoResponse("No artists downloading"),
+                    responses.get(0)));
   }
 
   @Test
@@ -300,7 +331,7 @@ public class CommandProcessorTests {
     validateInvalidCommand(invalidCommand, "Invalid command - type !help for command usage");
   }
 
-  private void validateValidCommand(String validCommand) {
+  private List<CommandResponse> validateValidCommand(String validCommand) {
     CommandProcessor commandProcessor = new CommandProcessor();
     List<CommandResponse> commandResponses =
       commandProcessor.processRequestMessage(getCommandsToTest(), validCommand, "user1");
@@ -311,6 +342,7 @@ public class CommandProcessorTests {
         Assert.assertNotEquals(ErrorResponse.class, response.getClass());
       }
     }
+    return commandResponses;
   }
 
   private void validateInvalidCommand(String invalidCommand, String expectedErrorResponseString) {

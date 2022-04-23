@@ -203,7 +203,7 @@ public class LidarrApi implements Api {
   }
 
   private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, LidarrUrls.DOWNLOAD_BASE, ContentType.ARTIST) {
+    return new DownloadsStrategy(this, LidarrUrls.DOWNLOAD_BASE) {
       @Override
       public CommandResponse getResponse(JsonElement rawElement) {
         LidarrQueueRecord lidarrQueueRecord = new Gson().fromJson(rawElement, LidarrQueueRecord.class);

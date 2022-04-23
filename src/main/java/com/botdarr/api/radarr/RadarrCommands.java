@@ -1,8 +1,10 @@
 package com.botdarr.api.radarr;
 
+import com.botdarr.api.ContentType;
 import com.botdarr.commands.BaseCommand;
 import com.botdarr.commands.Command;
 import com.botdarr.commands.CommandProcessor;
+import com.botdarr.commands.CommandResponseUtil;
 import com.botdarr.commands.responses.CommandResponse;
 import org.apache.logging.log4j.util.Strings;
 
@@ -80,7 +82,7 @@ public class RadarrCommands {
 
         @Override
         public List<CommandResponse> execute(String command) {
-          return radarrApi.downloads();
+          return new CommandResponseUtil().addEmptyDownloadsMessage(radarrApi.downloads(), ContentType.MOVIE);
         }
       });
     }};

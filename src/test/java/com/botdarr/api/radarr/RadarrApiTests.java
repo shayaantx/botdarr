@@ -235,11 +235,8 @@ public class RadarrApiTests {
     mockServerRule.getClient().verify(request);
 
     //verify response data
-    //since nothing is downloading we should only get back 1 response with a message about no downloads
-    Assert.assertEquals(1, commandResponse.size());
-    Assert.assertTrue(
-            EqualsBuilder.reflectionEquals(new InfoResponse("No movies downloading"),
-                    commandResponse.get(0)));
+    //since nothing is downloading we should get back 0 responses
+    Assert.assertEquals(0, commandResponse.size());
   }
 
   @Test

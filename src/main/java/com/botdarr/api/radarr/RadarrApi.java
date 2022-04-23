@@ -163,7 +163,7 @@ public class RadarrApi implements Api {
   }
 
   private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, RadarrUrls.DOWNLOAD_BASE, ContentType.MOVIE) {
+    return new DownloadsStrategy(this, RadarrUrls.DOWNLOAD_BASE) {
       @Override
       public CommandResponse getResponse(JsonElement rawElement) {
         RadarrQueue radarrQueue = new Gson().fromJson(rawElement, RadarrQueue.class);

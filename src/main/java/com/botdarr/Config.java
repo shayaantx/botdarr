@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.botdarr.commands.StatusCommand.*;
 
