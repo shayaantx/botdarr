@@ -171,7 +171,7 @@ public class SonarrApi implements Api {
   }
 
   private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, SonarrUrls.DOWNLOAD_BASE, ContentType.SHOW) {
+    return new DownloadsStrategy(this, SonarrUrls.DOWNLOAD_BASE) {
       @Override
       public CommandResponse getResponse(JsonElement rawElement) {
         SonarrQueue showQueue = new Gson().fromJson(rawElement, SonarrQueue.class);

@@ -1,8 +1,10 @@
 package com.botdarr.api.sonarr;
 
+import com.botdarr.api.ContentType;
 import com.botdarr.commands.BaseCommand;
 import com.botdarr.commands.Command;
 import com.botdarr.commands.CommandProcessor;
+import com.botdarr.commands.CommandResponseUtil;
 import com.botdarr.commands.responses.CommandResponse;
 import org.apache.logging.log4j.util.Strings;
 
@@ -46,7 +48,7 @@ public class SonarrCommands {
 
         @Override
         public List<CommandResponse> execute(String command) {
-          return sonarrApi.downloads();
+          return new CommandResponseUtil().addEmptyDownloadsMessage(sonarrApi.downloads(), ContentType.SHOW);
         }
       });
       add(new BaseCommand("show profiles", "Displays all the profiles available to search for shows under (i.e., show add ANY)") {

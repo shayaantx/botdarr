@@ -17,11 +17,9 @@ import java.util.List;
 
 public abstract class DownloadsStrategy {
   public DownloadsStrategy(Api api,
-                           String url,
-                           ContentType contentType) {
+                           String url) {
     this.api = api;
     this.url = url;
-    this.contentType = contentType;
   }
 
   public abstract CommandResponse getResponse(JsonElement rawElement);
@@ -30,11 +28,7 @@ public abstract class DownloadsStrategy {
     if (MAX_DOWNLOADS_TO_SHOW <= 0) {
       return Collections.emptyList();
     }
-    List<CommandResponse> chatClientResponses = getContentDownloads();
-    if (chatClientResponses.isEmpty()) {
-      chatClientResponses.add(new InfoResponse("No " + this.contentType.getDisplayName() + "s downloading"));
-    }
-    return chatClientResponses;
+    return getContentDownloads();
   }
 
   public List<CommandResponse> getContentDownloads() {
@@ -76,6 +70,5 @@ public abstract class DownloadsStrategy {
   private final Api api;
   private final String url;
   private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
-  private final ContentType contentType;
   private static Logger LOGGER = LogManager.getLogger();
 }

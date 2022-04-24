@@ -1,5 +1,6 @@
 package com.botdarr.api;
 
+import com.botdarr.Config;
 import com.botdarr.TestCommandResponse;
 import com.botdarr.commands.responses.CommandResponse;
 import com.botdarr.commands.responses.InfoResponse;
@@ -7,14 +8,15 @@ import com.google.gson.JsonElement;
 import mockit.*;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.logging.log4j.Logger;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 import org.mockserver.junit.MockServerRule;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class DownloadsStrategyTests {
   @BeforeClass
@@ -26,6 +28,14 @@ public class DownloadsStrategyTests {
         return 0;
       }
     };
+  }
+
+  @Before
+  public void beforeEachTest() throws Exception {
+    Properties properties = new Properties();
+    properties.put("telegram-token", "%H$$54j45i");
+    properties.put("telegram-private-channels", "channel1:459349");
+    writeFakePropertiesFile(properties);
   }
 
   @Test
@@ -41,11 +51,7 @@ public class DownloadsStrategyTests {
     DownloadsStrategy mockDownloadsStrategy = getMockDownloadsStrategy(1);
     List<CommandResponse> responses = mockDownloadsStrategy.downloads();
     Assert.assertNotNull(responses);
-    Assert.assertEquals(1, responses.size());
-    Assert.assertTrue(
-            EqualsBuilder.reflectionEquals(
-                    new InfoResponse("No movies downloading"),
-                    responses.get(0)));
+    Assert.assertEquals(0, responses.size());
   }
 
   @Test
@@ -67,7 +73,7 @@ public class DownloadsStrategyTests {
 
   @Test
   public void getContentDownloads_endpointUnavailable_emptyResponse() {
-    DownloadsStrategy downloadsStrategy = new DownloadsStrategy(api, "", ContentType.MOVIE) {
+    DownloadsStrategy downloadsStrategy = new DownloadsStrategy(api, "") {
       @Override
       public CommandResponse getResponse(JsonElement rawElement) {
         return null;
@@ -85,10 +91,21 @@ public class DownloadsStrategyTests {
   }
 
   private DownloadsStrategy getMockDownloadsStrategy(int maxDownloadsToShow) {
-    DownloadsStrategy mockDownloadsStrategy = new MockDownloadsStrategy(api, "", ContentType.MOVIE);
+    DownloadsStrategy mockDownloadsStrategy = new MockDownloadsStrategy(api, "");
     Deencapsulation.setField(mockDownloadsStrategy, "MAX_DOWNLOADS_TO_SHOW", maxDownloadsToShow);
     return  mockDownloadsStrategy;
   }
+
+  private void writeFakePropertiesFile(Properties properties) throws Exception {
+    File propertiesFile = new File(temporaryFolder.getRoot(), "properties");
+    Deencapsulation.setField(Config.class, "propertiesPath", propertiesFile.getPath());
+    try (FileOutputStream fos = new FileOutputStream(propertiesFile)) {
+      properties.store(fos, "");
+    }
+  }
+
+  @Rule
+  public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   @Rule
   public MockServerRule mockServerRule = new MockServerRule(this);
@@ -101,8 +118,8 @@ public class DownloadsStrategyTests {
 
   private static class MockDownloadsStrategy extends DownloadsStrategy {
 
-    public MockDownloadsStrategy(Api api, String url, ContentType contentType) {
-      super(api, url, contentType);
+    public MockDownloadsStrategy(Api api, String url) {
+      super(api, url);
     }
 
     @Override

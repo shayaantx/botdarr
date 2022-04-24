@@ -1,10 +1,13 @@
 package com.botdarr.api.lidarr;
 
+import com.botdarr.api.ContentType;
 import com.botdarr.api.lidarr.LidarrApi;
 import com.botdarr.commands.BaseCommand;
 import com.botdarr.commands.Command;
 import com.botdarr.commands.CommandProcessor;
+import com.botdarr.commands.CommandResponseUtil;
 import com.botdarr.commands.responses.CommandResponse;
+import com.botdarr.commands.responses.InfoResponse;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,7 +59,7 @@ public class LidarrCommands {
 
         @Override
         public List<CommandResponse> execute(String command) {
-          return lidarrApi.downloads();
+          return new CommandResponseUtil().addEmptyDownloadsMessage(lidarrApi.downloads(), ContentType.ARTIST);
         }
       });
     }};
