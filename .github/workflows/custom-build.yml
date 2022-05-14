@@ -1,4 +1,4 @@
-name: development
+name: build-custom-release
 on:
   workflow_dispatch:
     inputs:
