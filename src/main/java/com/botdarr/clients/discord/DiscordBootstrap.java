@@ -84,12 +84,17 @@ public class DiscordBootstrap extends ChatClientBootstrap {
                 }
 
                 private void handleCommand(JDA jda, String message, String author, String channelName) {
+                    LogManager.getLogger("com.botdarr.clients.discord").debug("Handling command " + message);
                     //build chat client
                     DiscordChatClient discordChatClient = new DiscordChatClient(jda);
 
                     //capture/process command
                     Scheduler.getScheduler().executeCommand(() -> {
+
+                        LogManager.getLogger("com.botdarr.clients.discord").debug("Executing command for " + message);
                         runAndProcessCommands(message, author, responseBuilder, chatClientResponse -> {
+
+                            LogManager.getLogger("com.botdarr.clients.discord").debug("Attempting to send response for " + message);
                             discordChatClient.sendMessage(chatClientResponse, channelName);
                         });
                         return null;

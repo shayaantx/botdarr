@@ -69,11 +69,13 @@ public abstract class ChatClientBootstrap {
                                                                              ChatSender<T> chatSender) {
     List<CommandResponse> commandResponses =
             commandProcessor.processRequestMessage(buildConfig().getCommands(), message, username);
+    LogManager.getLogger("com.botdarr.clients.discord").debug("Command responses count= " + commandResponses.size());
     if (commandResponses != null) {
       //if there is a response, format it for given response builder
       for (CommandResponse commandResponse : commandResponses) {
         //convert command response into chat client specific response
         T telegramResponse = commandResponse.convertToChatClientResponse(responseBuilder);
+        LogManager.getLogger("com.botdarr.clients.discord").debug("Sending converted response " + telegramResponse.toString());
         //then send the response
         chatSender.send(telegramResponse);
       }
