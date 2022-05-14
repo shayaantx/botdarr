@@ -116,40 +116,40 @@
     </Appenders>
 
     <Loggers>
-        <Logger name="com.botdarr" level="info" additivity="false">
+        <Logger name="com.botdarr" level="debug" additivity="false">
             <AppenderRef ref="Console" />
             <AppenderRef ref="BotLog" />
         </Logger>
 
-        <Logger name="com.botdarr.api.radarr" level="info" additivity="false">
+        <Logger name="com.botdarr.api.radarr" level="debug" additivity="false">
             <AppenderRef ref="RadarrLog" />
         </Logger>
 
-        <Logger name="com.botdarr.api.sonarr" level="info" additivity="false">
+        <Logger name="com.botdarr.api.sonarr" level="debug" additivity="false">
             <AppenderRef ref="SonarrLog" />
         </Logger>
 
-        <Logger name="com.botdarr.connections" level="info" additivity="false">
+        <Logger name="com.botdarr.connections" level="debug" additivity="false">
             <AppenderRef ref="NetworkLog" />
         </Logger>
 
-        <Logger name="AuditLog" level="info" additivity="false">
+        <Logger name="AuditLog" level="debug" additivity="false">
             <AppenderRef ref="AuditLog" />
         </Logger>
 
-        <Logger name="com.botdarr.clients.slack" level="info" additivity="false">
+        <Logger name="com.botdarr.clients.slack" level="debug" additivity="false">
             <AppenderRef ref="SlackLog" />
         </Logger>
 
-        <Logger name="com.botdarr.clients.discord" level="info" additivity="false">
+        <Logger name="com.botdarr.clients.discord" level="debug" additivity="false">
             <AppenderRef ref="DiscordLog" />
         </Logger>
 
-        <Logger name="com.botdarr.clients.telegram" level="info" additivity="false">
+        <Logger name="com.botdarr.clients.telegram" level="debug" additivity="false">
             <AppenderRef ref="TelegramLog" />
         </Logger>
 
-        <Logger name="com.botdarr.clients.matrix" level="info" additivity="false">
+        <Logger name="com.botdarr.clients.matrix" level="debug" additivity="false">
             <AppenderRef ref="MatrixLog" />
         </Logger>
 
