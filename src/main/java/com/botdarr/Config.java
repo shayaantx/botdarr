@@ -5,8 +5,12 @@ import com.botdarr.clients.discord.DiscordBootstrap;
 import com.botdarr.clients.matrix.MatrixBootstrap;
 import com.botdarr.clients.slack.SlackBootstrap;
 import com.botdarr.clients.telegram.TelegramBootstrap;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.util.Strings;
 
 import java.io.FileInputStream;
@@ -14,6 +18,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.function.BiConsumer;
 
 import static com.botdarr.commands.StatusCommand.*;
 
@@ -35,6 +40,14 @@ public class Config {
     try (InputStream input = new FileInputStream(propertiesPath)) {
       properties = new Properties();
       properties.load(input);
+
+      String logLevel = properties.getProperty(Constants.LOG_LEVEL);
+      if (!Strings.isEmpty(logLevel)) {
+        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        Configuration config = ctx.getConfiguration();
+        config.getLoggers().forEach((s, loggerConfig) -> loggerConfig.setLevel(Level.valueOf(logLevel)));
+        ctx.updateLoggers();
+      }
 
       List<ChatClientBootstrap> availableBootstraps = Arrays.asList(
               new DiscordBootstrap(),
@@ -85,7 +98,7 @@ public class Config {
         LOGGER.warn("Lidarr commands are not enabled, make sure you set the lidarr url, path, token, default profile");
       }
 
-      String configuredPrefix = properties.getProperty(Config.Constants.COMMAND_PREFIX);
+      String configuredPrefix = properties.getProperty(Constants.COMMAND_PREFIX);
       if (!Strings.isEmpty(configuredPrefix)) {
         chatClientBootstrap.validatePrefix(configuredPrefix);
       }
@@ -387,6 +400,11 @@ public class Config {
      * Connection/read timeouts for all outbound requests
      */
     public static final String TIMEOUT = "timeout";
+
+    /**
+     * Config for the log level
+     */
+    public static final String LOG_LEVEL = "log-level";
   }
 
   private static String propertiesPath = "config/properties";
