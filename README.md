@@ -124,7 +124,7 @@ botdarr:
 | Environment Variable | Description | Required | Default | 
 | :---: | :---: | :---: | :---: |
 | DISCORD_TOKEN | The discord bot token (don't share) | yes - if you use discord | |
-| DISCORD_CHANNELS | The actual discord channel(s) the bot lives in | yes - if you use discord |
+| DISCORD_CHANNELS | The actual discord channel(s) names the bot has access to. If multiple channel names specified, separate via a comma | yes - if you use discord |
 | TELEGRAM_TOKEN | The telegram bot token (don't share) | yes - if you use telegram |
 | TELEGRAM_PRIVATE_CHANNELS | Your actual telegram channels your bot can respond in. This should be a list containing the name and id of the channel, i.e., CHANNEL_NAME:CHANNEL_ID to get the channel id, right click any post in private channel and copy post link you should see something like this, https://t.me/c/1408146664/63 the id is between c/<id>/<postId> example: plex-channel1:id1,plex-channel2:id2 | yes - if you use telegram |
 | TELEGRAM_PRIVATE_GROUPS | Your actual telegram groups your bot can respond in. This should be a list containing the name and id of the group, i.e., GROUP_NAME:GROUP_ID to get the channel id, right click any post in private group and copy post link (you need to enable message history for this) you should see something like this, https://t.me/c/1408146664/63 the id is between c/<id>/<postId> example: plex-group1:id1,plex-group2:id2 | yes - if you use telegram |
@@ -178,6 +178,7 @@ botdarr:
 | COMMAND_PREFIX | The command prefix (default is !). Any prefix is allowed (but I haven't tested every single prefix in every client) | yes | ! | 
 | STATUS_ENDPOINTS | Endpoints that can be used to return statuses via !status command. The endpoints are separated by a comma and each endpoint is in the following format - name:hostname:port | no | |
 | TIMEOUT | The connection/read timeout value (in milliseconds) for all outbound requests | no | 5000 |
+| LOG_LEVEL | The log4j log level | no | info |
 <br/>
 
 ## Usage

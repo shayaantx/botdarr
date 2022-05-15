@@ -54,6 +54,7 @@ if [ ! -e "$propertiesFile" ]; then
     [[ ! -z "${MAX_MOVIE_REQUESTS_PER_USER}" ]] && addConfiguration "max-movie-requests-per-user" "${MAX_MOVIE_REQUESTS_PER_USER}" "${propertiesFile}"
     [[ ! -z "${EXISTING_ITEM_PATHS_BLACKLIST}" ]] && addConfiguration "existing-item-paths-blacklist" "${EXISTING_ITEM_PATHS_BLACKLIST}" "${propertiesFile}"
     [[ ! -z "${STATUS_ENDPOINTS}" ]] && addConfiguration "status-endpoints" "${STATUS_ENDPOINTS}" "${propertiesFile}"
+    [[ ! -z "${LOG_LEVEL}" ]] && addConfiguration "log-level" "${LOG_LEVEL}" "${propertiesFile}"
 
     addConfiguration "max-downloads-to-show" "${MAX_DOWNLOADS_TO_SHOW:-20}" "${propertiesFile}"
     addConfiguration "max-results-to-show" "${MAX_RESULTS_TO_SHOW:-20}" "${propertiesFile}"
