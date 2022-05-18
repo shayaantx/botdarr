@@ -48,7 +48,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
       }
 
       if (!Config.getStatusEndpoints().isEmpty()) {
-        matrixResponse.addContent("<b>" + new CommandProcessor().getPrefix() + STATUS_COMMAND + "</b> - " + STATUS_COMMAND_DESCRIPTION);
+        matrixResponse.addContent("<b>" + CommandContext.getConfig().getPrefix() + STATUS_COMMAND + "</b> - " + STATUS_COMMAND_DESCRIPTION);
       }
       return matrixResponse;
     } catch (Exception e) {
@@ -327,7 +327,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     MatrixResponse matrixResponse = new MatrixResponse();
     matrixResponse.addContent("<b><u>Commands</u></b>");
     for (Command command : commands) {
-      matrixResponse.addContent("<b>" + new CommandProcessor().getPrefix() + command.getCommandUsage() + "</b>" + " - " + command.getDescription());
+      matrixResponse.addContent("<b>" + CommandContext.getConfig().getPrefix() + command.getCommandUsage() + "</b>" + " - " + command.getDescription());
     }
     return matrixResponse;
   }

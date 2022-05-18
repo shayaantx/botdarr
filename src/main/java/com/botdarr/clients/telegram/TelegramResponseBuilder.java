@@ -50,7 +50,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
         domContents.add(b("*No radarr or sonarr or lidarr commands configured, check your properties file and logs*"));
       }
       if (!Config.getStatusEndpoints().isEmpty()) {
-        domContents.add(text(new CommandProcessor().getPrefix() + STATUS_COMMAND + " - " + STATUS_COMMAND_DESCRIPTION));
+        domContents.add(text(CommandContext.getConfig().getPrefix() + STATUS_COMMAND + " - " + STATUS_COMMAND_DESCRIPTION));
       }
       return new TelegramResponse(domContents);
     } catch (IOException e) {
@@ -337,7 +337,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(u(b("*Commands*")));
     for (Command command : commands) {
-      domContents.add(b(text(new CommandProcessor().getPrefix() + command.getCommandUsage())));
+      domContents.add(b(text(CommandContext.getConfig().getPrefix() + command.getCommandUsage())));
       domContents.add(text(command.getDescription()));
       domContents.add(text(" "));
     }

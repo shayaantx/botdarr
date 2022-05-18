@@ -3,6 +3,7 @@ package com.botdarr.clients.telegram;
 import com.botdarr.Config;
 import com.botdarr.clients.ChatClientBootstrap;
 import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.commands.CommandContext;
 import com.botdarr.scheduling.Scheduler;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
@@ -37,7 +38,7 @@ public class TelegramBootstrap extends ChatClientBootstrap {
                         //for now we leave the author as "telegram" till a better solution arises
                         String author = "telegram";
                         Scheduler.getScheduler().executeCommand(() -> {
-                            runAndProcessCommands(text, author, responseChatClientResponseBuilder, chatClientResponse -> {
+                            TelegramBootstrap.this.runAndProcessCommands(CommandContext.getConfig().getPrefix(), text, author, responseChatClientResponseBuilder, chatClientResponse -> {
                                 telegramChatClient.sendMessage(chatClientResponse, message.chat());
                             });
                             return null;

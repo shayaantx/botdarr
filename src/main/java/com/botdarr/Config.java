@@ -178,6 +178,17 @@ public class Config {
     return 5000;
   }
 
+  /**
+   * @return The command prefix
+   */
+  public static String getPrefix() {
+    String configuredPrefix = Config.getProperty(Config.Constants.COMMAND_PREFIX);
+    if (!Strings.isEmpty(configuredPrefix)) {
+      return configuredPrefix;
+    }
+    return "!";
+  }
+
   private static StatusEndPoint getDomain(String constant, String name) {
     try {
       URI uri = new URI(getProperty(constant));

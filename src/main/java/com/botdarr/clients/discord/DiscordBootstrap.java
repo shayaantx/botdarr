@@ -1,30 +1,47 @@
 package com.botdarr.clients.discord;
 
 import com.botdarr.Config;
+import com.botdarr.api.lidarr.LidarrCommands;
+import com.botdarr.api.radarr.RadarrCommands;
+import com.botdarr.api.sonarr.SonarrCommands;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientBootstrap;
 import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.commands.Command;
+import com.botdarr.commands.CommandContext;
 import com.botdarr.scheduling.Scheduler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageHistory;
+import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageAction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.lidarr.LidarrApi.ARTIST_LOOKUP_KEY_FIELD;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.radarr.RadarrApi.MOVIE_LOOKUP_FIELD;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.sonarr.SonarrApi.SHOW_LOOKUP_FIELD;
 
 public class DiscordBootstrap extends ChatClientBootstrap {
     @Override
@@ -46,6 +63,43 @@ public class DiscordBootstrap extends ChatClientBootstrap {
                     //start the scheduler threads that send notifications and cache data periodically
                     initScheduling(chatClient, responseBuilder, config.getApis());
                     super.onReady(event);
+                }
+
+                @Override
+                public void onSlashCommand(@NotNull SlashCommandEvent event) {
+                    // let discord know we received the message as quick as we can
+                    event.deferReply().queue();
+
+                    String discordSlashCommandPrefix = "/";
+                    StringBuilder eventCommand = new StringBuilder(discordSlashCommandPrefix + event.getName().replace('-', ' '));
+                    for (OptionMapping option : event.getOptions()) {
+                        eventCommand.append(" ").append(option.getAsString());
+                    }
+                    ChatClientResponseBuilder<DiscordResponse> slashCommandResponseBuilder = new DiscordResponseBuilder().usesSlashCommands();
+                    //capture/process command
+                    Scheduler.getScheduler().executeCommand(() -> {
+                        runAndProcessCommands(discordSlashCommandPrefix, eventCommand.toString(), event.getUser().getName(), slashCommandResponseBuilder, chatClientResponse -> {
+                            // then send the rest of the messages
+                            WebhookMessageAction<Message> action = event.getHook().sendMessageEmbeds(Collections.singletonList(chatClientResponse.getMessage()));
+                            if (!chatClientResponse.getActionComponents().isEmpty()) {
+                                action = action.addActionRow(chatClientResponse.getActionComponents());
+                            }
+                            action.queue();
+                        });
+                        return null;
+                    });
+                    LogManager.getLogger("com.botdarr.clients.discord").debug(eventCommand);
+                }
+
+                @Override
+                public void onButtonClick(@NotNull ButtonClickEvent event) {
+                    Message message = event.getInteraction().getMessage();
+                    message.getEmbeds().forEach(embed -> {
+                        String command = getCommandFromEmbed(embed);
+                        if (!Strings.isEmpty(command)) {
+                            handleCommand(event.getJDA(), command, event.getUser().getName(), event.getChannel().getName());
+                        }
+                    });
                 }
 
                 @Override
@@ -78,8 +132,10 @@ public class DiscordBootstrap extends ChatClientBootstrap {
 
                 @Override
                 public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
-                    handleCommand(event.getJDA(), event.getMessage().getContentStripped(), event.getAuthor().getName(), event.getChannel().getName());
-                    LogManager.getLogger("com.botdarr.clients.discord").debug(event.getMessage().getContentRaw());
+                    if (event.getMessage().getType() != MessageType.APPLICATION_COMMAND && event.getMessage().getEmbeds().isEmpty()) {
+                        handleCommand(event.getJDA(), event.getMessage().getContentStripped(), event.getAuthor().getName(), event.getChannel().getName());
+                        LogManager.getLogger("com.botdarr.clients.discord").debug(event.getMessage().getContentRaw());
+                    }
                     super.onMessageReceived(event);
                 }
 
@@ -89,7 +145,7 @@ public class DiscordBootstrap extends ChatClientBootstrap {
 
                     //capture/process command
                     Scheduler.getScheduler().executeCommand(() -> {
-                        runAndProcessCommands(message, author, responseBuilder, chatClientResponse -> {
+                        DiscordBootstrap.this.runAndProcessCommands(CommandContext.getConfig().getPrefix(), message, author, responseBuilder, chatClientResponse -> {
                             discordChatClient.sendMessage(chatClientResponse, channelName);
                         });
                         return null;
@@ -98,6 +154,7 @@ public class DiscordBootstrap extends ChatClientBootstrap {
 
                 private static final String THUMBS_UP_EMOTE = "\uD83D\uDC4D";
             }).build();
+            config.getCommands().forEach(command -> jda.upsertCommand(convertCommandToCommandData(command)).queue());
             jda.awaitReady();
         } catch (Throwable e) {
             LogManager.getLogger("com.botdarr.clients.discord").error("Error caught during main", e);
@@ -109,5 +166,44 @@ public class DiscordBootstrap extends ChatClientBootstrap {
     public boolean isConfigured(Properties properties) {
         return !Strings.isBlank(properties.getProperty(Config.Constants.DISCORD_TOKEN)) &&
                !Strings.isBlank(properties.getProperty(Config.Constants.DISCORD_CHANNELS));
+    }
+
+    @Override
+    public void validatePrefix(String configuredPrefix) {
+        super.validatePrefix(configuredPrefix);
+        if (configuredPrefix.equals("/")) {
+            throw new RuntimeException("Cannot use / command prefix in discord since / command is used by discord slash commands");
+        }
+    }
+
+    public String getCommandFromEmbed(MessageEmbed embed) {
+        for(MessageEmbed.Field field : embed.getFields()) {
+            if (field.getName() != null) {
+                if (field.getName().equals(MOVIE_LOOKUP_FIELD)) {
+                    return RadarrCommands.getAddMovieCommandStr(embed.getTitle(), Long.parseLong(field.getValue()));
+                }
+                if (field.getName().equals(SHOW_LOOKUP_FIELD)) {
+                    return SonarrCommands.getAddShowCommandStr(embed.getTitle(), Long.parseLong(field.getValue()));
+                }
+                if (field.getName().equals(ARTIST_LOOKUP_KEY_FIELD)) {
+                    return LidarrCommands.getAddArtistCommandStr(embed.getTitle(), field.getValue());
+                }
+            }
+        }
+        return null;
+    }
+
+    public CommandData convertCommandToCommandData(Command command) {
+        String description = command.getDescription();
+        if (description.length() > 100) {
+            description = description.substring(0, 97);
+            description += "...";
+        }
+        CommandData commandData = new CommandData(command.getCommandText().replace(' ', '-'), description);
+        command.getInput().forEach(input -> {
+            // all input is required by default
+            commandData.addOption(OptionType.STRING, input, input, true);
+        });
+        return commandData;
     }
 }

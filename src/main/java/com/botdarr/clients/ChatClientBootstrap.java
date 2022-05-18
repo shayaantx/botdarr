@@ -8,7 +8,6 @@ import com.botdarr.api.radarr.RadarrApi;
 import com.botdarr.api.radarr.RadarrCommands;
 import com.botdarr.api.sonarr.SonarrApi;
 import com.botdarr.api.sonarr.SonarrCommands;
-import com.botdarr.clients.telegram.TelegramResponse;
 import com.botdarr.commands.*;
 import com.botdarr.commands.responses.CommandResponse;
 import com.botdarr.scheduling.Scheduler;
@@ -26,7 +25,7 @@ public abstract class ChatClientBootstrap {
     }
   }
 
-  protected static <T extends ChatClientResponse> ApisAndCommandConfig buildConfig() {
+  protected <T extends ChatClientResponse> ApisAndCommandConfig buildConfig() {
     RadarrApi radarrApi = new RadarrApi();
     SonarrApi sonarrApi = new SonarrApi();
     LidarrApi lidarrApi = new LidarrApi();
@@ -63,20 +62,31 @@ public abstract class ChatClientBootstrap {
     scheduler.initApiNotifications(apis, chatClient, responseBuilder);
   }
 
-  protected static <T extends ChatClientResponse> void runAndProcessCommands(String message,
-                                                                             String username,
-                                                                             ChatClientResponseBuilder<T> responseBuilder,
-                                                                             ChatSender<T> chatSender) {
-    List<CommandResponse> commandResponses =
-            commandProcessor.processRequestMessage(buildConfig().getCommands(), message, username);
-    if (commandResponses != null) {
-      //if there is a response, format it for given response builder
-      for (CommandResponse commandResponse : commandResponses) {
-        //convert command response into chat client specific response
-        T telegramResponse = commandResponse.convertToChatClientResponse(responseBuilder);
-        //then send the response
-        chatSender.send(telegramResponse);
+  protected <T extends ChatClientResponse> void runAndProcessCommands(String prefix,
+                                                                      String message,
+                                                                      String username,
+                                                                      ChatClientResponseBuilder<T> responseBuilder,
+                                                                      ChatSender<T> chatSender) {
+    try {
+      CommandContext
+              .start()
+              .setPrefix(prefix)
+              .setUsername(username);
+      LOGGER.debug("Processing command " + message + " for username " + username + " with prefix " + prefix);
+      List<CommandResponse> commandResponses =
+              commandProcessor.processCommand(prefix, buildConfig().getCommands(), message, username);
+      if (commandResponses != null) {
+        //if there is a response, format it for given response builder
+        for (CommandResponse commandResponse : commandResponses) {
+          LOGGER.debug("Processing command response " + commandResponse.toString());
+          //convert command response into chat client specific response
+          T clientResponse = commandResponse.convertToChatClientResponse(responseBuilder);
+          //then send the response
+          chatSender.send(clientResponse);
+        }
       }
+    } finally {
+      CommandContext.end();
     }
   }
 
@@ -98,6 +108,6 @@ public abstract class ChatClientBootstrap {
     private final List<Command> commands;
   }
 
-  protected static CommandProcessor commandProcessor = new CommandProcessor();
+  protected CommandProcessor commandProcessor = new CommandProcessor();
   protected static final Logger LOGGER = LogManager.getLogger(ChatClientBootstrap.class);
 }

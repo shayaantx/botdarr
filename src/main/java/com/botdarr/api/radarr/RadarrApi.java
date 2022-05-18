@@ -332,4 +332,5 @@ public class RadarrApi implements Api {
 
   private static RadarrCache RADARR_CACHE = new RadarrCache();
   public static final String ADD_MOVIE_COMMAND_FIELD_PREFIX = "Add movie command";
+  public static final String MOVIE_LOOKUP_FIELD = "TmdbId";
 }

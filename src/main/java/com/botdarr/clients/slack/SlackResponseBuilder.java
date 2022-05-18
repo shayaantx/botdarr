@@ -72,7 +72,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       }
       if (!Config.getStatusEndpoints().isEmpty()) {
         slackResponse.addBlock(SectionBlock.builder()
-          .text(MarkdownTextObject.builder().text(new CommandProcessor().getPrefix() + STATUS_COMMAND + " - " + STATUS_COMMAND_DESCRIPTION).build())
+          .text(MarkdownTextObject.builder().text(CommandContext.getConfig().getPrefix() + STATUS_COMMAND + " - " + STATUS_COMMAND_DESCRIPTION).build())
           .build());
       }
     } catch (IOException e) {
@@ -523,7 +523,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .build());
     for (Command command : commands) {
       slackResponse.addBlock(SectionBlock.builder()
-        .text(MarkdownTextObject.builder().text(new CommandProcessor().getPrefix() + command.getCommandUsage() + " - " + command.getDescription()).build())
+        .text(MarkdownTextObject.builder().text(CommandContext.getConfig().getPrefix() + command.getCommandUsage() + " - " + command.getDescription()).build())
         .build());
     }
     return slackResponse;

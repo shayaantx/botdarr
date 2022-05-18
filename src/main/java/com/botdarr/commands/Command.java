@@ -8,6 +8,7 @@ public interface Command {
   String getCommandText();
   String getDescription();
   String getIdentifier();
+  List<String> getInput();
   default String getCommandUsage() {
     return "";
   }

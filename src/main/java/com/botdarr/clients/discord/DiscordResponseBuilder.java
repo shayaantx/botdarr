@@ -13,16 +13,23 @@ import com.botdarr.commands.responses.*;
 import com.botdarr.utilities.ListUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.internal.interactions.ButtonImpl;
 import org.apache.logging.log4j.util.Strings;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.botdarr.api.lidarr.LidarrApi.ADD_ARTIST_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.lidarr.LidarrApi.ARTIST_LOOKUP_KEY_FIELD;
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.radarr.RadarrApi.MOVIE_LOOKUP_FIELD;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
+import static com.botdarr.api.sonarr.SonarrApi.SHOW_LOOKUP_FIELD;
 import static com.botdarr.commands.StatusCommand.STATUS_COMMAND;
 import static com.botdarr.commands.StatusCommand.STATUS_COMMAND_DESCRIPTION;
 import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
@@ -41,22 +48,22 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     boolean sonarrEnabled = Config.isSonarrEnabled();
     boolean lidarrEnabled = Config.isLidarrEnabled();
     if (radarrEnabled) {
-      embedBuilder.addField(RadarrCommands.getHelpMovieCommandStr(), "Shows all the commands for movies", false);
+      embedBuilder.addField(RadarrCommands.getHelpMovieCommandStr().replace(" ", "-"), "Shows all the commands for movies", false);
     }
 
     if (sonarrEnabled) {
-      embedBuilder.addField(SonarrCommands.getHelpShowCommandStr(), "Shows all the commands for shows", false);
+      embedBuilder.addField(SonarrCommands.getHelpShowCommandStr().replace(" ", "-"), "Shows all the commands for shows", false);
     }
 
     if (lidarrEnabled) {
-      embedBuilder.addField(LidarrCommands.getHelpCommandStr(), "Shows all the commands for music", false);
+      embedBuilder.addField(LidarrCommands.getHelpCommandStr().replace(" ", "-"), "Shows all the commands for music", false);
     }
 
     if (!radarrEnabled && !sonarrEnabled && !lidarrEnabled) {
       embedBuilder.appendDescription("No radarr or sonarr or lidarr commands configured, check your properties file and logs");
     }
     if (!Config.getStatusEndpoints().isEmpty()) {
-      embedBuilder.addField(new CommandProcessor().getPrefix() + STATUS_COMMAND, STATUS_COMMAND_DESCRIPTION, false);
+      embedBuilder.addField(CommandContext.getConfig().getPrefix() + STATUS_COMMAND, STATUS_COMMAND_DESCRIPTION, false);
     }
     return new DiscordResponse(embedBuilder.build());
   }
@@ -81,7 +88,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     SonarrShow show = showResponse.getShow();
     embedBuilder.setTitle(show.getTitle());
-    embedBuilder.addField("TvdbId", String.valueOf(show.getTvdbId()), false);
+    embedBuilder.addField(SHOW_LOOKUP_FIELD, String.valueOf(show.getTvdbId()), false);
     embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, SonarrCommands.getAddShowCommandStr(show.getTitle(), show.getTvdbId()), false);
     embedBuilder.setImage(show.getRemotePoster());
     return new DiscordResponse(embedBuilder.build());
@@ -204,9 +211,14 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     SonarrShow sonarrShow = newShowResponse.getNewShow();
     embedBuilder.setTitle(sonarrShow.getTitle());
     embedBuilder.addField("TvdbId", "" + sonarrShow.getTvdbId(), true);
-    embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId()), false);
     embedBuilder.setImage(sonarrShow.getRemotePoster());
-    return new DiscordResponse(embedBuilder.build());
+    if (!usingSlashCommand) {
+      embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId()), false);
+      return new DiscordResponse(embedBuilder.build());
+    }
+    List<Component> actionComponents = new ArrayList<>();
+    actionComponents.add(Button.primary("add", "Add"));
+    return new DiscordResponse(embedBuilder.build(), actionComponents);
   }
 
   @Override
@@ -233,10 +245,15 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     RadarrMovie radarrMovie = newMovieResponse.getRadarrMovie();
     embedBuilder.setTitle(radarrMovie.getTitle());
-    embedBuilder.addField("TmdbId", String.valueOf(radarrMovie.getTmdbId()), false);
-    embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()), false);
+    embedBuilder.addField(MOVIE_LOOKUP_FIELD, String.valueOf(radarrMovie.getTmdbId()), false);
     embedBuilder.setImage(radarrMovie.getRemotePoster());
-    return new DiscordResponse(embedBuilder.build());
+    if (!usingSlashCommand) {
+      embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()), false);
+      return new DiscordResponse(embedBuilder.build());
+    }
+    List<Component> actionComponents = new ArrayList<>();
+    actionComponents.add(Button.primary("add", "Add"));
+    return new DiscordResponse(embedBuilder.build(), actionComponents);
   }
 
   @Override
@@ -258,9 +275,15 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     LidarrArtist lookupArtist = newMusicArtistResponse.getLidarrArtist();
     String artistDetail = " (" + lookupArtist.getDisambiguation() + ")";
     embedBuilder.setTitle(lookupArtist.getArtistName() + (Strings.isEmpty(lookupArtist.getDisambiguation()) ? "" :  artistDetail));
-    embedBuilder.addField(ADD_ARTIST_COMMAND_FIELD_PREFIX, LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId()), false);
+    embedBuilder.addField(ARTIST_LOOKUP_KEY_FIELD, lookupArtist.getForeignArtistId(), false);
     embedBuilder.setImage(lookupArtist.getRemotePoster());
-    return new DiscordResponse(embedBuilder.build());
+    if (!usingSlashCommand) {
+      embedBuilder.addField(ADD_ARTIST_COMMAND_FIELD_PREFIX, LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId()), false);
+      return new DiscordResponse(embedBuilder.build());
+    }
+    List<Component> actionComponents = new ArrayList<>();
+    actionComponents.add(Button.primary("add", "Add"));
+    return new DiscordResponse(embedBuilder.build(), actionComponents);
   }
 
   @Override
@@ -341,8 +364,15 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle("Commands");
     for (Command com : commands) {
-      embedBuilder.addField(new CommandProcessor().getPrefix() + com.getCommandUsage(), com.getDescription(), false);
+      embedBuilder.addField(CommandContext.getConfig().getPrefix().replace(" ", "-") + com.getCommandUsage(), com.getDescription(), false);
     }
     return new DiscordResponse(embedBuilder.build());
   }
+
+  public DiscordResponseBuilder usesSlashCommands() {
+    this.usingSlashCommand = true;
+    return this;
+  }
+
+  private boolean usingSlashCommand = false;
 }
