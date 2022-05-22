@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.*;
 
 public class SonarrApi implements Api {
@@ -221,7 +222,9 @@ public class SonarrApi implements Api {
       HttpPost post = new HttpPost(getApiUrl(SonarrUrls.SERIES_BASE));
 
       post.addHeader("content-type", "application/x-www-form-urlencoded");
-      post.setEntity(new StringEntity(new GsonBuilder().addSerializationExclusionStrategy(excludeUnnecessaryFields).create().toJson(sonarrShow, SonarrShow.class)));
+      post.setEntity(
+        new StringEntity(
+          new GsonBuilder().addSerializationExclusionStrategy(excludeUnnecessaryFields).create().toJson(sonarrShow, SonarrShow.class), Charset.forName("UTF-8")));
 
       try (CloseableHttpResponse response = client.execute(post)) {
         int statusCode = response.getStatusLine().getStatusCode();

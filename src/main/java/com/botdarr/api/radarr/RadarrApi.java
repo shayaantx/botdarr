@@ -255,7 +255,7 @@ public class RadarrApi implements Api {
 
       post.addHeader("content-type", "application/json");
       String json = new Gson().toJson(radarrMovie, RadarrMovie.class);
-      post.setEntity(new StringEntity(json));
+      post.setEntity(new StringEntity(json, Charset.forName("UTF-8")));
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Client request=" + post);

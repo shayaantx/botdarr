@@ -19,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -265,7 +266,7 @@ public class LidarrApi implements Api {
       //lidarr for some reason doesn't support raw unicode characters in json parsing (since they should be allowed), so we escape them here
       mapper.getFactory().configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
       String json = mapper.writeValueAsString(lidarrArtist);
-      post.setEntity(new StringEntity(json));
+      post.setEntity(new StringEntity(json, Charset.forName("UTF-8")));
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Client request=" + post);
