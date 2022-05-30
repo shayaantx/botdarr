@@ -3,6 +3,7 @@ package com.botdarr.clients.matrix;
 import com.botdarr.Config;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.clients.ChatClientBootstrap;
+import com.botdarr.commands.CommandContext;
 import com.botdarr.scheduling.Scheduler;
 import org.apache.logging.log4j.util.Strings;
 
@@ -18,7 +19,7 @@ public class MatrixBootstrap extends ChatClientBootstrap {
         initScheduling(chatClient, responseChatClientResponseBuilder, config.getApis());
         chatClient.addListener((roomId, sender, content) -> {
             Scheduler.getScheduler().executeCommand(() -> {
-                runAndProcessCommands(content, sender, responseChatClientResponseBuilder, chatClientResponse -> {
+                MatrixBootstrap.this.runAndProcessCommands(CommandContext.getConfig().getPrefix(), content, sender, responseChatClientResponseBuilder, chatClientResponse -> {
                     chatClient.sendMessage(chatClientResponse, roomId);
                 });
                 return null;

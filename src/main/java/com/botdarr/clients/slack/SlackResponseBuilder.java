@@ -72,7 +72,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       }
       if (!Config.getStatusEndpoints().isEmpty()) {
         slackResponse.addBlock(SectionBlock.builder()
-          .text(MarkdownTextObject.builder().text(new CommandProcessor().getPrefix() + STATUS_COMMAND + " - " + STATUS_COMMAND_DESCRIPTION).build())
+          .text(MarkdownTextObject.builder().text(CommandContext.getConfig().getPrefix() + STATUS_COMMAND + " - " + STATUS_COMMAND_DESCRIPTION).build())
           .build());
       }
     } catch (IOException e) {
@@ -109,11 +109,11 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     slackResponse.addBlock(SectionBlock.builder()
       .text(PlainTextObject.builder().text(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + SonarrCommands.getAddShowCommandStr(show.getTitle(), show.getTvdbId())).build())
       .build());
-    if (!Strings.isBlank(show.getRemotePoster())) {
+    if (!Strings.isBlank(show.getRemoteImage())) {
       //if there is no poster to display, slack will fail to render all the blocks
       //so make sure there is one before trying to render
       slackResponse.addBlock(ImageBlock.builder()
-        .imageUrl(show.getRemotePoster())
+        .imageUrl(show.getRemoteImage())
         .altText(show.getTitle() + " poster")
         .build());
     }
@@ -133,11 +133,11 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     slackResponse.addBlock(SectionBlock.builder()
       .text(PlainTextObject.builder().text(ADD_ARTIST_COMMAND_FIELD_PREFIX + " - " + LidarrCommands.getAddArtistCommandStr(lidarrArtist.getArtistName(), lidarrArtist.getForeignArtistId())).build())
       .build());
-    if (!Strings.isBlank(lidarrArtist.getRemotePoster())) {
+    if (!Strings.isBlank(lidarrArtist.getRemoteImage())) {
       //if there is no poster to display, slack will fail to render all the blocks
       //so make sure there is one before trying to render
       slackResponse.addBlock(ImageBlock.builder()
-        .imageUrl(lidarrArtist.getRemotePoster())
+        .imageUrl(lidarrArtist.getRemoteImage())
         .altText(lidarrArtist.getArtistName() + " poster")
         .build());
     }
@@ -347,7 +347,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
             .text(MarkdownTextObject.builder().text(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId())).build())
             .build());
     slackResponse.addBlock(ImageBlock.builder()
-      .imageUrl(sonarrShow.getRemotePoster())
+      .imageUrl(sonarrShow.getRemoteImage())
       .altText(sonarrShow.getTitle() + " poster")
       .build());
     return slackResponse;
@@ -382,7 +382,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
               .build());
     }
     slackResponse.addBlock(ImageBlock.builder()
-            .imageUrl(sonarrShow.getRemotePoster())
+            .imageUrl(sonarrShow.getRemoteImage())
             .altText(sonarrShow.getTitle() + " poster")
             .build());
     return slackResponse;
@@ -403,7 +403,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
             .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + RadarrCommands.getAddMovieCommandStr(lookupMovie.getTitle(), lookupMovie.getTmdbId())).build())
             .build());
     slackResponse.addBlock(ImageBlock.builder()
-      .imageUrl(lookupMovie.getRemotePoster())
+      .imageUrl(lookupMovie.getRemoteImage())
       .altText(lookupMovie.getTitle() + " poster")
       .build());
     return slackResponse;
@@ -430,7 +430,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
             .text(MarkdownTextObject.builder().text("Has File - " + lookupMovie.isHasFile()).build())
             .build());
     slackResponse.addBlock(ImageBlock.builder()
-            .imageUrl(lookupMovie.getRemotePoster())
+            .imageUrl(lookupMovie.getRemoteImage())
             .altText(lookupMovie.getTitle() + " poster")
             .build());
     return slackResponse;
@@ -449,7 +449,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
                     LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId())).build())
             .build());
     slackResponse.addBlock(ImageBlock.builder()
-      .imageUrl(lookupArtist.getRemotePoster())
+      .imageUrl(lookupArtist.getRemoteImage())
       .altText(lookupArtist.getArtistName() + " poster")
       .build());
     return slackResponse;
@@ -464,7 +464,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
             .text(MarkdownTextObject.builder().text("*Artist Name* - " + lookupArtist.getArtistName() + (Strings.isEmpty(lookupArtist.getDisambiguation()) ? "" :  artistDetail)).build())
             .build());
     slackResponse.addBlock(ImageBlock.builder()
-            .imageUrl(lookupArtist.getRemotePoster())
+            .imageUrl(lookupArtist.getRemoteImage())
             .altText(lookupArtist.getArtistName() + " poster")
             .build());
     return slackResponse;
@@ -505,11 +505,11 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     slackResponse.addBlock(SectionBlock.builder()
             .text(MarkdownTextObject.builder().text(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId())).build())
             .build());
-    if (!Strings.isBlank(radarrMovie.getRemotePoster())) {
+    if (!Strings.isBlank(radarrMovie.getRemoteImage())) {
       //if there is no poster to display, slack will fail to render all the blocks
       //so make sure there is one before trying to render
       slackResponse.addBlock(ImageBlock.builder()
-              .imageUrl(radarrMovie.getRemotePoster())
+              .imageUrl(radarrMovie.getRemoteImage())
               .altText(radarrMovie.getTitle() + " poster")
               .build());
     }
@@ -523,7 +523,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .build());
     for (Command command : commands) {
       slackResponse.addBlock(SectionBlock.builder()
-        .text(MarkdownTextObject.builder().text(new CommandProcessor().getPrefix() + command.getCommandUsage() + " - " + command.getDescription()).build())
+        .text(MarkdownTextObject.builder().text(CommandContext.getConfig().getPrefix() + command.getCommandUsage() + " - " + command.getDescription()).build())
         .build());
     }
     return slackResponse;

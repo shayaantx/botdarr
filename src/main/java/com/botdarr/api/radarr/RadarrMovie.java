@@ -1,6 +1,7 @@
 package com.botdarr.api.radarr;
 
 import com.botdarr.api.KeyBased;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.Date;
 import java.util.List;
@@ -90,7 +91,18 @@ public class RadarrMovie implements KeyBased<Long> {
     this.website = website;
   }
 
-  public String getRemotePoster() {
+  public String getRemoteImage() {
+    if (Strings.isEmpty(remotePoster)) {
+      for(RadarrImage radarrImage : images) {
+        if (radarrImage.getCoverType().equals("poster") && !Strings.isEmpty(radarrImage.getRemoteUrl())) {
+          return radarrImage.getRemoteUrl();
+        }
+      }
+    }
+    return remotePoster;
+  }
+
+  public String getRemotePost() {
     return remotePoster;
   }
 

@@ -17,6 +17,15 @@ public class SonarrImage {
     this.url = url;
   }
 
+  public String getRemoteUrl() {
+    return remoteUrl;
+  }
+
+  public void setRemoteUrl(String remoteUrl) {
+    this.remoteUrl = remoteUrl;
+  }
+
   private String coverType;
   private String url;
+  private String remoteUrl;
 }

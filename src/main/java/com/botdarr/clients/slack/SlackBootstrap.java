@@ -3,6 +3,7 @@ package com.botdarr.clients.slack;
 import com.botdarr.Config;
 import com.botdarr.clients.ChatClientBootstrap;
 import com.botdarr.clients.ChatClientResponseBuilder;
+import com.botdarr.commands.CommandContext;
 import com.botdarr.scheduling.Scheduler;
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.model.Message;
@@ -86,7 +87,7 @@ public class SlackBootstrap extends ChatClientBootstrap {
 
             private void handleCommand(String text, String userId, String channel) {
                 Scheduler.getScheduler().executeCommand(() -> {
-                    runAndProcessCommands(text, userId, responseChatClientResponseBuilder, chatClientResponse -> {
+                    SlackBootstrap.this.runAndProcessCommands(CommandContext.getConfig().getPrefix(), text, userId, responseChatClientResponseBuilder, chatClientResponse -> {
                         slackChatClient.sendMessage(chatClientResponse, channel);
                     });
                     return null;

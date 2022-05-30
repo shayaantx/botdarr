@@ -1,14 +1,12 @@
 package com.botdarr.api.radarr;
 
 import com.botdarr.api.ContentType;
-import com.botdarr.commands.BaseCommand;
-import com.botdarr.commands.Command;
-import com.botdarr.commands.CommandProcessor;
-import com.botdarr.commands.CommandResponseUtil;
+import com.botdarr.commands.*;
 import com.botdarr.commands.responses.CommandResponse;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,8 +24,10 @@ public class RadarrCommands {
           return radarrApi.discover();
         }
       });
-      add(new BaseCommand("movie id add", "movie id add <movie-title> <movie-tmdbid>", "Adds a movie using search text and tmdb id (i.e., movie id add John Wick 484737). The easiest" +
-        " way to use this command is to use \"movie find new TITLE\", then the results will contain the movie add command for you") {
+      add(new BaseCommand(
+              "movie id add",
+              "Adds a movie using search text and tmdb id (i.e., movie id add John Wick 484737).",
+              Arrays.asList("movie-title", "movie-tmdbid")) {
         @Override
         public List<CommandResponse> execute(String command) {
           int lastSpace = command.lastIndexOf(" ");
@@ -41,8 +41,10 @@ public class RadarrCommands {
           return Collections.singletonList(radarrApi.addWithId(searchText, id));
         }
       });
-      add(new BaseCommand("movie title add", "movie title add <movie-title>", "Adds a movie with just a title. Since many movies can have same title or very similar titles, the trakt" +
-        " search can return multiple movies, if we detect multiple new films, we will return those films, otherwise we will add the single film.") {
+      add(new BaseCommand(
+              "movie title add",
+              "Adds a movie with just a title. Since many movies can have same title or very similar titles",
+              Collections.singletonList("movie-title")) {
         @Override
         public List<CommandResponse> execute(String searchText) {
           validateMovieTitle(searchText);
@@ -60,14 +62,20 @@ public class RadarrCommands {
           return radarrApi.getProfiles();
         }
       });
-      add(new BaseCommand("movie find new", "movie find new <movie-title>", "Finds a new movie using radarr (i.e., movie find new John Wick)") {
+      add(new BaseCommand(
+              "movie find new",
+              "Finds a new movie using radarr (i.e., movie find new John Wick)",
+              Collections.singletonList("movie-title")) {
         @Override
         public List<CommandResponse> execute(String searchText) {
           validateMovieTitle(searchText);
           return radarrApi.lookup(searchText, true);
         }
       });
-      add(new BaseCommand("movie find existing", "movie find existing <movie-title>", "Finds an existing movie using radarr (i.e., movie find existing Princess Fudgecake)") {
+      add(new BaseCommand(
+              "movie find existing",
+              "Finds an existing movie using radarr (i.e., movie find existing Princess Fudgecake)",
+              Collections.singletonList("movie-title")) {
         @Override
         public List<CommandResponse> execute(String searchText) {
           validateMovieTitle(searchText);
@@ -89,11 +97,11 @@ public class RadarrCommands {
   }
 
   public static String getAddMovieCommandStr(String title, long tmdbId) {
-    return new CommandProcessor().getPrefix() + "movie id add " + title + " " + tmdbId;
+    return CommandContext.getConfig().getPrefix() + "movie id add " + title + " " + tmdbId;
   }
 
   public static String getHelpMovieCommandStr() {
-    return new CommandProcessor().getPrefix() + "movies help";
+    return CommandContext.getConfig().getPrefix() + "movies help";
   }
 
   private static void validateMovieTitle(String movieTitle) {

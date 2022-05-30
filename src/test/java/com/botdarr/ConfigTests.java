@@ -112,6 +112,25 @@ public class ConfigTests {
     Config.getProperty("");
   }
 
+  @Test
+  public void getPrefix_returnsDefaultPrefix() throws Exception {
+    Properties properties = new Properties();
+    properties.put("telegram-token", "%H$$54j45i");
+    properties.put("telegram-private-groups", "group1:100459349");
+    writeFakePropertiesFile(properties);
+    Assert.assertEquals("!", Config.getPrefix());
+  }
+
+  @Test
+  public void getPrefix_returnsConfiguredPrefix() throws Exception {
+    Properties properties = new Properties();
+    properties.put("telegram-token", "%H$$54j45i");
+    properties.put("telegram-private-groups", "group1:100459349");
+    properties.put("command-prefix", "$");
+    writeFakePropertiesFile(properties);
+    Assert.assertEquals("$", Config.getPrefix());
+  }
+
   private void writeFakePropertiesFile(Properties properties) throws Exception {
     File propertiesFile = new File(temporaryFolder.getRoot(), "properties");
     Deencapsulation.setField(Config.class, "propertiesPath", propertiesFile.getPath());

@@ -282,4 +282,5 @@ public class SonarrApi implements Api {
 
   private static final SonarrCache SONARR_CACHE = new SonarrCache();
   public static final String ADD_SHOW_COMMAND_FIELD_PREFIX = "Add show command";
+  public static final String SHOW_LOOKUP_FIELD = "TvdbId";
 }

@@ -305,4 +305,5 @@ public class LidarrApi implements Api {
 
   private static final LidarrCache LIDARR_CACHE = new LidarrCache();
   public static final String ADD_ARTIST_COMMAND_FIELD_PREFIX = "Add artist command";
+  public static final String ARTIST_LOOKUP_KEY_FIELD = "ForeignArtistId";
 }

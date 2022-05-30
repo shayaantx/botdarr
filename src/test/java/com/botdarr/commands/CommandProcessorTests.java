@@ -1,5 +1,6 @@
 package com.botdarr.commands;
 
+import com.botdarr.Config;
 import com.botdarr.TestCommandResponse;
 import com.botdarr.api.lidarr.LidarrApi;
 import com.botdarr.api.lidarr.LidarrCommands;
@@ -14,11 +15,16 @@ import mockit.*;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * These tests specifically test commands that take no arguments and commands that take arguments
@@ -27,6 +33,7 @@ public class CommandProcessorTests {
   @Before
   public void beforeEachTest() {
     mockCommandPrefix("!");
+    writeFakePropertiesFile(getDefaultProperties());
   }
 
   @Test
@@ -334,7 +341,7 @@ public class CommandProcessorTests {
   private List<CommandResponse> validateValidCommand(String validCommand) {
     CommandProcessor commandProcessor = new CommandProcessor();
     List<CommandResponse> commandResponses =
-      commandProcessor.processRequestMessage(getCommandsToTest(), validCommand, "user1");
+      commandProcessor.processCommand(CommandContext.getConfig().getPrefix(), getCommandsToTest(), validCommand, "user1");
     //we are just making sure no error responses are returned since they signify a failure with the command
     if (commandResponses != null) {
       for (CommandResponse response: commandResponses) {
@@ -348,7 +355,7 @@ public class CommandProcessorTests {
   private void validateInvalidCommand(String invalidCommand, String expectedErrorResponseString) {
     CommandProcessor commandProcessor = new CommandProcessor();
     List<CommandResponse> commandResponses =
-            commandProcessor.processRequestMessage(getCommandsToTest(), invalidCommand, "user1");
+            commandProcessor.processCommand(CommandContext.getConfig().getPrefix(), getCommandsToTest(), invalidCommand, "user1");
     if (commandResponses != null) {
       Assert.assertEquals(1, commandResponses.size());
       CommandResponse commandResponse = commandResponses.get(0);
@@ -379,6 +386,35 @@ public class CommandProcessorTests {
     commands.addAll(lidarrCommands);
     return commands;
   }
+
+  private void writeFakePropertiesFile(Properties properties) {
+    File propertiesFile = null;
+    try {
+      propertiesFile = temporaryFolder.newFile("properties");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    Deencapsulation.setField(Config.class, "propertiesPath", propertiesFile.getPath());
+    try (FileOutputStream fos = new FileOutputStream(propertiesFile)) {
+      properties.store(fos, "");
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Properties getDefaultProperties() {
+    Properties properties = new Properties();
+    properties.setProperty("discord-token", "G$K$GK");
+    properties.setProperty("discord-channels", "plex-testing2");
+    properties.setProperty("radarr-url", "http://localhost:444");
+    properties.setProperty("radarr-token", "FSJDkjmf#$Kf3");
+    properties.setProperty("radarr-path", "/movies");
+    properties.setProperty("radarr-default-profile", "any");
+    return properties;
+  }
+
+  @Rule
+  public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   @Injectable
   private RadarrApi radarrApi;

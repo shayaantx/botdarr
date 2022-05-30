@@ -41,6 +41,7 @@ Made this simple multi chat-client bot to access radarr, sonarr, and lidarr with
 - [x] User requests audited to local database\
 - [x] Blacklist content by paths from showing up in searches
 - [x] Get status of radarr, lidarr, sonarr, and any additional configured endpoints
+- [x] Discord slash commands  
 - [ ] Lookup torrents for movies and force download
 - [ ] Cancel/blacklist existing downloads
 - [ ] Episode/season search
@@ -50,6 +51,17 @@ Made this simple multi chat-client bot to access radarr, sonarr, and lidarr with
 ## Discord Bot Installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Discord-Bot
+
+Slash commands installation/updates:
+- By default, slash commands are automatically available now
+- You can no longer use / with discord as that is reserved for slash commands
+- If you are trying to use slash commands, you will need to update your bots permission to include slash commands, then re-invite your bot your discord server
+- It can take up to 1 hour for discord slash commands to appear
+- If you don't see them after an hour, try disabling one of the commands, and re-enabling it. This workarounds the following bug I've noticed in desktop discord client
+  https://stackoverflow.com/questions/72111433/discord-bot-slash-command-not-appear-on-win10
+  https://github.com/discord/discord-api-docs/issues/4859
+  https://github.com/discord/discord-api-docs/issues/4856
+- Slash commands from botdarr operate the same except they are not the same case (i.e., all the commands have dashes in them)
 
 ## Slack Bot Installation
 
