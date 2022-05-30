@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.Component;
-import net.dv8tion.jda.internal.interactions.ButtonImpl;
 import org.apache.logging.log4j.util.Strings;
 
 import java.awt.*;
@@ -90,7 +89,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle(show.getTitle());
     embedBuilder.addField(SHOW_LOOKUP_FIELD, String.valueOf(show.getTvdbId()), false);
     embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, SonarrCommands.getAddShowCommandStr(show.getTitle(), show.getTvdbId()), false);
-    embedBuilder.setImage(show.getRemotePoster());
+    embedBuilder.setImage(show.getRemoteImage());
     return new DiscordResponse(embedBuilder.build());
   }
 
@@ -101,7 +100,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle(lidarrArtist.getArtistName());
     embedBuilder.addField("Id", String.valueOf(lidarrArtist.getForeignArtistId()), false);
     embedBuilder.addField(ADD_ARTIST_COMMAND_FIELD_PREFIX, LidarrCommands.getAddArtistCommandStr(lidarrArtist.getArtistName(), lidarrArtist.getForeignArtistId()), false);
-    embedBuilder.setImage(lidarrArtist.getRemotePoster());
+    embedBuilder.setImage(lidarrArtist.getRemoteImage());
     return new DiscordResponse(embedBuilder.build());
   }
 
@@ -211,7 +210,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     SonarrShow sonarrShow = newShowResponse.getNewShow();
     embedBuilder.setTitle(sonarrShow.getTitle());
     embedBuilder.addField("TvdbId", "" + sonarrShow.getTvdbId(), true);
-    embedBuilder.setImage(sonarrShow.getRemotePoster());
+    embedBuilder.setImage(sonarrShow.getRemoteImage());
     if (!usingSlashCommand) {
       embedBuilder.addField(ADD_SHOW_COMMAND_FIELD_PREFIX, SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId()), false);
       return new DiscordResponse(embedBuilder.build());
@@ -236,7 +235,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
             ",Available Epsiodes=" + sonarrSeason.getStatistics().getEpisodeCount() + ",Total Epsiodes=" + sonarrSeason.getStatistics().getTotalEpisodeCount(), false);
       }
     }
-    embedBuilder.setImage(existingShow.getRemotePoster());
+    embedBuilder.setImage(existingShow.getRemoteImage());
     return new DiscordResponse(embedBuilder.build());
   }
 
@@ -246,7 +245,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     RadarrMovie radarrMovie = newMovieResponse.getRadarrMovie();
     embedBuilder.setTitle(radarrMovie.getTitle());
     embedBuilder.addField(MOVIE_LOOKUP_FIELD, String.valueOf(radarrMovie.getTmdbId()), false);
-    embedBuilder.setImage(radarrMovie.getRemotePoster());
+    embedBuilder.setImage(radarrMovie.getRemoteImage());
     if (!usingSlashCommand) {
       embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()), false);
       return new DiscordResponse(embedBuilder.build());
@@ -265,7 +264,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.addField("Id", String.valueOf(radarrMovie.getId()), false);
     embedBuilder.addField("Downloaded", String.valueOf((radarrMovie.getSizeOnDisk() > 0)), false);
     embedBuilder.addField("Has File", String.valueOf(radarrMovie.isHasFile()), false);
-    embedBuilder.setImage(radarrMovie.getRemotePoster());
+    embedBuilder.setImage(radarrMovie.getRemoteImage());
     return new DiscordResponse(embedBuilder.build());
   }
 
@@ -276,7 +275,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     String artistDetail = " (" + lookupArtist.getDisambiguation() + ")";
     embedBuilder.setTitle(lookupArtist.getArtistName() + (Strings.isEmpty(lookupArtist.getDisambiguation()) ? "" :  artistDetail));
     embedBuilder.addField(ARTIST_LOOKUP_KEY_FIELD, lookupArtist.getForeignArtistId(), false);
-    embedBuilder.setImage(lookupArtist.getRemotePoster());
+    embedBuilder.setImage(lookupArtist.getRemoteImage());
     if (!usingSlashCommand) {
       embedBuilder.addField(ADD_ARTIST_COMMAND_FIELD_PREFIX, LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId()), false);
       return new DiscordResponse(embedBuilder.build());
@@ -292,7 +291,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     LidarrArtist lookupArtist = existingMusicArtistResponse.getLidarrArtist();
     String artistDetail = " (" + lookupArtist.getDisambiguation() + ")";
     embedBuilder.setTitle(lookupArtist.getArtistName() + (Strings.isEmpty(lookupArtist.getDisambiguation()) ? "" :  artistDetail));
-    embedBuilder.setImage(lookupArtist.getRemotePoster());
+    embedBuilder.setImage(lookupArtist.getRemoteImage());
     return new DiscordResponse(embedBuilder.build());
   }
 
@@ -336,7 +335,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle(radarrMovie.getTitle());
     embedBuilder.addField("TmdbId", "" + radarrMovie.getTmdbId(), false);
     embedBuilder.addField(ADD_MOVIE_COMMAND_FIELD_PREFIX, RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()), false);
-    embedBuilder.setImage(radarrMovie.getRemotePoster());
+    embedBuilder.setImage(radarrMovie.getRemoteImage());
     return new DiscordResponse(embedBuilder.build());
   }
 

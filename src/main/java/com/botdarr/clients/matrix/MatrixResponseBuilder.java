@@ -78,7 +78,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     matrixResponse.addContent("<b>Title</b> - " + show.getTitle());
     matrixResponse.addContent("<b>TvdbId</b> - " + show.getTvdbId());
     matrixResponse.addContent("<b>" + ADD_SHOW_COMMAND_FIELD_PREFIX + "</b> - " + SonarrCommands.getAddShowCommandStr(show.getTitle(), show.getTvdbId()));
-    matrixResponse.addImage(show.getRemotePoster());
+    matrixResponse.addImage(show.getRemoteImage());
     return matrixResponse;
   }
 
@@ -222,7 +222,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     matrixResponse.addContent("<b>Title</b> - " + sonarrShow.getTitle());
     matrixResponse.addContent("<b>TvdbId</b> - " + sonarrShow.getTvdbId());
     matrixResponse.addContent("<b>" + ADD_SHOW_COMMAND_FIELD_PREFIX + "</b> - " + SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId()));
-    matrixResponse.addImage(sonarrShow.getRemotePoster());
+    matrixResponse.addImage(sonarrShow.getRemoteImage());
     return matrixResponse;
   }
 
@@ -242,7 +242,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
                         ",Total Epsiodes=" + sonarrSeason.getStatistics().getTotalEpisodeCount());
       }
     }
-    matrixResponse.addImage(existingShow.getRemotePoster());
+    matrixResponse.addImage(existingShow.getRemoteImage());
     return matrixResponse;
   }
 
@@ -253,7 +253,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     matrixResponse.addContent("<b>Title</b> - " + radarrMovie.getTitle());
     matrixResponse.addContent("<b>TmdbId</b> - " + radarrMovie.getTmdbId());
     matrixResponse.addContent("<b>" + ADD_MOVIE_COMMAND_FIELD_PREFIX + "</b> - " + RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()));
-    matrixResponse.addImage(radarrMovie.getRemotePoster());
+    matrixResponse.addImage(radarrMovie.getRemoteImage());
     return matrixResponse;
   }
 
@@ -266,7 +266,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     matrixResponse.addContent("<b>Id</b> - " + radarrMovie.getId());
     matrixResponse.addContent("<b>Downloaded</b> - " + (radarrMovie.getSizeOnDisk() > 0));
     matrixResponse.addContent("<b>Has File</b> - " + radarrMovie.isHasFile());
-    matrixResponse.addImage(radarrMovie.getRemotePoster());
+    matrixResponse.addImage(radarrMovie.getRemoteImage());
     return matrixResponse;
   }
 
@@ -277,7 +277,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     String artistDetail = " (" + lidarrArtist.getDisambiguation() + ")";
     matrixResponse.addContent("<b>Title</b> - " + (lidarrArtist.getArtistName() + (Strings.isEmpty(lidarrArtist.getDisambiguation()) ? "" :  artistDetail)));
     matrixResponse.addContent("<b>" + ADD_ARTIST_COMMAND_FIELD_PREFIX + "</b> - " + LidarrCommands.getAddArtistCommandStr(lidarrArtist.getArtistName(), lidarrArtist.getForeignArtistId()));
-    matrixResponse.addImage(lidarrArtist.getRemotePoster());
+    matrixResponse.addImage(lidarrArtist.getRemoteImage());
     return matrixResponse;
   }
 
@@ -287,7 +287,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     MatrixResponse matrixResponse = new MatrixResponse();
     String artistDetail = " (" + lidarrArtist.getDisambiguation() + ")";
     matrixResponse.addContent("<b>Title</b> - " + (lidarrArtist.getArtistName() + (Strings.isEmpty(lidarrArtist.getDisambiguation()) ? "" :  artistDetail)));
-    matrixResponse.addImage(lidarrArtist.getRemotePoster());
+    matrixResponse.addImage(lidarrArtist.getRemoteImage());
     return matrixResponse;
   }
 
@@ -298,8 +298,8 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     matrixResponse.addContent("<b>Title</b> - " + radarrMovie.getTitle());
     matrixResponse.addContent("<b>TmdbId</b> - " + radarrMovie.getTmdbId());
     matrixResponse.addContent("<b>" + ADD_MOVIE_COMMAND_FIELD_PREFIX + "</b> - " + RadarrCommands.getAddMovieCommandStr(radarrMovie.getTitle(), radarrMovie.getTmdbId()));
-    if (radarrMovie.getRemotePoster() != null && !radarrMovie.getRemotePoster().isEmpty()) {
-      matrixResponse.addImage(radarrMovie.getRemotePoster());
+    if (radarrMovie.getRemoteImage() != null && !radarrMovie.getRemoteImage().isEmpty()) {
+      matrixResponse.addImage(radarrMovie.getRemoteImage());
     }
     return matrixResponse;
   }

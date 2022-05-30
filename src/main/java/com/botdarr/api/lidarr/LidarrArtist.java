@@ -1,6 +1,8 @@
 package com.botdarr.api.lidarr;
 
 import com.botdarr.api.KeyBased;
+import com.botdarr.api.sonarr.SonarrImage;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.List;
 
@@ -99,6 +101,22 @@ public class LidarrArtist implements KeyBased<String> {
   }
 
   public String getRemotePoster() {
+    return remotePoster;
+  }
+
+  public String getRemoteImage() {
+    if (Strings.isEmpty(remotePoster)) {
+      for (LidarrImage lidarrImage : images) {
+        if (lidarrImage.getCoverType().equals("poster") && !Strings.isEmpty(lidarrImage.getRemoteUrl())) {
+          return lidarrImage.getRemoteUrl();
+        }
+      }
+      for (LidarrImage lidarrImage : this.lastAlbum.getImages()) {
+        if (lidarrImage.getCoverType().equals("cover") && !Strings.isEmpty(lidarrImage.getUrl())) {
+          return lidarrImage.getUrl();
+        }
+      }
+    }
     return remotePoster;
   }
 
@@ -227,4 +245,5 @@ public class LidarrArtist implements KeyBased<String> {
   private LidarrAddOptions addOptions = new LidarrAddOptions();
   private String rootFolderPath;
   private String path;
+  private LidarrAlbum lastAlbum = new LidarrAlbum();
 }

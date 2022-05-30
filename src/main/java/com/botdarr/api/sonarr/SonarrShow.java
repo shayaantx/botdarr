@@ -1,6 +1,8 @@
 package com.botdarr.api.sonarr;
 
 import com.botdarr.api.KeyBased;
+import com.botdarr.api.radarr.RadarrImage;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.List;
 
@@ -71,6 +73,17 @@ public class SonarrShow implements KeyBased<Long> {
   }
 
   public String getRemotePoster() {
+    return remotePoster;
+  }
+
+  public String getRemoteImage() {
+    if (Strings.isEmpty(remotePoster)) {
+      for(SonarrImage sonarrImage : images) {
+        if (sonarrImage.getCoverType().equals("poster") && !Strings.isEmpty(sonarrImage.getRemoteUrl())) {
+          return sonarrImage.getRemoteUrl();
+        }
+      }
+    }
     return remotePoster;
   }
 
