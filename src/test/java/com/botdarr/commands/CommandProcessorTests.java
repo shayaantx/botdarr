@@ -341,7 +341,7 @@ public class CommandProcessorTests {
   private List<CommandResponse> validateValidCommand(String validCommand) {
     CommandProcessor commandProcessor = new CommandProcessor();
     List<CommandResponse> commandResponses =
-      commandProcessor.processCommand(CommandContext.getConfig().getPrefix(), getCommandsToTest(), validCommand, "user1");
+      commandProcessor.processCommand(CommandContext.getConfig().getPrefix(), getCommandsToTest(), validCommand);
     //we are just making sure no error responses are returned since they signify a failure with the command
     if (commandResponses != null) {
       for (CommandResponse response: commandResponses) {
@@ -355,7 +355,7 @@ public class CommandProcessorTests {
   private void validateInvalidCommand(String invalidCommand, String expectedErrorResponseString) {
     CommandProcessor commandProcessor = new CommandProcessor();
     List<CommandResponse> commandResponses =
-            commandProcessor.processCommand(CommandContext.getConfig().getPrefix(), getCommandsToTest(), invalidCommand, "user1");
+            commandProcessor.processCommand(CommandContext.getConfig().getPrefix(), getCommandsToTest(), invalidCommand);
     if (commandResponses != null) {
       Assert.assertEquals(1, commandResponses.size());
       CommandResponse commandResponse = commandResponses.get(0);
