@@ -74,7 +74,7 @@ public abstract class ChatClientBootstrap {
               .setUsername(username);
       LOGGER.debug("Processing command " + message + " for username " + username + " with prefix " + prefix);
       List<CommandResponse> commandResponses =
-              commandProcessor.processCommand(prefix, buildConfig().getCommands(), message, username);
+              commandProcessor.processCommand(prefix, buildConfig().getCommands(), message);
       if (commandResponses != null) {
         //if there is a response, format it for given response builder
         for (CommandResponse commandResponse : commandResponses) {
