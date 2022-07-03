@@ -7,7 +7,7 @@ import com.google.common.collect.Sets;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Chat;
-import com.pengrad.telegrambot.model.request.ParseMode;
+import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.GetChat;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.SendResponse;
@@ -31,14 +31,14 @@ public class TelegramChatClient implements ChatClient<TelegramResponse> {
 
   public void sendMessage(TelegramResponse telegramResponse, Chat chat) {
     sendMessages(chatChannel -> {
-      sendTelegramMessage(chatChannel.id(), telegramResponse.getHtml());
+      sendTelegramMessage(chatChannel.id(), telegramResponse.getHtml(), telegramResponse.getInteractiveMarkup());
     }, chat);
   }
 
   public void sendMessage(List<TelegramResponse> telegramResponses, Chat chat) {
     sendMessages(chatChannel -> {
       for (TelegramResponse telegramResponse : telegramResponses) {
-        sendTelegramMessage(chatChannel.id(), telegramResponse.getHtml());
+        sendTelegramMessage(chatChannel.id(), telegramResponse.getHtml(), telegramResponse.getInteractiveMarkup());
       }
     }, chat);
   }
@@ -51,10 +51,15 @@ public class TelegramChatClient implements ChatClient<TelegramResponse> {
     return channels;
   }
 
-  private void sendTelegramMessage(long id, String html) {
-    SendResponse sendResponse = bot.execute(new SendMessage(id, html).parseMode(ParseMode.HTML));
+  private void sendTelegramMessage(long id, String html, Keyboard interactiveMarkup) {
+    final SendResponse sendResponse;
+    if (interactiveMarkup != null) {
+      sendResponse = bot.execute(new SendMessage(id, html).parseMode(ParseMode.HTML).replyMarkup(interactiveMarkup));
+    } else {
+      sendResponse = bot.execute(new SendMessage(id, html).parseMode(ParseMode.HTML));
+    }
     if (LOGGER.isDebugEnabled() && sendResponse.errorCode() == 0) {
-      LOGGER.debug("send response =" + sendResponse.toString());
+      LOGGER.debug("send response =" + sendResponse);
     }
     if (sendResponse.errorCode() > 0) {
       LOGGER.error("Error sending response", sendResponse.toString());
