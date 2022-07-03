@@ -11,6 +11,10 @@ import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.*;
 import com.botdarr.commands.responses.*;
 import com.botdarr.utilities.ListUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
+import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import j2html.tags.DomContent;
 import org.apache.logging.log4j.util.Strings;
 
@@ -232,9 +236,8 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b("*Title* - " + sonarrShow.getTitle()));
     domContents.add(code("TvdbId - " + sonarrShow.getTvdbId()));
-    domContents.add(u(ADD_SHOW_COMMAND_FIELD_PREFIX + " - " + SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId())));
     domContents.add(a(sonarrShow.getRemoteImage()));
-    return new TelegramResponse(domContents);
+    return getAddResponse(domContents, SonarrCommands.getAddShowCommandStr(sonarrShow.getTitle(), sonarrShow.getTvdbId()));
   }
 
   @Override
@@ -265,9 +268,8 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     RadarrMovie lookupMovie = newMovieResponse.getRadarrMovie();
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b(lookupMovie.getTitle()));
-    domContents.add(u(ADD_MOVIE_COMMAND_FIELD_PREFIX + " - " + RadarrCommands.getAddMovieCommandStr(lookupMovie.getTitle(), lookupMovie.getTmdbId())));
     domContents.add(a(lookupMovie.getRemoteImage()));
-    return new TelegramResponse(domContents);
+    return getAddResponse(domContents, RadarrCommands.getAddMovieCommandStr(lookupMovie.getTitle(), lookupMovie.getTmdbId()));
   }
 
   @Override
@@ -289,9 +291,8 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     String artistDetail = " (" + lookupArtist.getDisambiguation() + ")";
     domContents.add(b(lookupArtist.getArtistName() + (Strings.isEmpty(lookupArtist.getDisambiguation()) ? "" :  artistDetail)));
-    domContents.add(u(ADD_ARTIST_COMMAND_FIELD_PREFIX + " - " + LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId())));
     domContents.add(a(lookupArtist.getRemoteImage()));
-    return new TelegramResponse(domContents);
+    return getAddResponse(domContents, LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId()));
   }
 
   @Override
@@ -322,6 +323,20 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
       domContents.add(text(endpointStatusEntry.getKey() + " - " + (endpointStatusEntry.getValue() ? "\uD83D\uDFE2" : "\uD83D\uDD34")));
     }
     return new TelegramResponse(domContents);
+  }
+
+  private TelegramResponse getAddResponse(List<DomContent> domContents, String command) {
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      String json = objectMapper.writeValueAsString(new TelegramCallbackData(command));
+      return new TelegramResponse(domContents, new InlineKeyboardMarkup(
+              new InlineKeyboardButton[]{
+                      new InlineKeyboardButton("Add").callbackData(json),
+              }
+      ));
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private TelegramResponse getMovieResponse(RadarrMovie radarrMovie) {

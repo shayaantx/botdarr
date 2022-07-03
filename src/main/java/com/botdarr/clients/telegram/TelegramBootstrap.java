@@ -5,14 +5,14 @@ import com.botdarr.clients.ChatClientBootstrap;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.CommandContext;
 import com.botdarr.scheduling.Scheduler;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.Update;
 import org.apache.logging.log4j.util.Strings;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -32,14 +32,30 @@ public class TelegramBootstrap extends ChatClientBootstrap {
             try {
                 for (Update update : list) {
                     com.pengrad.telegrambot.model.Message message = isUsingChannels() ? update.channelPost() : update.message();
+                    final String text;
+                    final Chat chat;
                     if (message != null && !Strings.isEmpty(message.text())) {
-                        String text = message.text();
+                        // regular commands
+                        text = message.text();
+                        chat = message.chat();
+                    } else if (!Strings.isEmpty(update.callbackQuery().data())) {
+                        // interactive commands with callback data
+                        ObjectMapper mapper = new ObjectMapper();
+                        TelegramCallbackData callbackData = mapper.readValue(update.callbackQuery().data(), TelegramCallbackData.class);
+                        text = callbackData.getCommand();
+                        chat = update.callbackQuery().message().chat();
+                    } else {
+                        // couldn't find a message or a chat to reply to
+                        text = "";
+                        chat = null;
+                    }
+                    if (!Strings.isEmpty(text) && chat != null) {
                         //TODO: the telegram api doesn't seem return "from" field in channel posts for some reason
                         //for now we leave the author as "telegram" till a better solution arises
                         String author = "telegram";
                         Scheduler.getScheduler().executeCommand(() -> {
                             TelegramBootstrap.this.runAndProcessCommands(CommandContext.getConfig().getPrefix(), text, author, responseChatClientResponseBuilder, chatClientResponse -> {
-                                telegramChatClient.sendMessage(chatClientResponse, message.chat());
+                                telegramChatClient.sendMessage(chatClientResponse, chat);
                             });
                             return null;
                         });
