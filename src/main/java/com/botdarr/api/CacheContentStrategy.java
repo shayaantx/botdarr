@@ -1,6 +1,7 @@
 package com.botdarr.api;
 
 import com.botdarr.connections.ConnectionHelper;
+import com.botdarr.connections.RequestBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -11,9 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class CacheContentStrategy<T, Z> {
-  public CacheContentStrategy(Api api, String url) {
-    this.api = api;
-    this.url = url;
+  public CacheContentStrategy(RequestBuilder requestBuilder) {
+    this.requestBuilder = requestBuilder;
   }
 
   public abstract void deleteFromCache(List<Z> itemsAddedUpdated);
@@ -21,7 +21,9 @@ public abstract class CacheContentStrategy<T, Z> {
 
   public void cacheData() {
     List<Z> itemsAddedUpdated = new ArrayList<>();
-    ConnectionHelper.makeGetRequest(this.api, this.url, new ConnectionHelper.SimpleEntityResponseHandler<List<T>>() {
+    ConnectionHelper.makeGetRequest(
+            this.requestBuilder,
+            new ConnectionHelper.SimpleEntityResponseHandler<List<T>>() {
       @Override
       public List<T> onSuccess(String response) throws Exception {
         JsonParser parser = new JsonParser();
@@ -33,10 +35,9 @@ public abstract class CacheContentStrategy<T, Z> {
       }
     });
     deleteFromCache(itemsAddedUpdated);
-    LOGGER.debug("Finished caching content data for api " + api.getClass().getName());
+    LOGGER.debug("Finished caching content data for host " + this.requestBuilder.getHost());
   }
 
-  private final Api api;
-  private final String url;
+  private final RequestBuilder requestBuilder;
   private static final Logger LOGGER = LogManager.getLogger();
 }

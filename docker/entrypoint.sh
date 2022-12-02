@@ -39,6 +39,7 @@ if [ ! -e "$propertiesFile" ]; then
     [[ ! -z "${SONARR_DEFAULT_PROFILE}" ]] && addConfiguration "sonarr-default-profile" "${SONARR_DEFAULT_PROFILE}" "${propertiesFile}"
     [[ ! -z "${SONARR_PATH}" ]] && addConfiguration "sonarr-path" "${SONARR_PATH}" "${propertiesFile}"
     [[ ! -z "${SONARR_URL_BASE}" ]] && addConfiguration "sonarr-url-base" "${SONARR_URL_BASE}" "${propertiesFile}"
+    [[ ! -z "${SONARR_V4}" ]] && addConfiguration "sonarr-v4" "${SONARR_V4}" "${propertiesFile}"
 
     [[ ! -z "${LIDARR_URL}" ]] && addConfiguration "lidarr-url" "${LIDARR_URL}" "${propertiesFile}"
     [[ ! -z "${LIDARR_TOKEN}" ]] && addConfiguration "lidarr-token" "${LIDARR_TOKEN}" "${propertiesFile}"

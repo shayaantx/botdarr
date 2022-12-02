@@ -7,28 +7,17 @@ import com.botdarr.commands.responses.*;
 import com.botdarr.connections.ConnectionHelper;
 import com.google.gson.*;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.*;
 
+import static com.botdarr.Config.Constants.VALUE_MAX_LENGTH;
+
 public class SonarrApi implements Api {
-  @Override
-  public String getUrlBase() {
-    return Config.getProperty(Config.Constants.SONARR_URL_BASE);
-  }
-
-  @Override
-  public String getApiUrl(String path) {
-    return getApiUrl(Config.Constants.SONARR_URL, Config.Constants.SONARR_TOKEN, path);
-  }
-
   @Override
   public List<CommandResponse> downloads() {
     return getDownloadsStrategy().downloads();
@@ -95,7 +84,9 @@ public class SonarrApi implements Api {
 
       @Override
       public List<SonarrProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(SonarrApi.this, SonarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<List<SonarrProfile>>() {
+        return ConnectionHelper.makeGetRequest(
+                new SonarrUrls.SonarrRequestBuilder().buildGet(SonarrUrls.PROFILE),
+                new ConnectionHelper.SimpleEntityResponseHandler<List<SonarrProfile>>() {
           @Override
           public List<SonarrProfile> onSuccess(String response) {
             List<SonarrProfile> sonarrProfiles = new ArrayList<>();
@@ -116,7 +107,7 @@ public class SonarrApi implements Api {
       }
     }.cacheData();
 
-    new CacheContentStrategy<SonarrShow, Long>(this, SonarrUrls.SERIES_BASE) {
+    new CacheContentStrategy<SonarrShow, Long>(new SonarrUrls.SonarrRequestBuilder().buildGet(SonarrUrls.SERIES_BASE)) {
       @Override
       public void deleteFromCache(List<Long> itemsAddedUpdated) {
         SONARR_CACHE.removeDeletedShows(itemsAddedUpdated);
@@ -129,11 +120,6 @@ public class SonarrApi implements Api {
         return sonarrShow.getKey();
       }
     }.cacheData();
-  }
-
-  @Override
-  public String getApiToken() {
-    return Config.Constants.SONARR_TOKEN;
   }
 
   private AddStrategy<SonarrShow> getAddStrategy() {
@@ -171,17 +157,77 @@ public class SonarrApi implements Api {
     };
   }
 
-  private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, SonarrUrls.DOWNLOAD_BASE) {
-      @Override
-      public CommandResponse getResponse(JsonElement rawElement) {
-        SonarrQueue showQueue = new Gson().fromJson(rawElement, SonarrQueue.class);
-        SonarQueueEpisode episode = showQueue.getEpisode();
-        if (episode == null) {
-          //something is wrong with the download, skip
-          LOGGER.error("Series " + showQueue.getSonarrQueueShow().getTitle() + " missing episode info for id " + showQueue.getId());
+  private SonarrEpisodeInformation getEpisode(long seriesId, long episodeId) {
+    return ConnectionHelper.makeGetRequest(
+      new SonarrUrls.SonarrRequestBuilder().buildGet(SonarrUrls.EPISODES_LOOKUP, new HashMap<String, String>() {{
+        put("seriesId", String.valueOf(seriesId));
+        put("episodeIds", String.valueOf(episodeId));
+      }}),
+      new ConnectionHelper.SimpleEntityResponseHandler<SonarrEpisodeInformation>() {
+        @Override
+        public SonarrEpisodeInformation onSuccess(String response) {
+          if (response == null || response.isEmpty() || response.equals("{}")) {
+            return null;
+          }
+          JsonArray array = JsonParser.parseString(response).getAsJsonArray();
+          for (int i = 0; i < array.size(); i++) {
+            SonarrQueueEpisode episode = new Gson().fromJson(array.get(i), SonarrQueueEpisode.class);
+            if (episode.getId() != episodeId) {
+              continue;
+            }
+            return new SonarrEpisodeInformation(episode.getSeasonNumber(), episode.getEpisodeNumber(), episode.getTitle(), episode.getOverview());
+          }
           return null;
         }
+      }
+    );
+  }
+
+  private DownloadsStrategy getDownloadsStrategy() {
+    return new DownloadsStrategy() {
+      private ShowDownloadResponse getDownloadBasedApiV3Queue(SonarrQueue showQueue) {
+        SonarrShow sonarrShow = SONARR_CACHE.getExistingShowFromSonarrId(showQueue.getSeriesId());
+        if (sonarrShow == null) {
+          LOGGER.warn("Could not load sonarr show from cache for id " + showQueue.getSeriesId());
+          return null;
+        }
+        if (isPathBlacklisted(sonarrShow)) {
+          LOGGER.warn("The following show is blacklisted: " + sonarrShow.getTitle() + " from being displayed in downloads");
+          return null;
+        }
+        SonarrEpisodeInformation episodeInformation = SONARR_CACHE.getEpisode(showQueue.getSeriesId(), showQueue.getEpisodeId());
+        if (episodeInformation == null) {
+           episodeInformation = getEpisode(showQueue.getSeriesId(), showQueue.getEpisodeId());
+           if (episodeInformation == null) {
+             // if episode is still null, we can't display any download data
+             LOGGER.error("Couldn't find download data in sonarr cache or sonarr api for " + showQueue.getSeriesId() + ", episode " + showQueue.getEpisodeId());
+             return null;
+           }
+           // cache information for faster lookups since download data is displayed periodically
+           SONARR_CACHE.addEpisode(showQueue.getSeriesId(), showQueue.getEpisodeId(), episodeInformation);
+        }
+        List<String> statusMessages = new ArrayList<>();
+        for (SonarrQueueStatusMessages sonarrQueueStatusMessages : showQueue.getStatusMessages()) {
+          statusMessages.add(sonarrQueueStatusMessages.getTitle());
+        }
+        String overview = episodeInformation.getOverview();
+        if (overview.length() > VALUE_MAX_LENGTH) {
+          overview = overview.substring(0, VALUE_MAX_LENGTH);
+        }
+        return new ShowDownloadResponse(new SonarrDownloadActivity(
+          sonarrShow.getTitle() + ": " + episodeInformation.getTitle(),
+          episodeInformation.getSeasonNumber(),
+          episodeInformation.getEpisodeNumber(),
+          showQueue.getQuality().getQuality().getName(),
+          showQueue.getStatus(),
+          showQueue.getTimeleft(),
+          overview,
+          statusMessages.toArray(new String[]{})
+        ));
+      }
+
+      private ShowDownloadResponse getDownloadBasedApiQueue(SonarrQueue showQueue) {
+        SonarrQueueEpisode episode = showQueue.getEpisode();
         SonarrShow sonarrShow = SONARR_CACHE.getExistingShowFromSonarrId(showQueue.getEpisode().getSeriesId());
         if (sonarrShow == null) {
           LOGGER.warn("Could not load sonarr show from cache for id " + showQueue.getEpisode().getSeriesId() + " title=" + showQueue.getSonarrQueueShow().getTitle());
@@ -191,7 +237,54 @@ public class SonarrApi implements Api {
           LOGGER.warn("The following show is blacklisted: " + sonarrShow.getTitle() + " from being displayed in downloads");
           return null;
         }
-        return new ShowDownloadResponse(showQueue);
+        List<String> statusMessages = new ArrayList<>();
+        for (SonarrQueueStatusMessages sonarrQueueStatusMessages : showQueue.getStatusMessages()) {
+          statusMessages.add(sonarrQueueStatusMessages.getTitle());
+        }
+        String overview = episode.getOverview();
+        if (overview.length() > VALUE_MAX_LENGTH) {
+          overview = overview.substring(0, VALUE_MAX_LENGTH);
+        }
+        return new ShowDownloadResponse(new SonarrDownloadActivity(
+            sonarrShow.getTitle() + ": " + episode.getTitle(),
+            episode.getSeasonNumber(),
+            episode.getEpisodeNumber(),
+            showQueue.getQuality().getQuality().getName(),
+            showQueue.getStatus(),
+            showQueue.getTimeleft(),
+            overview,
+            statusMessages.toArray(new String[]{})
+          )
+        );
+      }
+
+      @Override
+      public CommandResponse getResponse(JsonElement rawElement) {
+        SonarrQueue showQueue = new Gson().fromJson(rawElement, SonarrQueue.class);
+        SonarrQueueEpisode episode = showQueue.getEpisode();
+        // api/queue vs /api/v3/queue differ in results which makes the episode object not exist,
+        // so we support both cause I have no idea why I originally used api/queue and if its still in use and will stay in use...
+        //TODO: eventually get rid of the api/queue one when you're sure its not anything of value
+        if (episode == null) {
+          return getDownloadBasedApiV3Queue(showQueue);
+        }
+        return getDownloadBasedApiQueue(showQueue);
+      }
+
+      @Override
+      public List<CommandResponse> getContentDownloads() {
+        return ConnectionHelper.makeGetRequest(
+          new SonarrUrls.SonarrRequestBuilder().buildGet(SonarrUrls.DOWNLOAD_BASE),
+          new ConnectionHelper.SimpleCommandResponseHandler() {
+            @Override
+            public List<CommandResponse> onSuccess(String response) {
+              if (response == null || response.isEmpty() || response.equals("{}")) {
+                return new ArrayList<>();
+              }
+              JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+              return parseContent(json.get("records").toString());
+            }
+          });
       }
     };
   }
@@ -219,12 +312,11 @@ public class SonarrApi implements Api {
       return new ErrorResponse("Could not add show, user " + username + " has exceeded max show requests for " + requestThreshold.getReadableName());
     }
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-      HttpPost post = new HttpPost(getApiUrl(SonarrUrls.SERIES_BASE));
+      String json = new GsonBuilder().addSerializationExclusionStrategy(excludeUnnecessaryFields).create().toJson(sonarrShow, SonarrShow.class);
+      HttpRequestBase post = new SonarrUrls.SonarrRequestBuilder().buildPost(SonarrUrls.SERIES_BASE, json).build();
 
+      //TODO: why isn't the content type json
       post.addHeader("content-type", "application/x-www-form-urlencoded");
-      post.setEntity(
-        new StringEntity(
-          new GsonBuilder().addSerializationExclusionStrategy(excludeUnnecessaryFields).create().toJson(sonarrShow, SonarrShow.class), Charset.forName("UTF-8")));
 
       try (CloseableHttpResponse response = client.execute(post)) {
         int statusCode = response.getStatusLine().getStatusCode();
@@ -244,16 +336,20 @@ public class SonarrApi implements Api {
   }
 
   private List<SonarrShow> lookupShows(String search) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, SonarrUrls.LOOKUP_SERIES, "&term=" + URLEncoder.encode(search, "UTF-8"), new ConnectionHelper.SimpleEntityResponseHandler<List<SonarrShow>>() {
+    return ConnectionHelper.makeGetRequest(
+            new SonarrUrls.SonarrRequestBuilder().buildGet(SonarrUrls.LOOKUP_SERIES, new HashMap<String, String>() {{
+              put("term", search);
+            }}),
+            new ConnectionHelper.SimpleEntityResponseHandler<List<SonarrShow>>() {
       @Override
       public List<SonarrShow> onSuccess(String response) {
-        List<SonarrShow> movies = new ArrayList<>();
+        List<SonarrShow> shows = new ArrayList<>();
         JsonParser parser = new JsonParser();
         JsonArray json = parser.parse(response).getAsJsonArray();
         for (int i = 0; i < json.size(); i++) {
-          movies.add(new Gson().fromJson(json.get(i), SonarrShow.class));
+          shows.add(new Gson().fromJson(json.get(i), SonarrShow.class));
         }
-        return movies;
+        return shows;
       }
     });
   }

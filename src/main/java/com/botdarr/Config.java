@@ -328,6 +328,11 @@ public class Config {
     public static final String SONARR_URL_BASE = "sonarr-url-base";
 
     /**
+     * Whether to turn on sonarr v4 support or not
+     */
+    public static final String SONARR_V4 = "sonarr-v4";
+
+    /**
      * The url to your lidarr instance
      */
     public static final String LIDARR_URL = "lidarr-url";
@@ -416,6 +421,7 @@ public class Config {
      * Config for the log level
      */
     public static final String LOG_LEVEL = "log-level";
+    public static final int VALUE_MAX_LENGTH = 1024;
   }
 
   private static String propertiesPath = "config/properties";

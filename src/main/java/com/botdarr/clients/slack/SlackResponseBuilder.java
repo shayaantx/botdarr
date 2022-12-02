@@ -25,7 +25,6 @@ import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static com.botdarr.commands.StatusCommand.STATUS_COMMAND;
 import static com.botdarr.commands.StatusCommand.STATUS_COMMAND_DESCRIPTION;
-import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResponse> {
   @Override
@@ -146,17 +145,16 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
 
   @Override
   public SlackResponse build(ShowDownloadResponse showDownloadResponse) {
-    SonarrQueue showQueue = showDownloadResponse.getShowQueue();
-    SonarQueueEpisode episode = showQueue.getEpisode();
+    SonarrDownloadActivity showQueue = showDownloadResponse.getShowQueue();
     SlackResponse slackResponse = new SlackResponse();
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("*Title* - " + showQueue.getSonarrQueueShow().getTitle()).build())
+      .text(MarkdownTextObject.builder().text("*Title* - " + showQueue.getTitle()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Season/Episode - " + "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber()).build())
+      .text(MarkdownTextObject.builder().text("Season/Episode - " + "S" + showQueue.getSeasonNumber() + "E" + showQueue.getEpisodeNumber()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Quality - " + showQueue.getQuality().getQuality().getName()).build())
+      .text(MarkdownTextObject.builder().text("Quality - " + showQueue.getQualityProfileName()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
       .text(MarkdownTextObject.builder().text("Status - " + showQueue.getStatus()).build())
@@ -164,19 +162,13 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     slackResponse.addBlock(SectionBlock.builder()
       .text(MarkdownTextObject.builder().text("Time Left - *" + (showQueue.getTimeleft() == null ? "unknown" : showQueue.getTimeleft()) + "*").build())
       .build());
-    String overview = episode.getTitle() + ": " + episode.getOverview();
-    if (overview.length() > VALUE_MAX_LENGTH) {
-      overview = overview.substring(0, VALUE_MAX_LENGTH);
-    }
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Overview - " + overview).build())
-      .build());
+            .text(MarkdownTextObject.builder().text("Overview - " + showQueue.getOverview()).build())
+            .build());
     if (showQueue.getStatusMessages() != null) {
       List<ContextBlockElement> contextBlockElements = new ArrayList<>();
-      for (SonarrQueueStatusMessages statusMessage : showQueue.getStatusMessages()) {
-        for (String message : statusMessage.getMessages()) {
-          contextBlockElements.add(PlainTextObject.builder().text(message).build());
-        }
+      for (String statusMessage : showQueue.getStatusMessages()) {
+        contextBlockElements.add(PlainTextObject.builder().text(statusMessage).build());
       }
       if (showQueue.getStatusMessages() != null && showQueue.getStatusMessages().length > 0) {
         slackResponse.addBlock(ContextBlock.builder()
@@ -275,6 +267,10 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
     return slackResponse;
   }
 
+  private String addQualityItem(SonarrProfileQualityItem sonarrProfileQualityItem) {
+    return "Quality - name=" + sonarrProfileQualityItem.getQuality().getName() + ", resolution=" + sonarrProfileQualityItem.getQuality().getResolution();
+  }
+
   @Override
   public SlackResponse build(ShowProfileResponse showProfileResponse) {
     SonarrProfile sonarrProfile = showProfileResponse.getShowProfile();
@@ -286,16 +282,24 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .text(MarkdownTextObject.builder().text("Name - " + sonarrProfile.getName()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Cutoff - " + sonarrProfile.getCutoff().getName()).build())
+      .text(MarkdownTextObject.builder().text("Cutoff - " + sonarrProfile.getCutoff()).build())
       .build());
 
     List<ContextBlockElement> contextBlockElements = new ArrayList<>();
     for (int k = 0; k < sonarrProfile.getItems().size(); k++) {
       SonarrProfileQualityItem sonarrProfileQualityItem = sonarrProfile.getItems().get(k);
       if (sonarrProfileQualityItem.isAllowed()) {
-        contextBlockElements.add(PlainTextObject.builder()
-          .text("Quality - name=" + sonarrProfileQualityItem.getQuality().getName() + ", resolution=" + sonarrProfileQualityItem.getQuality().getResolution())
-          .build());
+        if (sonarrProfileQualityItem.getQuality() == null) {
+          for(SonarrProfileQualityItem qualityItem : sonarrProfileQualityItem.getItems()) {
+            contextBlockElements.add(PlainTextObject.builder()
+                    .text(addQualityItem(qualityItem))
+                    .build());
+          }
+        } else {
+          contextBlockElements.add(PlainTextObject.builder()
+                  .text(addQualityItem(sonarrProfileQualityItem))
+                  .build());
+        }
       }
     }
     slackResponse.addBlock(ContextBlock.builder()

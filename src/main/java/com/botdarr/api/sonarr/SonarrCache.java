@@ -12,6 +12,22 @@ public class SonarrCache {
     return existingSonarrIdsToShows.get(sonarrId);
   }
 
+  public SonarrEpisodeInformation getEpisode(long seriesId, long episodeNumber) {
+    if (existingSeriesToEpisodes.get(seriesId) == null) {
+       return null;
+    }
+    return existingSeriesToEpisodes.get(seriesId).get(episodeNumber);
+  }
+
+  public void addEpisode(long seriesId, long episodeNumber, SonarrEpisodeInformation sonarrEpisodeInformation) {
+    Map<Long, SonarrEpisodeInformation> episodeInformationMap = existingSeriesToEpisodes.get(seriesId);
+    if (episodeInformationMap == null) {
+      episodeInformationMap = new ConcurrentHashMap<>();
+      existingSeriesToEpisodes.put(seriesId, episodeInformationMap);
+    }
+    episodeInformationMap.put(episodeNumber, sonarrEpisodeInformation);
+  }
+
   public boolean doesShowExist(String title) {
     return existingShowTitlesToSonarrId.containsKey(title.toLowerCase());
   }
@@ -51,10 +67,12 @@ public class SonarrCache {
     existingShowTitlesToSonarrId.keySet().retainAll(existingShowTitles);
     existingTvdbIdsToShows.keySet().retainAll(addUpdatedTvdbShowIds);
     existingSonarrIdsToShows.keySet().retainAll(existingShowIds);
+    existingSeriesToEpisodes.keySet().retainAll(existingShowIds);
   }
 
   private Map<String, SonarrProfile> existingProfiles = new ConcurrentHashMap<>();
   private Map<String, Long> existingShowTitlesToSonarrId = new ConcurrentHashMap<>();
   private Map<Long, SonarrShow> existingTvdbIdsToShows = new ConcurrentHashMap<>();
   private Map<Long, SonarrShow> existingSonarrIdsToShows = new ConcurrentHashMap<>();
+  private Map<Long, Map<Long, SonarrEpisodeInformation>> existingSeriesToEpisodes = new ConcurrentHashMap<>();
 }

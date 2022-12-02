@@ -31,7 +31,6 @@ import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.SHOW_LOOKUP_FIELD;
 import static com.botdarr.commands.StatusCommand.STATUS_COMMAND;
 import static com.botdarr.commands.StatusCommand.STATUS_COMMAND_DESCRIPTION;
-import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 public class DiscordResponseBuilder implements ChatClientResponseBuilder<DiscordResponse> {
   @Override
@@ -107,23 +106,15 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
   @Override
   public DiscordResponse build(ShowDownloadResponse showDownloadResponse) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
-    SonarrQueue showQueue = showDownloadResponse.getShowQueue();
-    SonarQueueEpisode episode = showQueue.getEpisode();
-    embedBuilder.setTitle(showQueue.getSonarrQueueShow().getTitle());
-    embedBuilder.addField("Season/Episode", "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber(), true);
-    embedBuilder.addField("Quality", showQueue.getQuality().getQuality().getName(), true);
-    embedBuilder.addField("Status", showQueue.getStatus(), true);
-    embedBuilder.addField("Time Left", showQueue.getTimeleft() == null ? "unknown" : showQueue.getTimeleft(), true);
-    String overview = episode.getTitle() + ": " + episode.getOverview();
-    if (overview.length() > VALUE_MAX_LENGTH) {
-      overview = overview.substring(0, VALUE_MAX_LENGTH);
-    }
-    embedBuilder.addField("Overview", overview, false);
-    if (showQueue.getStatusMessages() != null) {
-      for (SonarrQueueStatusMessages statusMessage : showQueue.getStatusMessages()) {
-        for (String message : statusMessage.getMessages()) {
-          embedBuilder.addField("Download message", message, true);
-        }
+    embedBuilder.setTitle(showDownloadResponse.getShowQueue().getTitle());
+    embedBuilder.addField("Season/Episode", "S" + showDownloadResponse.getShowQueue().getSeasonNumber() + "E" + showDownloadResponse.getShowQueue().getEpisodeNumber(), true);
+    embedBuilder.addField("Quality", showDownloadResponse.getShowQueue().getQualityProfileName(), true);
+    embedBuilder.addField("Status", showDownloadResponse.getShowQueue().getStatus(), true);
+    embedBuilder.addField("Time Left", showDownloadResponse.getShowQueue().getTimeleft() == null ? "unknown" : showDownloadResponse.getShowQueue().getTimeleft(), true);
+    embedBuilder.addField("Overview", showDownloadResponse.getShowQueue().getOverview(), true);
+    if (showDownloadResponse.getShowQueue().getStatusMessages() != null) {
+      for (String statusMessage : showDownloadResponse.getShowQueue().getStatusMessages()) {
+        embedBuilder.addField("Download message", statusMessage, true);
       }
     }
     return new DiscordResponse(embedBuilder.build());
@@ -164,21 +155,31 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     return new DiscordResponse(embedBuilder.build());
   }
 
+  private void addQualityItem(EmbedBuilder embedBuilder, SonarrProfileQualityItem sonarrProfileQualityItem) {
+    embedBuilder.addField(
+            "Quality",
+            "name=" + sonarrProfileQualityItem.getQuality().getName() + ", resolution=" + sonarrProfileQualityItem.getQuality().getResolution(),
+            true);
+  }
+
   @Override
   public DiscordResponse build(ShowProfileResponse showProfileResponse) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle("Profile");
     SonarrProfile sonarrProfile = showProfileResponse.getShowProfile();
     embedBuilder.addField("Name", sonarrProfile.getName(), false);
-    embedBuilder.addField("Cutoff", sonarrProfile.getCutoff().getName(), false);
+    embedBuilder.addField("Cutoff", "" + sonarrProfile.getCutoff(), false);
     embedBuilder.addBlankField(false);
     for (int k = 0; k < sonarrProfile.getItems().size(); k++) {
       SonarrProfileQualityItem sonarrProfileQualityItem = sonarrProfile.getItems().get(k);
       if (sonarrProfileQualityItem.isAllowed()) {
-        embedBuilder.addField(
-          "Quality",
-          "name=" + sonarrProfileQualityItem.getQuality().getName() + ", resolution=" + sonarrProfileQualityItem.getQuality().getResolution(),
-          true);
+        if (sonarrProfileQualityItem.getQuality() == null) {
+          for(SonarrProfileQualityItem qualityItem : sonarrProfileQualityItem.getItems()) {
+            addQualityItem(embedBuilder, qualityItem);
+          }
+        } else {
+          addQualityItem(embedBuilder, sonarrProfileQualityItem);
+        }
       }
     }
     return new DiscordResponse(embedBuilder.build());

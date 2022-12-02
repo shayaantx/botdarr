@@ -1,6 +1,20 @@
 package com.botdarr.api.radarr;
 
+import com.botdarr.Config;
+import com.botdarr.api.ArrRequestBuilder;
+
 public class RadarrUrls {
+  public static class RadarrV3RequestBuilder extends ArrRequestBuilder {
+    public RadarrV3RequestBuilder() {
+      super(Config.Constants.RADARR_URL, Config.Constants.RADARR_URL_BASE, Config.Constants.RADARR_TOKEN);
+    }
+
+    @Override
+    public String getApiSuffix() {
+      return "/api/v3/";
+    }
+  }
+
   /**
    * The base download(s) url for get, put, delete requests (which each do different things in radarr)
    * See https://github.com/Radarr/Radarr/wiki/API:Queue

@@ -4,6 +4,7 @@ import com.botdarr.Config;
 import com.botdarr.TestCommandResponse;
 import com.botdarr.commands.responses.CommandResponse;
 import com.botdarr.commands.responses.InfoResponse;
+import com.botdarr.connections.RequestBuilder;
 import com.google.gson.JsonElement;
 import mockit.*;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -36,6 +37,7 @@ public class DownloadsStrategyTests {
     properties.put("telegram-token", "%H$$54j45i");
     properties.put("telegram-private-channels", "channel1:459349");
     writeFakePropertiesFile(properties);
+    requestBuilder = new RequestBuilder().host("http://localhost");
   }
 
   @Test
@@ -71,27 +73,8 @@ public class DownloadsStrategyTests {
                     responses.get(0)));
   }
 
-  @Test
-  public void getContentDownloads_endpointUnavailable_emptyResponse() {
-    DownloadsStrategy downloadsStrategy = new DownloadsStrategy(api, "") {
-      @Override
-      public CommandResponse getResponse(JsonElement rawElement) {
-        return null;
-      }
-    };
-    Deencapsulation.setField(downloadsStrategy, "LOGGER", logger);
-    new Expectations(downloadsStrategy) {{
-      api.getApiUrl(""); result = "http://localhost"; times = 2;
-      api.getApiToken(); result = "token1"; times = 1;
-      logger.error("Error trying to connect to http://localhost"); times = 1;
-    }};
-
-    //confirm even tho we failed to connect we don't return error notifications that could flood chat clients
-    Assert.assertTrue(downloadsStrategy.getContentDownloads().isEmpty());
-  }
-
   private DownloadsStrategy getMockDownloadsStrategy(int maxDownloadsToShow) {
-    DownloadsStrategy mockDownloadsStrategy = new MockDownloadsStrategy(api, "");
+    DownloadsStrategy mockDownloadsStrategy = new MockDownloadsStrategy();
     Deencapsulation.setField(mockDownloadsStrategy, "MAX_DOWNLOADS_TO_SHOW", maxDownloadsToShow);
     return  mockDownloadsStrategy;
   }
@@ -113,14 +96,9 @@ public class DownloadsStrategyTests {
   @Mocked
   private Logger logger;
 
-  @Injectable
-  private Api api;
+  private RequestBuilder requestBuilder;
 
   private static class MockDownloadsStrategy extends DownloadsStrategy {
-
-    public MockDownloadsStrategy(Api api, String url) {
-      super(api, url);
-    }
 
     @Override
     public CommandResponse getResponse(JsonElement rawElement) {

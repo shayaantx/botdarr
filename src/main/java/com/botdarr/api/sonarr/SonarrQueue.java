@@ -46,23 +46,41 @@ public class SonarrQueue {
     return series;
   }
 
-  public void setRadarrQueueMovie(SonarrQueueShow radarrQueueMovie) {
-    this.series = radarrQueueMovie;
+  public void setSeries(SonarrQueueShow series) {
+    this.series = series;
   }
 
-  public SonarQueueEpisode getEpisode() {
+  public SonarrQueueEpisode getEpisode() {
     return episode;
   }
 
-  public void setEpisode(SonarQueueEpisode episode) {
+  public void setEpisode(SonarrQueueEpisode episode) {
     this.episode = episode;
   }
 
-  private String status;
-  private String timeleft;
+  public long getSeriesId() {
+    return seriesId;
+  }
+
+  public void setSeriesId(long seriesId) {
+    this.seriesId = seriesId;
+  }
+
+  public long getEpisodeId() {
+    return episodeId;
+  }
+
+  public void setEpisodeId(long episodeId) {
+    this.episodeId = episodeId;
+  }
+
   private SonarrProfileQualityItem quality;
-  private long id;
   private SonarrQueueStatusMessages[] statusMessages;
   private SonarrQueueShow series;
-  private SonarQueueEpisode episode;
+  private SonarrQueueEpisode episode;
+  private String status;
+  private String timeleft;
+  private long seriesId;
+  private long episodeId;
+  private long id;
 }
