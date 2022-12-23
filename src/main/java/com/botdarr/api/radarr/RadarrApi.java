@@ -8,28 +8,16 @@ import com.botdarr.connections.ConnectionHelper;
 import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
 
 public class RadarrApi implements Api {
-  @Override
-  public String getUrlBase() {
-    return Config.getProperty(Config.Constants.RADARR_URL_BASE);
-  }
-
-  @Override
-  public String getApiUrl(String path) {
-    return getApiUrl(Config.Constants.RADARR_URL, Config.Constants.RADARR_TOKEN, "v3/" + path);
-  }
-
   public List<CommandResponse> lookup(String search, boolean findNew) {
     return new LookupStrategy<RadarrMovie>(ContentType.MOVIE) {
 
@@ -96,7 +84,9 @@ public class RadarrApi implements Api {
 
       @Override
       public List<RadarrProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(RadarrApi.this, RadarrUrls.PROFILE_BASE, new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrProfile>>() {
+        return ConnectionHelper.makeGetRequest(
+                new RadarrUrls.RadarrV3RequestBuilder().buildGet(RadarrUrls.PROFILE_BASE),
+                new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrProfile>>() {
           @Override
           public List<RadarrProfile> onSuccess(String response) {
             List<RadarrProfile> radarrProfiles = new ArrayList<>();
@@ -117,7 +107,7 @@ public class RadarrApi implements Api {
       }
     }.cacheData();
 
-    new CacheContentStrategy<RadarrMovie, Long>(this, RadarrUrls.MOVIE_BASE) {
+    new CacheContentStrategy<RadarrMovie, Long>(new RadarrUrls.RadarrV3RequestBuilder().buildGet(RadarrUrls.MOVIE_BASE)) {
       @Override
       public void deleteFromCache(List<Long> itemsAddedUpdated) {
         RADARR_CACHE.removeDeletedMovies(itemsAddedUpdated);
@@ -132,13 +122,12 @@ public class RadarrApi implements Api {
     }.cacheData();
   }
 
-  @Override
-  public String getApiToken() {
-    return Config.Constants.RADARR_TOKEN;
-  }
-
   public List<CommandResponse> discover() {
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.DISCOVER_MOVIES, "&includeRecommendations=true", new ConnectionHelper.SimpleEntityResponseHandler<List<CommandResponse>>() {
+    return ConnectionHelper.makeGetRequest(
+            new RadarrUrls.RadarrV3RequestBuilder().buildGet(RadarrUrls.DISCOVER_MOVIES, new HashMap<String, String>() {{
+              put("includeRecommendations", "true");
+            }}),
+            new ConnectionHelper.SimpleEntityResponseHandler<List<CommandResponse>>() {
       @Override
       public List<CommandResponse> onSuccess(String response) throws Exception {
         List<CommandResponse> recommendedMovies = new ArrayList<>();
@@ -163,7 +152,7 @@ public class RadarrApi implements Api {
   }
 
   private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, RadarrUrls.DOWNLOAD_BASE) {
+    return new DownloadsStrategy() {
       @Override
       public CommandResponse getResponse(JsonElement rawElement) {
         RadarrQueue radarrQueue = new Gson().fromJson(rawElement, RadarrQueue.class);
@@ -186,16 +175,14 @@ public class RadarrApi implements Api {
       @Override
       public List<CommandResponse> getContentDownloads() {
         return ConnectionHelper.makeGetRequest(
-          RadarrApi.this,
-          RadarrUrls.DOWNLOAD_BASE,
-          new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
+                new RadarrUrls.RadarrV3RequestBuilder().buildGet(RadarrUrls.DOWNLOAD_BASE),
+                new ConnectionHelper.SimpleCommandResponseHandler() {
           @Override
           public List<CommandResponse> onSuccess(String response) {
             if (response == null || response.isEmpty() || response.equals("{}")) {
               return new ArrayList<>();
             }
-            JsonParser parser = new JsonParser();
-            JsonObject json = parser.parse(response).getAsJsonObject();
+            JsonObject json = JsonParser.parseString(response).getAsJsonObject();
             return parseContent(json.get("records").toString());
           }
         });
@@ -251,15 +238,12 @@ public class RadarrApi implements Api {
     radarrMovie.setQualityProfileId((int) radarrProfile.getId());
 
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-      HttpPost post = new HttpPost(getApiUrl(RadarrUrls.MOVIE_BASE));
-
-      post.addHeader("content-type", "application/json");
       String json = new Gson().toJson(radarrMovie, RadarrMovie.class);
-      post.setEntity(new StringEntity(json, Charset.forName("UTF-8")));
+      HttpRequestBase post = new RadarrUrls.RadarrV3RequestBuilder().buildPost(RadarrUrls.MOVIE_BASE, json).build();
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Client request=" + post);
-        LOGGER.debug("Client data=" + (json));
+        LOGGER.debug("Client data=" + json);
       }
 
       String username = CommandContext.getConfig().getUsername();
@@ -292,8 +276,11 @@ public class RadarrApi implements Api {
   }
 
   private List<RadarrMovie> lookupMovies(String search) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_LOOKUP, "&term=" + URLEncoder.encode(search, "UTF-8"),
-      new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrMovie>>() {
+    return ConnectionHelper.makeGetRequest(
+            new RadarrUrls.RadarrV3RequestBuilder().buildGet(RadarrUrls.MOVIE_LOOKUP, new HashMap<String, String>() {{
+              put("term", search);
+            }}),
+            new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrMovie>>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) {
         List<RadarrMovie> movies = new ArrayList<>();
@@ -308,8 +295,11 @@ public class RadarrApi implements Api {
   }
 
   private List<RadarrMovie> lookupMoviesById(String tmdbid) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, RadarrUrls.MOVIE_LOOKUP_TMDB, "&tmdbId=" + URLEncoder.encode(tmdbid, "UTF-8"),
-      new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrMovie>>() {
+    return ConnectionHelper.makeGetRequest(
+            new RadarrUrls.RadarrV3RequestBuilder().buildGet(RadarrUrls.MOVIE_LOOKUP_TMDB, new HashMap<String, String>() {{
+              put("tmdbId", tmdbid);
+            }}),
+            new ConnectionHelper.SimpleEntityResponseHandler<List<RadarrMovie>>() {
       @Override
       public List<RadarrMovie> onSuccess(String response) {
         List<RadarrMovie> movies = new ArrayList<>();

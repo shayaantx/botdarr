@@ -104,24 +104,16 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
 
   @Override
   public MatrixResponse build(ShowDownloadResponse showDownloadResponse) {
-    SonarrQueue sonarrQueue = showDownloadResponse.getShowQueue();
     MatrixResponse matrixResponse = new MatrixResponse();
-    SonarQueueEpisode episode = sonarrQueue.getEpisode();
-    matrixResponse.addContent("<b>Title</b> - " + sonarrQueue.getSonarrQueueShow().getTitle());
-    matrixResponse.addContent("<b>Season/Episode</b> - " + "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber());
-    matrixResponse.addContent("<b>Quality</b> - " + sonarrQueue.getQuality().getQuality().getName());
-    matrixResponse.addContent("<b>Status</b> - " + sonarrQueue.getStatus());
-    matrixResponse.addContent("<b>Time Left</b> - <i>" + (sonarrQueue.getTimeleft() == null ? "unknown" : sonarrQueue.getTimeleft()) + "</i>");
-    String overview = episode.getTitle() + ": " + episode.getOverview();
-    if (overview.length() > 1024) {
-      overview = overview.substring(0, 1024);
-    }
-    matrixResponse.addContent("<b>Overview</b> - "  + overview);
-    if (sonarrQueue.getStatusMessages() != null) {
-      for (SonarrQueueStatusMessages statusMessage : sonarrQueue.getStatusMessages()) {
-        for (String message : statusMessage.getMessages()) {
-          matrixResponse.addContent("<b>Download message</b> - " + message);
-        }
+    matrixResponse.addContent("<b>Title</b> - " + showDownloadResponse.getShowQueue().getTitle());
+    matrixResponse.addContent("<b>Season/Episode</b> - " + "S" + showDownloadResponse.getShowQueue().getSeasonNumber() + "E" + showDownloadResponse.getShowQueue().getEpisodeNumber());
+    matrixResponse.addContent("<b>Quality</b> - " + showDownloadResponse.getShowQueue().getQualityProfileName());
+    matrixResponse.addContent("<b>Status</b> - " + showDownloadResponse.getShowQueue().getStatus());
+    matrixResponse.addContent("<b>Time Left</b> - <i>" + (showDownloadResponse.getShowQueue().getTimeleft() == null ? "unknown" : showDownloadResponse.getShowQueue().getTimeleft()) + "</i>");
+    matrixResponse.addContent("<b>Overview</b> - " + showDownloadResponse.getShowQueue().getOverview());
+    if (showDownloadResponse.getShowQueue().getStatusMessages() != null) {
+      for (String statusMessage : showDownloadResponse.getShowQueue().getStatusMessages()) {
+        matrixResponse.addContent("<b>Download message</b> - " + statusMessage);
       }
     }
     return matrixResponse;
@@ -183,17 +175,27 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     return matrixResponse;
   }
 
+  private String addQualityItem(SonarrProfileQualityItem sonarrProfileQualityItem) {
+    return "<b>Quality</b> - Name: " + sonarrProfileQualityItem.getQuality().getName() + ", Resolution: " + sonarrProfileQualityItem.getQuality().getResolution();
+  }
+
   @Override
   public MatrixResponse build(ShowProfileResponse showProfileResponse) {
     SonarrProfile sonarrProfile = showProfileResponse.getShowProfile();
     MatrixResponse matrixResponse = new MatrixResponse();
     matrixResponse.addContent("<u><b>Profile</b></u>");
     matrixResponse.addContent("<b>Name</b> - " + sonarrProfile.getName());
-    matrixResponse.addContent("<b>Cutoff</b> - " + sonarrProfile.getCutoff().getName());
+    matrixResponse.addContent("<b>Cutoff</b> - " + sonarrProfile.getCutoff());
     for (int k = 0; k < sonarrProfile.getItems().size(); k++) {
       SonarrProfileQualityItem sonarrProfileQualityItem = sonarrProfile.getItems().get(k);
       if (sonarrProfileQualityItem.isAllowed()) {
-        matrixResponse.addContent("<b>Quality</b> - Name: " + sonarrProfileQualityItem.getQuality().getName() + ", Resolution: " + sonarrProfileQualityItem.getQuality().getResolution());
+        if (sonarrProfileQualityItem.getQuality() == null) {
+          for(SonarrProfileQualityItem qualityItem : sonarrProfileQualityItem.getItems()) {
+            matrixResponse.addContent(addQualityItem(qualityItem));
+          }
+        } else {
+          matrixResponse.addContent(addQualityItem(sonarrProfileQualityItem));
+        }
       }
     }
     return matrixResponse;

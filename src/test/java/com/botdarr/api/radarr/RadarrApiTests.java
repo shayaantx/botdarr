@@ -9,6 +9,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.mockserver.junit.MockServerRule;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
@@ -219,7 +220,10 @@ public class RadarrApiTests {
     HttpRequest request = HttpRequest.request()
       .withMethod("GET")
       .withPath("/api/v3/queue")
-      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3");
+      .withQueryStringParameter("apiKey", "FSJDkjmf#$Kf3")
+      .withHeaders(new ArrayList<Header>() {{
+        add(new Header("content-length", "0"));
+      }});
 
     //setup expected response in mock server
     mockServerRule.getClient()

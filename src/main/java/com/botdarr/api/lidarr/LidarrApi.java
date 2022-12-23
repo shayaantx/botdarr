@@ -2,39 +2,27 @@ package com.botdarr.api.lidarr;
 
 import com.botdarr.Config;
 import com.botdarr.api.*;
-import com.botdarr.api.sonarr.SonarrUrls;
 import com.botdarr.commands.CommandContext;
 import com.botdarr.commands.responses.*;
 import com.botdarr.connections.ConnectionHelper;
+import com.botdarr.connections.RequestBuilder;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 public class LidarrApi implements Api {
-  @Override
-  public String getUrlBase() {
-    return Config.getProperty(Config.Constants.LIDARR_URL_BASE);
-  }
-
-  @Override
-  public String getApiUrl(String path) {
-    return getApiUrl(Config.Constants.LIDARR_URL, Config.Constants.LIDARR_TOKEN, path);
-  }
-
   @Override
   public List<CommandResponse> downloads() {
     return getDownloadsStrategy().downloads();
@@ -51,7 +39,9 @@ public class LidarrApi implements Api {
 
       @Override
       public List<LidarrQualityProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<List<LidarrQualityProfile>>() {
+        return ConnectionHelper.makeGetRequest(
+                new LidarrUrls.LidarrRequestBuilder().buildGet(LidarrUrls.PROFILE),
+                new ConnectionHelper.SimpleEntityResponseHandler<List<LidarrQualityProfile>>() {
           @Override
           public List<LidarrQualityProfile> onSuccess(String response) {
             List<LidarrQualityProfile> lidarrQualityProfiles = new ArrayList<>();
@@ -81,7 +71,9 @@ public class LidarrApi implements Api {
 
       @Override
       public List<LidarrMetadataProfile> getProfiles() {
-        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.METADATA_PROFILE, new ConnectionHelper.SimpleEntityResponseHandler<List<LidarrMetadataProfile>>() {
+        return ConnectionHelper.makeGetRequest(
+                new LidarrUrls.LidarrRequestBuilder().buildGet(LidarrUrls.METADATA_PROFILE),
+                new ConnectionHelper.SimpleEntityResponseHandler<List<LidarrMetadataProfile>>() {
           @Override
           public List<LidarrMetadataProfile> onSuccess(String response) {
             List<LidarrMetadataProfile> lidarrMetadataProfiles = new ArrayList<>();
@@ -102,7 +94,7 @@ public class LidarrApi implements Api {
       }
     }.cacheData();
 
-    new CacheContentStrategy<LidarrArtist, String>(this, LidarrUrls.ALL_ARTISTS) {
+    new CacheContentStrategy<LidarrArtist, String>(new LidarrUrls.LidarrRequestBuilder().buildGet(LidarrUrls.ALL_ARTISTS)) {
 
       @Override
       public void deleteFromCache(List<String> itemsToRetain) {
@@ -118,11 +110,6 @@ public class LidarrApi implements Api {
     }.cacheData();
 
     //TODO: add album cache
-  }
-
-  @Override
-  public String getApiToken() {
-    return Config.Constants.LIDARR_TOKEN;
   }
 
   public CommandResponse addArtistWithId(String id, String artistName) {
@@ -204,7 +191,8 @@ public class LidarrApi implements Api {
   }
 
   private DownloadsStrategy getDownloadsStrategy() {
-    return new DownloadsStrategy(this, LidarrUrls.DOWNLOAD_BASE) {
+    RequestBuilder requestBuilder = new LidarrUrls.LidarrRequestBuilder().buildGet(LidarrUrls.DOWNLOAD_BASE);
+    return new DownloadsStrategy() {
       @Override
       public CommandResponse getResponse(JsonElement rawElement) {
         LidarrQueueRecord lidarrQueueRecord = new Gson().fromJson(rawElement, LidarrQueueRecord.class);
@@ -212,11 +200,12 @@ public class LidarrApi implements Api {
       }
       @Override
       public List<CommandResponse> getContentDownloads() {
-        return ConnectionHelper.makeGetRequest(LidarrApi.this, LidarrUrls.DOWNLOAD_BASE, new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
+        return ConnectionHelper.makeGetRequest(
+                requestBuilder,
+                new ConnectionHelper.SimpleCommandResponseHandler() {
           @Override
           public List<CommandResponse> onSuccess(String response) {
-            JsonParser parser = new JsonParser();
-            JsonObject json = parser.parse(response).getAsJsonObject();
+            JsonObject json = JsonParser.parseString(response).getAsJsonObject();
             return parseContent(json.get("records").toString());
           }
         });
@@ -225,7 +214,10 @@ public class LidarrApi implements Api {
   }
 
   private List<LidarrArtist> lookupArtists(String search) throws Exception {
-    return ConnectionHelper.makeGetRequest(this, LidarrUrls.LOOKUP_ARTISTS, "&term=" + URLEncoder.encode(search, "UTF-8"),
+    return ConnectionHelper.makeGetRequest(
+            new LidarrUrls.LidarrRequestBuilder().buildGet(LidarrUrls.LOOKUP_ARTISTS, new HashMap<String, String>() {{
+              put("term", search);
+            }}),
       new ConnectionHelper.SimpleEntityResponseHandler<List<LidarrArtist>>() {
         @Override
         public List<LidarrArtist> onSuccess(String response) {
@@ -259,14 +251,12 @@ public class LidarrApi implements Api {
     lidarrArtist.setMetadataProfileId(lidarrMetadataProfile.getId());
     lidarrArtist.setQualityProfileId(lidarrQualityProfile.getId());
     try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-      HttpPost post = new HttpPost(getApiUrl(SonarrUrls.ARTIST_BASE));
-      post.addHeader("content-type", "application/json");
 
       ObjectMapper mapper = new ObjectMapper();
       //lidarr for some reason doesn't support raw unicode characters in json parsing (since they should be allowed), so we escape them here
       mapper.getFactory().configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
       String json = mapper.writeValueAsString(lidarrArtist);
-      post.setEntity(new StringEntity(json, Charset.forName("UTF-8")));
+      HttpRequestBase post = new LidarrUrls.LidarrRequestBuilder().buildPost(LidarrUrls.ARTIST_BASE, json).build();
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Client request=" + post);

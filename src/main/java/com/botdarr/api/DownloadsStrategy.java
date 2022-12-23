@@ -3,6 +3,7 @@ package com.botdarr.api;
 import com.botdarr.commands.responses.CommandResponse;
 import com.botdarr.commands.responses.InfoResponse;
 import com.botdarr.connections.ConnectionHelper;
+import com.botdarr.connections.RequestBuilder;
 import com.botdarr.utilities.ListUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -16,13 +17,8 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class DownloadsStrategy {
-  public DownloadsStrategy(Api api,
-                           String url) {
-    this.api = api;
-    this.url = url;
-  }
-
   public abstract CommandResponse getResponse(JsonElement rawElement);
+  public abstract List<CommandResponse> getContentDownloads();
 
   public List<CommandResponse> downloads() {
     if (MAX_DOWNLOADS_TO_SHOW <= 0) {
@@ -31,27 +27,9 @@ public abstract class DownloadsStrategy {
     return getContentDownloads();
   }
 
-  public List<CommandResponse> getContentDownloads() {
-    return ConnectionHelper.makeGetRequest(this.api, this.url, new ConnectionHelper.SimpleMessageEmbedResponseHandler() {
-
-      @Override
-      public List<CommandResponse> onConnectException(HttpHostConnectException e) {
-        String message = "Error trying to connect to " + DownloadsStrategy.this.api.getApiUrl(DownloadsStrategy.this.url);
-        LOGGER.error(message);
-        return Collections.emptyList();
-      }
-
-      @Override
-      public List<CommandResponse> onSuccess(String response) {
-        return parseContent(response);
-      }
-    });
-  }
-
   public List<CommandResponse> parseContent(String response) {
     List<CommandResponse> chatClientResponses = new ArrayList<>();
-    JsonParser parser = new JsonParser();
-    JsonArray json = parser.parse(response).getAsJsonArray();
+    JsonArray json = JsonParser.parseString(response).getAsJsonArray();
     boolean tooManyDownloads = json.size() >= MAX_DOWNLOADS_TO_SHOW;
     for (int i = 0; i < json.size(); i++) {
       CommandResponse chatClientResponse = getResponse(json.get(i));
@@ -67,8 +45,6 @@ public abstract class DownloadsStrategy {
     return chatClientResponses;
   }
 
-  private final Api api;
-  private final String url;
   private final int MAX_DOWNLOADS_TO_SHOW = new ApiRequests().getMaxDownloadsToShow();
   private static Logger LOGGER = LogManager.getLogger();
 }

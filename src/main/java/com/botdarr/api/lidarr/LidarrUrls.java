@@ -1,6 +1,15 @@
 package com.botdarr.api.lidarr;
 
+import com.botdarr.Config;
+import com.botdarr.api.ArrRequestBuilder;
+
 public class LidarrUrls {
+  public static class LidarrRequestBuilder extends ArrRequestBuilder {
+    public LidarrRequestBuilder() {
+      super(Config.Constants.LIDARR_URL, Config.Constants.LIDARR_URL_BASE, Config.Constants.LIDARR_TOKEN);
+    }
+  }
+
   /**
    * The base endpoint prefix for lidarr v1 api, https://github.com/lidarr/Lidarr/wiki/API
    */
@@ -30,4 +39,5 @@ public class LidarrUrls {
    * TODO: doc
    */
   public static final String METADATA_PROFILE = VERSION + "metadataprofile";
+  public static final String ARTIST_BASE = "v1/artist";
 }

@@ -14,7 +14,7 @@ public class SonarrProfile implements KeyBased<String> {
     return name;
   }
 
-  public SonarrProfileCutoff getCutoff() {
+  public Integer getCutoff() {
     return cutoff;
   }
 
@@ -22,7 +22,7 @@ public class SonarrProfile implements KeyBased<String> {
     this.name = name;
   }
 
-  public void setCutoff(SonarrProfileCutoff cutoff) {
+  public void setCutoff(Integer cutoff) {
     this.cutoff = cutoff;
   }
 
@@ -43,7 +43,7 @@ public class SonarrProfile implements KeyBased<String> {
   }
 
   private String name;
-  private SonarrProfileCutoff cutoff;
+  private Integer cutoff;
   private List<SonarrProfileQualityItem> items;
   private long id;
 }

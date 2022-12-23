@@ -24,7 +24,6 @@ import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
 import static com.botdarr.commands.StatusCommand.STATUS_COMMAND;
 import static com.botdarr.commands.StatusCommand.STATUS_COMMAND_DESCRIPTION;
 import static j2html.TagCreator.*;
-import static net.dv8tion.jda.api.entities.MessageEmbed.VALUE_MAX_LENGTH;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -101,28 +100,19 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
 
   @Override
   public TelegramResponse build(ShowDownloadResponse showDownloadResponse) {
-    SonarrQueue showQueue = showDownloadResponse.getShowQueue();
-    SonarQueueEpisode episode = showQueue.getEpisode();
-
     List<DomContent> domContents = new ArrayList<>();
-    domContents.add(b(showQueue.getSonarrQueueShow().getTitle()));
-    String queueDetails = "Season/Episode - " + "S" + episode.getSeasonNumber() + "E" + episode.getEpisodeNumber() + "\n" +
-            "Quality - " + showQueue.getQuality().getQuality().getName() + "\n" +
-            "Status - " + showQueue.getStatus() + "\n" +
-            "Time Left - " + (showQueue.getTimeleft() == null ? "unknown" : showQueue.getTimeleft()) + "\n";
+    domContents.add(b(showDownloadResponse.getShowQueue().getTitle()));
+    String queueDetails = "Season/Episode - " + "S" + showDownloadResponse.getShowQueue().getSeasonNumber() + "E" + showDownloadResponse.getShowQueue().getEpisodeNumber() + "\n" +
+            "Quality - " + showDownloadResponse.getShowQueue().getQualityProfileName() + "\n" +
+            "Status - " + showDownloadResponse.getShowQueue().getStatus() + "\n" +
+            "Time Left - " + (showDownloadResponse.getShowQueue().getTimeleft() == null ? "unknown" : showDownloadResponse.getShowQueue().getTimeleft()) + "\n" +
+            "Overview - " + showDownloadResponse.getShowQueue().getOverview() + "\n";
     domContents.add(code(queueDetails));
 
-    String overview = episode.getTitle() + ": " + episode.getOverview();
-    if (overview.length() > VALUE_MAX_LENGTH) {
-      overview = overview.substring(0, VALUE_MAX_LENGTH);
-    }
-    domContents.add(b("Overview - " + overview));
-    if (showQueue.getStatusMessages() != null) {
+    if (showDownloadResponse.getShowQueue().getStatusMessages() != null) {
       StringBuilder statusMessageBuilder = new StringBuilder();
-      for (SonarrQueueStatusMessages statusMessage : showQueue.getStatusMessages()) {
-        for (String message : statusMessage.getMessages()) {
-          statusMessageBuilder.append("Download Message - ").append(message).append("\n");
-        }
+      for (String statusMessage : showDownloadResponse.getShowQueue().getStatusMessages()) {
+        statusMessageBuilder.append("Download Message - ").append(statusMessage).append("\n");
       }
       domContents.add(code(statusMessageBuilder.toString()));
     }
@@ -190,19 +180,38 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     return new TelegramResponse(domContents);
   }
 
+  private StringBuilder appendQualityItem(SonarrProfileQualityItem qualityItem) {
+    StringBuilder qualityItems = new StringBuilder();
+    qualityItems.append("Quality - ")
+            .append("id=")
+            .append(qualityItem.getQuality().getId())
+            .append(", name=")
+            .append(qualityItem.getQuality().getName())
+            .append(", resolution=")
+            .append(qualityItem.getQuality().getResolution())
+            .append("\n");
+    return qualityItems;
+  }
+
   @Override
   public TelegramResponse build(ShowProfileResponse showProfileResponse) {
     SonarrProfile sonarrProfile = showProfileResponse.getShowProfile();
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b("Profile"));
     domContents.add(text("Name - " + sonarrProfile.getName()));
-    domContents.add(text("Cutoff - " + sonarrProfile.getCutoff().getName()));
+    domContents.add(text("Cutoff - " + sonarrProfile.getCutoff()));
     if (sonarrProfile.getItems() != null) {
       StringBuilder qualityItems = new StringBuilder();
       for (int k = 0; k < sonarrProfile.getItems().size(); k++) {
         SonarrProfileQualityItem sonarrProfileQualityItem = sonarrProfile.getItems().get(k);
         if (sonarrProfileQualityItem.isAllowed()) {
-          qualityItems.append("Quality - name=").append(sonarrProfileQualityItem.getQuality().getName()).append(", resolution=").append(sonarrProfileQualityItem.getQuality().getResolution()).append("\n");
+          if (sonarrProfileQualityItem.getQuality() == null) {
+             for(SonarrProfileQualityItem qualityItem : sonarrProfileQualityItem.getItems()) {
+               qualityItems.append(appendQualityItem(qualityItem));
+             }
+          } else {
+            qualityItems.append(appendQualityItem(sonarrProfileQualityItem));
+          }
         }
       }
       domContents.add(code(qualityItems.toString()));

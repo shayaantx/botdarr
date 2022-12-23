@@ -1,15 +1,15 @@
 package com.botdarr.commands.responses;
 
-import com.botdarr.api.sonarr.SonarrQueue;
+import com.botdarr.api.sonarr.SonarrDownloadActivity;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 
 public class ShowDownloadResponse implements CommandResponse {
-    private final SonarrQueue showQueue;
-    public ShowDownloadResponse(SonarrQueue showQueue) {
+    private final SonarrDownloadActivity showQueue;
+    public ShowDownloadResponse(SonarrDownloadActivity showQueue) {
         this.showQueue = showQueue;
     }
-    public SonarrQueue getShowQueue() {
+    public SonarrDownloadActivity getShowQueue() {
         return showQueue;
     }
 

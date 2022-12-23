@@ -1,6 +1,6 @@
 package com.botdarr.api.sonarr;
 
-public class SonarQueueEpisode {
+public class SonarrQueueEpisode {
   public int getSeasonNumber() {
     return seasonNumber;
   }
@@ -37,9 +37,18 @@ public class SonarQueueEpisode {
     return seriesId;
   }
 
+  public long getId() {
+    return id;
+  }
+
+  public void setId(long id) {
+    this.id = id;
+  }
+
   private int seasonNumber;
   private int episodeNumber;
   private String title;
   private String overview;
   private long seriesId;
+  private long id;
 }

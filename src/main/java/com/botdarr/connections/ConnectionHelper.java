@@ -1,6 +1,5 @@
 package com.botdarr.connections;
 
-import com.botdarr.api.Api;
 import com.botdarr.Config;
 import com.botdarr.commands.responses.CommandResponse;
 import com.botdarr.commands.responses.ErrorResponse;
@@ -18,17 +17,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class ConnectionHelper {
-  public static <T> T makeGetRequest(Api api, String path, ResponseHandler<T> responseHandler) {
-    return makeGetRequest(api, path, "", responseHandler);
-  }
-
-  public static <T> T makeGetRequest(Api api, String path, String params, ResponseHandler<T> responseHandler) {
+  public static <T> T makeGetRequest(RequestBuilder builder, ResponseHandler<T> responseHandler) {
     return makeRequest(new RequestHandler() {
       @Override
       public HttpRequestBase buildRequest() throws Exception {
-        HttpGet get = new HttpGet(api.getApiUrl(path) + params);
-        get.setHeader("X-Api-Key", Config.getProperty(api.getApiToken()));
-        return get;
+        return builder.build();
       }
 
       @Override
@@ -58,6 +51,7 @@ public class ConnectionHelper {
             return responseHandler.onException(e);
           }
         } else {
+          LOGGER.error("Non 200 status code returned from request, code=" + statusCode + ", reason=" + response.getStatusLine().getReasonPhrase());
           return responseHandler.onFailure(statusCode, response.getStatusLine().getReasonPhrase());
         }
       } catch (HttpHostConnectException e) {
@@ -73,13 +67,13 @@ public class ConnectionHelper {
     }
   }
 
-  public static abstract class SimpleMessageEmbedResponseHandler implements ResponseHandler<List<CommandResponse>> {
+  public static abstract class SimpleCommandResponseHandler implements ResponseHandler<List<CommandResponse>> {
     @Override
     public List<CommandResponse> onConnectException(HttpHostConnectException e) {
       return onException(e);
     }
 
-    public SimpleMessageEmbedResponseHandler() {
+    public SimpleCommandResponseHandler() {
     }
 
     @Override
