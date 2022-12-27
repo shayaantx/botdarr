@@ -38,7 +38,7 @@ public class TelegramBootstrap extends ChatClientBootstrap {
                         // regular commands
                         text = message.text();
                         chat = message.chat();
-                    } else if (!Strings.isEmpty(update.callbackQuery().data())) {
+                    } else if (update.callbackQuery() != null && !Strings.isEmpty(update.callbackQuery().data())) {
                         // interactive commands with callback data
                         ObjectMapper mapper = new ObjectMapper();
                         TelegramCallbackData callbackData = mapper.readValue(update.callbackQuery().data(), TelegramCallbackData.class);

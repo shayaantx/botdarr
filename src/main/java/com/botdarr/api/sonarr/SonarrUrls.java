@@ -2,7 +2,8 @@ package com.botdarr.api.sonarr;
 
 import com.botdarr.Config;
 import com.botdarr.api.ArrRequestBuilder;
-import org.apache.logging.log4j.util.Strings;
+
+import static com.botdarr.Config.isSonarrV4Enabled;
 
 public class SonarrUrls {
   public static class SonarrRequestBuilder extends ArrRequestBuilder {
@@ -10,15 +11,9 @@ public class SonarrUrls {
       super(Config.Constants.SONARR_URL, Config.Constants.SONARR_URL_BASE, Config.Constants.SONARR_TOKEN);
     }
 
-    //TODO: do i even need this?
-    private boolean isV4Enabled() {
-      String isSonarrV4 = Config.getProperty(Config.Constants.SONARR_V4);
-      return !Strings.isEmpty(isSonarrV4) && Boolean.parseBoolean(isSonarrV4);
-    }
-
     @Override
     public String getApiSuffix() {
-      if (isV4Enabled()) {
+      if (isSonarrV4Enabled()) {
         return "/api/v3/";
       }
       return super.getApiSuffix();

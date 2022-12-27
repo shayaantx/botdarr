@@ -185,7 +185,7 @@ public class MatrixResponseBuilder implements ChatClientResponseBuilder<MatrixRe
     MatrixResponse matrixResponse = new MatrixResponse();
     matrixResponse.addContent("<u><b>Profile</b></u>");
     matrixResponse.addContent("<b>Name</b> - " + sonarrProfile.getName());
-    matrixResponse.addContent("<b>Cutoff</b> - " + sonarrProfile.getCutoff());
+    matrixResponse.addContent("<b>Cutoff</b> - " + sonarrProfile.getCutOffDisplayStr());
     for (int k = 0; k < sonarrProfile.getItems().size(); k++) {
       SonarrProfileQualityItem sonarrProfileQualityItem = sonarrProfile.getItems().get(k);
       if (sonarrProfileQualityItem.isAllowed()) {

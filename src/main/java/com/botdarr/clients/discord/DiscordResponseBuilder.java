@@ -168,7 +168,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     embedBuilder.setTitle("Profile");
     SonarrProfile sonarrProfile = showProfileResponse.getShowProfile();
     embedBuilder.addField("Name", sonarrProfile.getName(), false);
-    embedBuilder.addField("Cutoff", "" + sonarrProfile.getCutoff(), false);
+    embedBuilder.addField("Cutoff", "" + sonarrProfile.getCutOffDisplayStr(), false);
     embedBuilder.addBlankField(false);
     for (int k = 0; k < sonarrProfile.getItems().size(); k++) {
       SonarrProfileQualityItem sonarrProfileQualityItem = sonarrProfile.getItems().get(k);

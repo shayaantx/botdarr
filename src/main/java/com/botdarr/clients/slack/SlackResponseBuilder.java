@@ -282,7 +282,7 @@ public class SlackResponseBuilder implements ChatClientResponseBuilder<SlackResp
       .text(MarkdownTextObject.builder().text("Name - " + sonarrProfile.getName()).build())
       .build());
     slackResponse.addBlock(SectionBlock.builder()
-      .text(MarkdownTextObject.builder().text("Cutoff - " + sonarrProfile.getCutoff()).build())
+      .text(MarkdownTextObject.builder().text("Cutoff - " + sonarrProfile.getCutOffDisplayStr()).build())
       .build());
 
     List<ContextBlockElement> contextBlockElements = new ArrayList<>();

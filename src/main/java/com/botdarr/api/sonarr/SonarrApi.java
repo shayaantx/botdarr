@@ -93,7 +93,12 @@ public class SonarrApi implements Api {
             JsonParser parser = new JsonParser();
             JsonArray json = parser.parse(response).getAsJsonArray();
             for (int i = 0; i < json.size(); i++) {
-              SonarrProfile sonarrProfile = new Gson().fromJson(json.get(i), SonarrProfile.class);
+              if (Config.isSonarrV4Enabled()) {
+                SonarrV4Profile sonarrProfile = new Gson().fromJson(json.get(i), SonarrV4Profile.class);
+                sonarrProfiles.add(sonarrProfile);
+                continue;
+              }
+              SonarrV3Profile sonarrProfile = new Gson().fromJson(json.get(i), SonarrV3Profile.class);
               sonarrProfiles.add(sonarrProfile);
             }
             return sonarrProfiles;
@@ -278,11 +283,16 @@ public class SonarrApi implements Api {
           new ConnectionHelper.SimpleCommandResponseHandler() {
             @Override
             public List<CommandResponse> onSuccess(String response) {
-              if (response == null || response.isEmpty() || response.equals("{}")) {
+              if (response == null || response.isEmpty() || response.equals("{}") || response.equals("[]")) {
                 return new ArrayList<>();
               }
-              JsonObject json = JsonParser.parseString(response).getAsJsonObject();
-              return parseContent(json.get("records").toString());
+              if (Config.isSonarrV4Enabled()) {
+                JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+                return parseContent(json.get("records").toString());
+              }
+              // my usage of sonarr v3 is goofy and doesn't use the actual /api/*/queue endpoint
+              // so just let parseContent take the raw array
+              return parseContent(response);
             }
           });
       }

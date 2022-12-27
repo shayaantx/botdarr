@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 @Plugin(name="LogMaskingConverter", category = "Converter")
 @ConverterKeys({"scrubbedMsg"})
 public class Log4jSensitiveDataPattern extends LogEventPatternConverter {
-    private static final Pattern API_KEY_PATTERN = Pattern.compile("apikey=([0-9a-zA-z]+)");
+    private static final Pattern API_KEY_PATTERN = Pattern.compile("apiKey=([0-9a-zA-z]+)");
 
     protected Log4jSensitiveDataPattern(String name, String style) {
         super(name, style);
@@ -28,7 +28,7 @@ public class Log4jSensitiveDataPattern extends LogEventPatternConverter {
             StringBuffer modifiedBuffer = new StringBuffer();
             Matcher matcher = API_KEY_PATTERN.matcher(message);
             while(matcher.find()) {
-                matcher.appendReplacement(modifiedBuffer, "apikey=****");
+                matcher.appendReplacement(modifiedBuffer, "apiKey=****");
             }
             if (modifiedBuffer.length() > 0) {
                 maskedMessage = modifiedBuffer.toString();
