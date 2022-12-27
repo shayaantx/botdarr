@@ -120,6 +120,11 @@ public class Config {
     return getConfig().isSonarrEnabled;
   }
 
+  public static boolean isSonarrV4Enabled() {
+    String isSonarrV4 = Config.getProperty(Config.Constants.SONARR_V4);
+    return !Strings.isEmpty(isSonarrV4) && Boolean.parseBoolean(isSonarrV4);
+  }
+
   public static boolean isLidarrEnabled() {
     return getConfig().isLidarrEnabled;
   }

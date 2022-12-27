@@ -23,7 +23,7 @@ public class Log4jSensitiveDataPatternTests {
 
     @Test
     public void format_apiKeyInString_noMaskedText() {
-        String input = "http://localhost?apikey=fdskjkjfd";
+        String input = "http://localhost?apiKey=fdskjkjfd";
         LogEventPatternConverter patternConverter = new Log4jSensitiveDataPattern("test", "style");
         StringBuilder output = new StringBuilder();
         new Expectations() {{
@@ -31,7 +31,7 @@ public class Log4jSensitiveDataPatternTests {
         }};
         patternConverter.format(mockedEvent, output);
         //input should remain unchanged
-        Assert.assertEquals("http://localhost?apikey=****", output.toString());
+        Assert.assertEquals("http://localhost?apiKey=****", output.toString());
     }
 
     @Mocked

@@ -41,6 +41,8 @@ public class ConnectionHelper {
       requestConfigBuilder.setConnectionRequestTimeout(timeout);
     }
     try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(requestConfigBuilder.build()).build()) {
+      HttpUriRequest request = requestHandler.buildRequest();
+      LOGGER.debug("Running request, uri= " + request.getURI());
       try (CloseableHttpResponse response = client.execute(requestHandler.buildRequest())) {
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == 200) {
@@ -63,6 +65,9 @@ public class ConnectionHelper {
       }
     } catch (IOException e) {
       LOGGER.error("Error trying to make connection during request", e);
+      return responseHandler.onException(e);
+    } catch (Exception e) {
+      LOGGER.error("Error during request", e);
       return responseHandler.onException(e);
     }
   }

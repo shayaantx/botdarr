@@ -199,7 +199,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     domContents.add(b("Profile"));
     domContents.add(text("Name - " + sonarrProfile.getName()));
-    domContents.add(text("Cutoff - " + sonarrProfile.getCutoff()));
+    domContents.add(text("Cutoff - " + sonarrProfile.getCutOffDisplayStr()));
     if (sonarrProfile.getItems() != null) {
       StringBuilder qualityItems = new StringBuilder();
       for (int k = 0; k < sonarrProfile.getItems().size(); k++) {
