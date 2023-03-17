@@ -199,7 +199,7 @@ public class DiscordBootstrap extends ChatClientBootstrap {
             description = description.substring(0, 97);
             description += "...";
         }
-        CommandData commandData = new CommandData(command.getCommandText().replace(' ', '-'), description);
+        CommandData commandData = new CommandData(DiscordResponseBuilder.formatForSlashCommand(command.getCommandText()), description);
         command.getInput().forEach(input -> {
             // all input is required by default
             commandData.addOption(OptionType.STRING, input, input, true);

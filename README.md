@@ -64,6 +64,11 @@ Slash commands installation/updates:
   https://github.com/discord/discord-api-docs/issues/4856
 - Slash commands from botdarr operate the same except they are not the same case (i.e., all the commands have dashes in them)
 
+To make Non-Slash commands work you need to go to Discord Developer section -> Applications -> Bot -> Enable Message Content Intent
+
+![](https://raw.githubusercontent.com/shayaantx/botdarr/development/images/discord-message-content-intent.png)
+- Non-slash commands don't work anymore with botdarr unless you are running your bot in 75+ servers, see https://support-dev.discord.com/hc/en-us/articles/4404772028055
+
 ## Slack Bot Installation
 
 See https://github.com/shayaantx/botdarr/wiki/Install-Slack-Bot
