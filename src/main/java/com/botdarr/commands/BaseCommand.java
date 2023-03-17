@@ -37,11 +37,6 @@ public abstract class BaseCommand implements Command {
   }
 
   @Override
-  public String getCommandUsageWithInfix(String commandInfix) {
-    return commandText.replace(" ", commandInfix) + (input != null && !input.isEmpty() ? " " + String.join(" ", input) : "");
-  }
-
-  @Override
   public List<String> getInput() {
     return input;
   }

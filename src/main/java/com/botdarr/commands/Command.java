@@ -12,9 +12,6 @@ public interface Command {
   default String getCommandUsage() {
     return "";
   }
-  default String getCommandUsageWithInfix(String commandInfix) {
-    return "";
-  }
   default boolean hasArguments() {
     //by default all commands have arguments unless explicitly overridden
     return true;

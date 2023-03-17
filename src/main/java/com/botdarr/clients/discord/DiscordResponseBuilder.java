@@ -364,7 +364,7 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle("Commands");
     for (Command com : commands) {
-      embedBuilder.addField(CommandContext.getConfig().getPrefix() + com.getCommandUsageWithInfix("-"), com.getDescription(), false);
+      embedBuilder.addField(CommandContext.getConfig().getPrefix().replace(" ", "-") + com.getCommandUsage(), com.getDescription(), false);
     }
     return new DiscordResponse(embedBuilder.build());
   }
