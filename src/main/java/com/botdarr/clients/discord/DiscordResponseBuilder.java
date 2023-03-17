@@ -331,6 +331,10 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     return new DiscordResponse(createSuccessMessageEmbed(successResponse.getSuccessMessage()));
   }
 
+  public static String formatForSlashCommand(String command) {
+    return command.replace(' ', '-');
+  }
+
   private DiscordResponse getMovieResponse(RadarrMovie radarrMovie) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle(radarrMovie.getTitle());
@@ -363,8 +367,12 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
   private DiscordResponse getListOfCommands(List<Command> commands) {
     EmbedBuilder embedBuilder = new EmbedBuilder();
     embedBuilder.setTitle("Commands");
+    String commandPrefix = CommandContext.getConfig().getPrefix().replace(" ", "-");
     for (Command com : commands) {
-      embedBuilder.addField(CommandContext.getConfig().getPrefix().replace(" ", "-") + com.getCommandUsage(), com.getDescription(), false);
+      // slash commands
+      embedBuilder.addField(commandPrefix.equals("/") ?
+              commandPrefix + formatForSlashCommand(com.getCommandText()) :
+              commandPrefix + com.getCommandUsage(), com.getDescription(), false);
     }
     return new DiscordResponse(embedBuilder.build());
   }
