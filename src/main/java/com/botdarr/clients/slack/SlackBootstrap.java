@@ -12,14 +12,18 @@ import com.github.seratch.jslack.api.model.block.LayoutBlock;
 import com.github.seratch.jslack.api.model.block.SectionBlock;
 import com.github.seratch.jslack.api.model.block.composition.MarkdownTextObject;
 import com.github.seratch.jslack.api.rtm.RTMMessageHandler;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import static com.botdarr.api.radarr.RadarrApi.ADD_MOVIE_COMMAND_FIELD_PREFIX;
 import static com.botdarr.api.sonarr.SonarrApi.ADD_SHOW_COMMAND_FIELD_PREFIX;
@@ -103,9 +107,21 @@ public class SlackBootstrap extends ChatClientBootstrap {
 
     @Override
     public boolean isConfigured(Properties properties) {
-        return
-                !Strings.isBlank(properties.getProperty(Config.Constants.SLACK_BOT_TOKEN)) &&
-                        !Strings.isBlank(properties.getProperty(Config.Constants.SLACK_CHANNELS));
+        String slackChannels = properties.getProperty(Config.Constants.SLACK_CHANNELS);
+        if (!Strings.isBlank(properties.getProperty(Config.Constants.SLACK_BOT_TOKEN)) &&
+            !Strings.isBlank(slackChannels)) {
+            Set<String> supportedSlackChannels =
+                    Sets.newHashSet(Splitter.on(',').trimResults().split(slackChannels));
+            String regex = "^[a-zA-Z0-9-]+$";
+            for (String slackChannel : supportedSlackChannels) {
+                if (!slackChannel.matches(regex)) {
+                    LOGGER.warn("Slack channel {} cannot have special characters", slackChannel);
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -115,4 +131,5 @@ public class SlackBootstrap extends ChatClientBootstrap {
             throw new RuntimeException("Cannot use / command prefix in slack since /help command was deprecated by slack");
         }
     }
+    private static final Logger LOGGER = LogManager.getLogger();
 }
