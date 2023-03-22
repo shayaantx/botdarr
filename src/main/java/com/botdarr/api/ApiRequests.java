@@ -38,11 +38,11 @@ public class ApiRequests {
   }
   
   public int getNotificationInterval() {
-	String notificationInvterval = Config.getProperty(Config.Constants.NOTIFICATION_INTERVAL);
+	String notificationInterval = Config.getProperty(Config.Constants.NOTIFICATION_INTERVAL);
     if (!Strings.isEmpty(notificationInterval)) {
       try {
-    	return Integer.parseInt(notificationInvterval);
-      } catch (NumberFormatterException e) {
+    	return Integer.parseInt(notificationInterval);
+      } catch (NumberFormatException e) {
     	LOGGER.error("Invalid notification interval configuration", e);
       }
     }
