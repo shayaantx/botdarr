@@ -1,12 +1,11 @@
 package com.botdarr.scheduling;
 
 import com.botdarr.api.Api;
+import com.botdarr.api.ApiRequests;
 import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.responses.CommandResponse;
-
-import src.main.java.com.botdarr.api.ApiRequests;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
