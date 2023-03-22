@@ -36,6 +36,18 @@ public class ApiRequests {
     }
     return 20;
   }
+  
+  public int getNotificationInterval() {
+	String notificationInvterval = Config.getProperty(Config.Constants.NOTIFICATION_INTERVAL);
+    if (!Strings.isEmpty(notificationInterval)) {
+      try {
+    	return Integer.parseInt(notificationInvterval);
+      } catch (NumberFormatterException e) {
+    	LOGGER.error("Invalid notification interval configuration", e);
+      }
+    }
+    return 5;
+  }
 
   public boolean checkRequestLimits(ApiRequestType requestType) {
     String maxRequestsThreshold = Config.getProperty(Config.Constants.MAX_REQUESTS_THRESHOLD);

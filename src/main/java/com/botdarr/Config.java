@@ -396,11 +396,16 @@ public class Config {
      * The max number of downloads to show to the user(s)
      */
     public static final String MAX_DOWNLOADS_TO_SHOW = "max-downloads-to-show";
-
+    
     /**
      * The max number of results to show per search command
      */
     public static final String MAX_RESULTS_TO_SHOW = "max-results-to-show";
+
+    /**
+     * Interval of notifications in minutes.
+     */
+    public static final String NOTIFICATION_INTERVAL = "notification-interval";
 
     /**
      * The prefix for all commands

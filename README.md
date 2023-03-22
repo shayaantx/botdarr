@@ -194,6 +194,7 @@ botdarr:
 | EXISTING_ITEM_PATHS_BLACKLIST | If you want content to NOT appear in searches against your library, you can list blacklisted paths here in comma delimited form, and they will be ignored when building up responses | no |
 | MAX_DOWNLOADS_TO_SHOW | The max number of downloads to show. If you set this to any value less than or equal to 0, no downloads will show | yes | 20 |
 | MAX_RESULTS_TO_SHOW | The max number of results to show per search command. If you set this to any value less than 0, the bot won't startup | yes | 20 | 
+| NOTIFICATION_INTERVAL | The number of minutes between each notification. If you set this to any value less than 0, the bot won't startup | yes | 20 | 
 | COMMAND_PREFIX | The command prefix (default is !). Any prefix is allowed (but I haven't tested every single prefix in every client) | yes | ! | 
 | STATUS_ENDPOINTS | Endpoints that can be used to return statuses via !status command. The endpoints are separated by a comma and each endpoint is in the following format - name:hostname:port | no | |
 | TIMEOUT | The connection/read timeout value (in milliseconds) for all outbound requests | no | 5000 |
