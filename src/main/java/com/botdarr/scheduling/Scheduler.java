@@ -5,6 +5,9 @@ import com.botdarr.clients.ChatClient;
 import com.botdarr.clients.ChatClientResponse;
 import com.botdarr.clients.ChatClientResponseBuilder;
 import com.botdarr.commands.responses.CommandResponse;
+
+import src.main.java.com.botdarr.api.ApiRequests;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,7 +42,7 @@ public class Scheduler {
         } catch (Throwable e) {
           LOGGER.error("Error during api notification", e);
         }
-      }, 0, 5, TimeUnit.MINUTES);
+      }, 0, NOTIFICATION_INTERVAL, TimeUnit.MINUTES);
     }
   }
 
@@ -75,4 +78,5 @@ public class Scheduler {
   private ExecutorService commandThreadPool;
   private static volatile Scheduler instance;
   private static final Logger LOGGER = LogManager.getLogger();
+  private static final int NOTIFICATION_INTERVAL = new ApiRequests().getNotificationInterval();
 }
