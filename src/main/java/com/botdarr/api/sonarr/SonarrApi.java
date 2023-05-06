@@ -156,8 +156,8 @@ public class SonarrApi implements Api {
       }
 
       @Override
-      public CommandResponse getResponse(SonarrShow item) {
-        return new ShowResponse(item);
+      public CommandResponse getNewItemResponse(SonarrShow item) {
+        return new NewShowResponse(item);
       }
     };
   }

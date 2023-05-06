@@ -218,8 +218,8 @@ public class RadarrApi implements Api {
       }
 
       @Override
-      public CommandResponse getResponse(RadarrMovie item) {
-        return new MovieResponse(item);
+      public CommandResponse getNewItemResponse(RadarrMovie item) {
+        return new NewMovieResponse(item);
       }
     };
   }

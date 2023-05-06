@@ -21,7 +21,7 @@ public abstract class AddStrategy<T> {
   public abstract boolean doesItemExist(T content);
   public abstract String getItemId(T item);
   public abstract CommandResponse addContent(T content);
-  public abstract CommandResponse getResponse(T item);
+  public abstract CommandResponse getNewItemResponse(T item);
 
   public CommandResponse addWithSearchId(String searchText, String id) {
     try {
@@ -69,7 +69,7 @@ public abstract class AddStrategy<T> {
           //skip existing items
           continue;
         }
-        restOfItems.add(getResponse(item));
+        restOfItems.add(getNewItemResponse(item));
       }
       if (restOfItems.size() > 1) {
         restOfItems = ListUtils.subList(restOfItems, MAX_RESULTS_TO_SHOW);
