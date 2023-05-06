@@ -5,10 +5,6 @@ import org.apache.logging.log4j.util.Strings;
 
 public class CommandContext {
   public static CommandContextConfig getConfig() {
-    if (contextConfigThreadLocal == null) {
-      contextConfigThreadLocal = new ThreadLocal<>();
-      contextConfigThreadLocal.set(new CommandContextConfig());
-    }
     if (contextConfigThreadLocal.get() == null) {
       contextConfigThreadLocal.set(new CommandContextConfig());
     }
@@ -16,7 +12,7 @@ public class CommandContext {
   }
 
   public static void end() {
-    contextConfigThreadLocal = null;
+    contextConfigThreadLocal.remove();
   }
 
   public static CommandContextConfig start() {
@@ -55,5 +51,5 @@ public class CommandContext {
     private String username;
     private String prefix;
   }
-  private static ThreadLocal<CommandContextConfig> contextConfigThreadLocal;
+  private static ThreadLocal<CommandContextConfig> contextConfigThreadLocal = new ThreadLocal<>();
 }

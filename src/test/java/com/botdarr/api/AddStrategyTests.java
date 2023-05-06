@@ -185,9 +185,9 @@ public class AddStrategyTests {
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(foundMovie, foundMovie2);
       mockAddStrategy.doesItemExist(foundMovie); times = 1; result = false;
-      mockAddStrategy.getResponse(foundMovie); times = 1; result = foundMovieResponse;
+      mockAddStrategy.getNewItemResponse(foundMovie); times = 1; result = foundMovieResponse;
       mockAddStrategy.doesItemExist(foundMovie2); times = 1; result = false;
-      mockAddStrategy.getResponse(foundMovie2); times = 1; result = foundMovieResponse2;
+      mockAddStrategy.getNewItemResponse(foundMovie2); times = 1; result = foundMovieResponse2;
     }};
     List<CommandResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
     Assert.assertNotNull(responses);
@@ -215,9 +215,9 @@ public class AddStrategyTests {
     new Expectations(mockAddStrategy) {{
       mockAddStrategy.lookupContent(searchText); times = 1; result = Arrays.asList(foundMovie, foundMovie2);
       mockAddStrategy.doesItemExist(foundMovie); times = 1; result = false;
-      mockAddStrategy.getResponse(foundMovie); times = 1; result = foundMovieResponse;
+      mockAddStrategy.getNewItemResponse(foundMovie); times = 1; result = foundMovieResponse;
       mockAddStrategy.doesItemExist(foundMovie2); times = 1; result = false;
-      mockAddStrategy.getResponse(foundMovie2); times = 1; result = foundMovieResponse2;
+      mockAddStrategy.getNewItemResponse(foundMovie2); times = 1; result = foundMovieResponse2;
     }};
     List<CommandResponse> responses = mockAddStrategy.addWithSearchTitle(searchText);
     Assert.assertNotNull(responses);
@@ -311,7 +311,7 @@ public class AddStrategyTests {
     }
 
     @Override
-    public CommandResponse getResponse(Object item) {
+    public CommandResponse getNewItemResponse(Object item) {
       return null;
     }
   }

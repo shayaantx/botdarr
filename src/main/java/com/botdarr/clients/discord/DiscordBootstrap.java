@@ -97,7 +97,22 @@ public class DiscordBootstrap extends ChatClientBootstrap {
                     message.getEmbeds().forEach(embed -> {
                         String command = getCommandFromEmbed(embed);
                         if (!Strings.isEmpty(command)) {
-                            handleCommand(event.getJDA(), command, event.getUser().getName(), event.getChannel().getName());
+                            //build chat client
+                            DiscordChatClient discordChatClient = new DiscordChatClient(event.getJDA());
+
+                            //capture/process command
+                            Scheduler.getScheduler().executeCommand(() -> {
+                                DiscordBootstrap.this.runAndProcessCommands(
+                                        CommandContext.getConfig().getPrefix(),
+                                        command, event.getUser().getName(),
+                                        responseBuilder, chatClientResponse -> {
+                                    // If we don't reply in 3 seconds or less, we get "This interaction failed" errors in discord
+                                    // so we use a special reply for embeds on the button event
+                                    // https://jda.wiki/using-jda/troubleshooting/#this-interaction-failed-unknown-interaction
+                                    discordChatClient.sendButtonReply(chatClientResponse, event);
+                                });
+                                return null;
+                            });
                         }
                     });
                 }

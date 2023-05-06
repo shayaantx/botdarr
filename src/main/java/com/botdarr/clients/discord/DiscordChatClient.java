@@ -6,7 +6,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import org.apache.logging.log4j.LogManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.List;
@@ -27,6 +29,10 @@ public class DiscordChatClient implements ChatClient<DiscordResponse> {
 
   public void sendMessage(DiscordResponse chatClientResponse, String channelName) {
     sendMessages(channel -> channel.sendMessage(chatClientResponse.getMessage()).queue(), channelName);
+  }
+
+  public void sendButtonReply(DiscordResponse chatClientResponse, @NotNull ButtonClickEvent event) {
+    sendMessages(channel -> event.replyEmbeds(chatClientResponse.getMessage()).queue(), event.getChannel().getName());
   }
 
   private void sendMessages(MessageSender messageSender, String channelName) {

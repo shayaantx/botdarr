@@ -184,8 +184,8 @@ public class LidarrApi implements Api {
       }
 
       @Override
-      public CommandResponse getResponse(LidarrArtist item) {
-        return new MusicArtistResponse(item);
+      public CommandResponse getNewItemResponse(LidarrArtist item) {
+        return new NewMusicArtistResponse(item);
       }
     };
   }
