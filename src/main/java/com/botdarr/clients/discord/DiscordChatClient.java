@@ -27,6 +27,11 @@ public class DiscordChatClient implements ChatClient<DiscordResponse> {
     }, null);
   }
 
+  @Override
+  public void cleanup() {
+    // nothing to cleanup
+  }
+
   public void sendMessage(DiscordResponse chatClientResponse, String channelName) {
     sendMessages(channel -> channel.sendMessage(chatClientResponse.getMessage()).queue(), channelName);
   }

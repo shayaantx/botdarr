@@ -3,6 +3,7 @@ package com.botdarr.api;
 import com.botdarr.Config;
 import com.botdarr.database.DatabaseBootstrap;
 import com.botdarr.database.DatabaseHelper;
+import com.botdarr.database.MockedDatabase;
 import mockit.*;
 import org.junit.Assert;
 import org.junit.Before;
@@ -241,19 +242,6 @@ public class ApiRequestsTests {
     private final String expectedMessage;
     private Throwable actualThrowable;
     private final Throwable expectedThrowable;
-  }
-
-  private static class MockedDatabase extends MockUp<DatabaseHelper> {
-    private MockedDatabase(File temporaryDatabase) {
-      this.temporaryDatabase = temporaryDatabase;
-    }
-
-    @Mock
-    public File getDatabaseFile() {
-      return temporaryDatabase;
-    }
-
-    private final File temporaryDatabase;
   }
 
   @Rule

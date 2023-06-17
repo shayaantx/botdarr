@@ -6,7 +6,7 @@
 	<artifactId>botdarr</artifactId>
 	<version>release</version>
 	<name>botdarr</name>
-	<description>Discord/Slack/Telegram bot for interfacing with radarr, sonarr</description>
+	<description>Discord/Slack/Telegram/Matrix bot for interfacing with radarr, sonarr, lidarr</description>
 
 	<properties>
 		<java.version>1.8</java.version>
@@ -91,7 +91,7 @@
         <dependency>
             <groupId>com.github.pengrad</groupId>
             <artifactId>java-telegram-bot-api</artifactId>
-            <version>5.5.0</version>
+            <version>6.6.1</version>
         </dependency>
         <dependency>
             <groupId>com.j2html</groupId>

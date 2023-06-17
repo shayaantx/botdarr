@@ -152,6 +152,11 @@ public class SlackChatClient implements ChatClient<SlackResponse> {
     sendMessage(chatClientResponses, null);
   }
 
+  @Override
+  public void cleanup() {
+    // nothing to cleanup
+  }
+
   private interface MessageSender {
     void send(String channel);
   }

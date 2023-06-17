@@ -1,0 +1,1 @@
+create table telegram_callbacks (id integer primary key not null, callback text not null, createdDt date not null);
