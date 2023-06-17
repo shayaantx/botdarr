@@ -26,6 +26,11 @@ public class Scheduler {
     return instance;
   }
 
+  public <T extends ChatClientResponse> void initCleanup(ChatClient<T> chatClient) {
+    if (cleanupFuture == null) {
+      cleanupFuture = Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(chatClient::cleanup, 0, 5 , TimeUnit.MINUTES);
+    }
+  }
 
   public <T extends ChatClientResponse> void initApiNotifications(List<Api> apis, ChatClient<T> chatClient, ChatClientResponseBuilder<T> responseBuilder) {
     if (notificationFuture == null) {
@@ -74,6 +79,7 @@ public class Scheduler {
 
   private ScheduledFuture notificationFuture;
   private ScheduledFuture cacheFuture;
+  private ScheduledFuture cleanupFuture;
   private ExecutorService commandThreadPool;
   private static volatile Scheduler instance;
   private static final Logger LOGGER = LogManager.getLogger();

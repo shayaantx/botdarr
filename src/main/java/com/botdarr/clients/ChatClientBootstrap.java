@@ -60,6 +60,7 @@ public abstract class ChatClientBootstrap {
     //make sure to always cache before doing any notifications
     scheduler.initApiCaching(apis);
     scheduler.initApiNotifications(apis, chatClient, responseBuilder);
+    scheduler.initCleanup(chatClient);
   }
 
   protected <T extends ChatClientResponse> void runAndProcessCommands(String prefix,

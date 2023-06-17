@@ -57,6 +57,11 @@ public class MatrixChatClient implements ChatClient<MatrixResponse> {
     }
   }
 
+  @Override
+  public void cleanup() {
+    // nothing to cleanup
+  }
+
   public void sendMessage(MatrixResponse response, String roomId) {
     sendMatrixResponse(response, roomId);
   }

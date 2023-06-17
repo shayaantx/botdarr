@@ -40,8 +40,10 @@ public class TelegramBootstrap extends ChatClientBootstrap {
                         chat = message.chat();
                     } else if (update.callbackQuery() != null && !Strings.isEmpty(update.callbackQuery().data())) {
                         // interactive commands with callback data
+                        TelegramCallbackManager telegramCallbackManager = new TelegramCallbackManager();
+                        String callback = telegramCallbackManager.getCallback(Integer.parseInt(update.callbackQuery().data()));
                         ObjectMapper mapper = new ObjectMapper();
-                        TelegramCallbackData callbackData = mapper.readValue(update.callbackQuery().data(), TelegramCallbackData.class);
+                        TelegramCallbackData callbackData = mapper.readValue(callback, TelegramCallbackData.class);
                         text = callbackData.getCommand();
                         chat = update.callbackQuery().message().chat();
                     } else {

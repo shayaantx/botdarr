@@ -96,6 +96,12 @@ public class TelegramChatClient implements ChatClient<TelegramResponse> {
     sendMessage(chatClientResponses, null);
   }
 
+  @Override
+  public void cleanup() {
+    // remove any 10 day old callbacks
+    new TelegramCallbackManager().deleteOldCallbacks();
+  }
+
   private interface MessageSender {
     void send(Chat chatChannel);
   }

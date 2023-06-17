@@ -300,7 +300,7 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     List<DomContent> domContents = new ArrayList<>();
     String artistDetail = " (" + lookupArtist.getDisambiguation() + ")";
     domContents.add(b(lookupArtist.getArtistName() + (Strings.isEmpty(lookupArtist.getDisambiguation()) ? "" :  artistDetail)));
-    domContents.add(a(lookupArtist.getRemoteImage()));
+    domContents.add(Strings.isEmpty(lookupArtist.getRemoteImage()) ? code("No image found!") : a(lookupArtist.getRemoteImage()));
     return getAddResponse(domContents, LidarrCommands.getAddArtistCommandStr(lookupArtist.getArtistName(), lookupArtist.getForeignArtistId()));
   }
 
@@ -338,11 +338,11 @@ public class TelegramResponseBuilder implements ChatClientResponseBuilder<Telegr
     try {
       ObjectMapper objectMapper = new ObjectMapper();
       String json = objectMapper.writeValueAsString(new TelegramCallbackData(command));
-      return new TelegramResponse(domContents, new InlineKeyboardMarkup(
-              new InlineKeyboardButton[]{
-                      new InlineKeyboardButton("Add").callbackData(json),
-              }
-      ));
+      TelegramCallbackManager telegramCallbackManager = new TelegramCallbackManager();
+      int id = telegramCallbackManager.saveCallback(json);
+      return new TelegramResponse(domContents,
+              // callback data can never be larger than 64 bytes
+              new InlineKeyboardMarkup(new InlineKeyboardButton("Add").callbackData(String.valueOf(id))));
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
