@@ -12,6 +12,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -302,7 +303,7 @@ public class SonarrApi implements Api {
   private CommandResponse addShow(SonarrShow sonarrShow) {
     String title = sonarrShow.getTitle();
     //make sure we specify where the show should get downloaded
-    sonarrShow.setPath(Config.getProperty(Config.Constants.SONARR_PATH) + "/" + title);
+    sonarrShow.setPath(Config.getProperty(Config.Constants.SONARR_PATH) + File.separator + title);
     //make sure the show is monitored
     sonarrShow.setMonitored(true);
     //make sure to have seasons stored in separate folders
@@ -325,8 +326,7 @@ public class SonarrApi implements Api {
       String json = new GsonBuilder().addSerializationExclusionStrategy(excludeUnnecessaryFields).create().toJson(sonarrShow, SonarrShow.class);
       HttpRequestBase post = new SonarrUrls.SonarrRequestBuilder().buildPost(SonarrUrls.SERIES_BASE, json).build();
 
-      //TODO: why isn't the content type json
-      post.addHeader("content-type", "application/x-www-form-urlencoded");
+      post.addHeader("content-type", "application/json");
 
       try (CloseableHttpResponse response = client.execute(post)) {
         int statusCode = response.getStatusLine().getStatusCode();

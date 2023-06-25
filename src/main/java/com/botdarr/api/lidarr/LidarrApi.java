@@ -16,6 +16,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -235,7 +236,7 @@ public class LidarrApi implements Api {
 
   private CommandResponse addArtist(LidarrArtist lidarrArtist) {
     lidarrArtist.setMonitored(true);
-    lidarrArtist.setRootFolderPath(Config.getProperty(Config.Constants.LIDARR_PATH) + "/");
+    lidarrArtist.setRootFolderPath(Config.getProperty(Config.Constants.LIDARR_PATH) + File.separator);
 
     String lidarrProfileName = Config.getProperty(Config.Constants.LIDARR_DEFAULT_QUALITY_PROFILE);
     LidarrQualityProfile lidarrQualityProfile = LIDARR_CACHE.getQualityProfile(lidarrProfileName.toLowerCase());
