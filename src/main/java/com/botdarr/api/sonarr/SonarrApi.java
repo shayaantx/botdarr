@@ -11,6 +11,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.util.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -248,7 +249,7 @@ public class SonarrApi implements Api {
           statusMessages.add(sonarrQueueStatusMessages.getTitle());
         }
         String overview = episode.getOverview();
-        if (overview.length() > VALUE_MAX_LENGTH) {
+        if (!Strings.isEmpty(overview) && overview.length() > VALUE_MAX_LENGTH) {
           overview = overview.substring(0, VALUE_MAX_LENGTH);
         }
         return new ShowDownloadResponse(new SonarrDownloadActivity(
