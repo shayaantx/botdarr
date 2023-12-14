@@ -3,13 +3,13 @@
     <Appenders>
         <!-- Console Appender -->
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n" />
+            <PatternLayout pattern="%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable" />
         </Console>
         <RollingFile name="BotLog">
             <FileName>logs/bot.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -21,7 +21,7 @@
             <FileName>logs/audit.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.audit.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -33,7 +33,7 @@
             <FileName>logs/radarr.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -45,7 +45,7 @@
             <FileName>logs/sonarr.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -57,7 +57,7 @@
             <FileName>logs/network.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -69,7 +69,7 @@
             <FileName>logs/slack.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -81,7 +81,7 @@
             <FileName>logs/discord.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -93,7 +93,7 @@
             <FileName>logs/matrix.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -105,7 +105,7 @@
             <FileName>logs/telegram.log</FileName>
             <FilePattern>logs/%d{yyyy-MM-dd-hh-mm}.log.zip</FilePattern>
             <PatternLayout>
-                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n</Pattern>
+                <Pattern>%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %scrubbedMsg%n%throwable</Pattern>
             </PatternLayout>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>

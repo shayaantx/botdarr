@@ -24,7 +24,7 @@ public class ArrRequestBuilder {
                 .headers("X-Api-Key", Config.getProperty(this.tokenName));
     }
 
-    private String getRadarrHost() {
+    private String getHost() {
         String host = Config.getProperty(this.urlConfigName);
         String rawUrlBase = Config.getProperty(this.urlBaseConfigName);
         String urlBase = Strings.isBlank(rawUrlBase) ? "" : "/" + rawUrlBase;
@@ -43,12 +43,12 @@ public class ArrRequestBuilder {
         for (Map.Entry<String, String> entry : params.entrySet()) {
             this.requestBuilder.param(entry.getKey(), entry.getValue());
         }
-        RequestBuilder requestBuilder = this.requestBuilder.host(getRadarrHost() + path);
+        RequestBuilder requestBuilder = this.requestBuilder.host(getHost() + path);
         return this.tokens(requestBuilder);
     }
 
     public RequestBuilder buildPost(String path, String postBody) {
-        RequestBuilder requestBuilder = this.requestBuilder.host(getRadarrHost() + path).post(postBody);
+        RequestBuilder requestBuilder = this.requestBuilder.host(getHost() + path).post(postBody);
         return this.tokens(requestBuilder);
     }
 }
