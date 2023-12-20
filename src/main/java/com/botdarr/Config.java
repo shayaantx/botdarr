@@ -122,6 +122,11 @@ public class Config {
 
   public static boolean isSonarrV4Enabled() {
     String isSonarrV4 = Config.getProperty(Config.Constants.SONARR_V4);
+    if (!Strings.isEmpty(isSonarrV4) &&
+            !(isSonarrV4.equalsIgnoreCase("true") ||
+             isSonarrV4.equalsIgnoreCase("false"))) {
+      throw new RuntimeException("Sonarr V4 flag is not set to true/false");
+    }
     return !Strings.isEmpty(isSonarrV4) && Boolean.parseBoolean(isSonarrV4);
   }
 

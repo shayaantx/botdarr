@@ -172,7 +172,7 @@ botdarr:
 | SONARR_DEFAULT_PROFILE | The sonarr quality profile (should be already configured in sonarr) | yes - if you use sonarr |
 | SONARR_PATH | Where your sonarr shows should go (if you add/update them) | yes - if you use sonarr |
 | SONARR_URL_BASE | Only populate this if you use a custom sonarr url base (which is configurable in Sonarr->Settings->General->URL Base) don't include prefix/suffix slashes | no |
-| SONARR_V4 | Whether you are using sonarr v4 or not | no | no |
+| SONARR_V4 | Whether you are using sonarr v4 or not (true/false) | no | false |
 
 #### Lidarr
 | Environment Variable | Description | Required | Default | 
