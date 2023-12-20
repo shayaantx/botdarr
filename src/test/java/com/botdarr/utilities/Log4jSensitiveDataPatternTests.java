@@ -31,7 +31,20 @@ public class Log4jSensitiveDataPatternTests {
         }};
         patternConverter.format(mockedEvent, output);
         //input should remain unchanged
-        Assert.assertEquals("http://localhost?apiKey=****", output.toString());
+        Assert.assertEquals("http://localhost?****", output.toString());
+    }
+
+    @Test
+    public void format_access_tokenInString_noMaskedText() {
+        String input = "http://localhost?access_token=fdskjkjfd";
+        LogEventPatternConverter patternConverter = new Log4jSensitiveDataPattern("test", "style");
+        StringBuilder output = new StringBuilder();
+        new Expectations() {{
+            mockedEvent.getMessage().getFormattedMessage(); result = input;
+        }};
+        patternConverter.format(mockedEvent, output);
+        //input should remain unchanged
+        Assert.assertEquals("http://localhost?****", output.toString());
     }
 
     @Mocked
