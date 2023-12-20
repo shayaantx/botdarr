@@ -25,6 +25,7 @@ jobs:
         VERSION=$(cat src/main/resources/version.txt)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "Building $VERSION"
+        
     - name: Build
       run: mvn --no-transfer-progress compile
     - name: Package
