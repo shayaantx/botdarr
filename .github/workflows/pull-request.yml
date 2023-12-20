@@ -8,7 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:  
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      with:
+        ref: "${{ github.event.pull_request.merge_commit_sha }}"
     - name: Setup java
       uses: actions/setup-java@v1
       with:
