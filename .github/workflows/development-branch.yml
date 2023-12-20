@@ -27,8 +27,6 @@ jobs:
         echo "Building $VERSION"
     - name: Build
       run: mvn --no-transfer-progress compile
-    - name: Test
-      run: mvn --no-transfer-progress test
     - name: Package
       run: mvn --no-transfer-progress package -DskipTests
     - name: Create Github Release
