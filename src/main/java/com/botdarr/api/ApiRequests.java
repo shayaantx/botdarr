@@ -41,6 +41,7 @@ public class ApiRequests {
 	String notificationInterval = Config.getProperty(Config.Constants.NOTIFICATION_INTERVAL);
     if (!Strings.isEmpty(notificationInterval)) {
       try {
+        LOGGER.info("Found notification interval " + notificationInterval);
     	return Integer.parseInt(notificationInterval);
       } catch (NumberFormatException e) {
     	LOGGER.error("Invalid notification interval configuration", e);
