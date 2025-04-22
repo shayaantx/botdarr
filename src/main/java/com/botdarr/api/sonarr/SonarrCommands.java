@@ -80,6 +80,8 @@ public class SonarrCommands {
           return sonarrApi.lookup(command, true);
         }
       });
+
+      //TODO: lookup macro commands
     }};
   }
 

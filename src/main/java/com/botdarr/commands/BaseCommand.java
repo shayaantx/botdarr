@@ -16,6 +16,8 @@ public abstract class BaseCommand implements Command {
     this.input = input;
   }
 
+  //TODO: add input parsing method
+
   @Override
   public String getIdentifier() {
     return commandText.toLowerCase();

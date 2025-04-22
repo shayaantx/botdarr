@@ -48,6 +48,9 @@ public abstract class ChatClientBootstrap {
       commands.addAll(lidarrCommands);
       apis.add(lidarrApi);
     }
+    if (Config.isMacrosEnabled()) {
+      commands.addAll(MacroCommands.getCommands());
+    }
     if (!Config.getStatusEndpoints().isEmpty()) {
       commands.add(new StatusCommand());
     }

@@ -1,0 +1,1 @@
+create table command_macros (id integer primary key not null, command text not null, original text not null, profile text not null ,createdDt date not null);

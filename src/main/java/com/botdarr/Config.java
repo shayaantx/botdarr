@@ -94,6 +94,10 @@ public class Config {
         !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_QUALITY_PROFILE)) &&
         !Strings.isBlank(properties.getProperty(Constants.LIDARR_DEFAULT_METADATA_PROFILE));
 
+      this.isMacrosEnabled =
+        !Strings.isBlank(properties.getProperty(Constants.MACROS_ENABLED)) &&
+        Boolean.parseBoolean(properties.getProperty(Constants.MACROS_ENABLED));
+
       if (!this.isLidarrEnabled) {
         LOGGER.warn("Lidarr commands are not enabled, make sure you set the lidarr url, path, token, default profile");
       }
@@ -132,6 +136,11 @@ public class Config {
 
   public static boolean isLidarrEnabled() {
     return getConfig().isLidarrEnabled;
+  }
+
+  public static boolean isMacrosEnabled()
+  {
+    return getConfig().isMacrosEnabled;
   }
 
   public static ChatClientBootstrap getChatClientBootstrap() {
@@ -432,6 +441,8 @@ public class Config {
      */
     public static final String TIMEOUT = "timeout";
 
+    public static final String MACROS_ENABLED = "macros_enabled";
+
     /**
      * Config for the log level
      */
@@ -444,6 +455,7 @@ public class Config {
   private final boolean isRaddarrEnabled;
   private final boolean isSonarrEnabled;
   private final boolean isLidarrEnabled;
+  private final boolean isMacrosEnabled;
   private ChatClientBootstrap chatClientBootstrap = null;
   private static final Logger LOGGER = LogManager.getLogger();
 }

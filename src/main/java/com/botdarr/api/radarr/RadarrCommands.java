@@ -93,6 +93,8 @@ public class RadarrCommands {
           return new CommandResponseUtil().addEmptyDownloadsMessage(radarrApi.downloads(), ContentType.MOVIE);
         }
       });
+
+      //TODO: lookup macro commands
     }};
   }
 
