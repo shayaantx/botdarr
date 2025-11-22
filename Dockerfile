@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM openjdk:8u111
 RUN mkdir -p /home/botdarr
 ADD target/botdarr-release.jar /home/botdarr
 
