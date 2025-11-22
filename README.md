@@ -11,6 +11,7 @@ Made this simple multi chat-client bot to access radarr, sonarr, and lidarr with
 
 ## Currently, Supported API's
 
+- [x] Radarr (v5)
 - [x] Radarr (v4)
 - [x] Sonarr (v4)
 - [x] Sonarr (v3)
@@ -157,13 +158,14 @@ botdarr:
     
 
 #### Radarr
-| Environment Variable | Description | Required | Default | 
-| :---: | :---: | :---: | :---: |
-| RADARR_URL | The url of your radarr instance | yes - if you use radarr |
-| RADARR_TOKEN | The radarr api key (get this from Radarr->Settings->General) | yes - if you use radarr |
-| RADARR_DEFAULT_PROFILE | The radarr quality profile (should be already configured in radarr) | yes - if you use radarr |
-| RADARR_PATH | Where your radarr movies should go (if you add/update them) | yes - if you use radarr |
-| RADARR_URL_BASE | Only populate this if you use a custom radarr url base (which is configurable in Radarr->Settings->General->URL Base) don't include prefix/suffix slashes | no |
+|    Environment Variable     | Description | Required |  Default  | 
+|:---------------------------:| :---: | :---: |:---------:|
+|         RADARR_URL          | The url of your radarr instance | yes - if you use radarr |
+|        RADARR_TOKEN         | The radarr api key (get this from Radarr->Settings->General) | yes - if you use radarr |
+|   RADARR_DEFAULT_PROFILE    | The radarr quality profile (should be already configured in radarr) | yes - if you use radarr |
+|         RADARR_PATH         | Where your radarr movies should go (if you add/update them) | yes - if you use radarr |
+|       RADARR_URL_BASE       | Only populate this if you use a custom radarr url base (which is configurable in Radarr->Settings->General->URL Base) don't include prefix/suffix slashes | no |
+| RADARR_DEFAULT_AVAILABILITY | https://wiki.servarr.com/radarr/faq#what-is-minimum-availability | no | Announced |
 
 #### Sonarr
 | Environment Variable | Description | Required | Default | 

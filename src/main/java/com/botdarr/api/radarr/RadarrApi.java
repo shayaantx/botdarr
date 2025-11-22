@@ -229,6 +229,11 @@ public class RadarrApi implements Api {
     radarrMovie.setRootFolderPath(Config.getProperty(Config.Constants.RADARR_PATH));
     //make sure the movie is monitored
     radarrMovie.setMonitored(true);
+    String defaultAvailability = Config.getProperty(Config.Constants.RADARR_DEFAULT_AVAILABILITY);
+    if (defaultAvailability == null || defaultAvailability.isEmpty()) {
+      defaultAvailability = "Announced";
+    }
+    radarrMovie.setMinimumAvailability(defaultAvailability);
 
     String radarrProfileName = Config.getProperty(Config.Constants.RADARR_DEFAULT_PROFILE);
     RadarrProfile radarrProfile = RADARR_CACHE.getProfile(radarrProfileName.toLowerCase());
