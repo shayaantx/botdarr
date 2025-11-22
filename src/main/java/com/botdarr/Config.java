@@ -312,6 +312,11 @@ public class Config {
     public static final String RADARR_URL_BASE = "radarr-url-base";
 
     /**
+     * See <a href="https://wiki.servarr.com/radarr/faq#what-is-minimum-availability">...</a>
+     */
+    public static final String RADARR_DEFAULT_AVAILABILITY = "radarr-default-availability";
+
+    /**
      * The url to your sonarr instance
      * (i.e., http://SOME_IP:PORT)
      */
