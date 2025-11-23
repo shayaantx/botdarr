@@ -33,6 +33,7 @@ if [ ! -e "$propertiesFile" ]; then
     [[ ! -z "${RADARR_DEFAULT_PROFILE}" ]] && addConfiguration "radarr-default-profile" "${RADARR_DEFAULT_PROFILE}" "${propertiesFile}"
     [[ ! -z "${RADARR_PATH}" ]] && addConfiguration "radarr-path" "${RADARR_PATH}" "${propertiesFile}"
     [[ ! -z "${RADARR_URL_BASE}" ]] && addConfiguration "radarr-url-base" "${RADARR_URL_BASE}" "${propertiesFile}"
+    [[ ! -z "${RADARR_DEFAULT_AVAILABILITY}" ]] && addConfiguration "radarr-default-availability" "${RADARR_DEFAULT_AVAILABILITY}" "${propertiesFile}"
 
     [[ ! -z "${SONARR_URL}" ]] && addConfiguration "sonarr-url" "${SONARR_URL}" "${propertiesFile}"
     [[ ! -z "${SONARR_TOKEN}" ]] && addConfiguration "sonarr-token" "${SONARR_TOKEN}" "${propertiesFile}"
