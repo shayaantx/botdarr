@@ -46,15 +46,27 @@ public class DiscordResponseBuilder implements ChatClientResponseBuilder<Discord
     boolean sonarrEnabled = Config.isSonarrEnabled();
     boolean lidarrEnabled = Config.isLidarrEnabled();
     if (radarrEnabled) {
-      embedBuilder.addField(RadarrCommands.getHelpMovieCommandStr().replace(" ", "-"), "Shows all the commands for movies", false);
+      String helpCommand = RadarrCommands.getHelpMovieCommandStr();
+      if (this.usingSlashCommand) {
+        helpCommand = helpCommand.replace(" ", "-");
+      }
+      embedBuilder.addField(helpCommand, "Shows all the commands for movies", false);
     }
 
     if (sonarrEnabled) {
-      embedBuilder.addField(SonarrCommands.getHelpShowCommandStr().replace(" ", "-"), "Shows all the commands for shows", false);
+      String helpCommand = SonarrCommands.getHelpShowCommandStr();
+      if (this.usingSlashCommand) {
+        helpCommand = helpCommand.replace(" ", "-");
+      }
+      embedBuilder.addField(helpCommand, "Shows all the commands for shows", false);
     }
 
     if (lidarrEnabled) {
-      embedBuilder.addField(LidarrCommands.getHelpCommandStr().replace(" ", "-"), "Shows all the commands for music", false);
+      String helpCommand = LidarrCommands.getHelpCommandStr();
+      if (this.usingSlashCommand) {
+        helpCommand = helpCommand.replace(" ", "-");
+      }
+      embedBuilder.addField(helpCommand, "Shows all the commands for music", false);
     }
 
     if (!radarrEnabled && !sonarrEnabled && !lidarrEnabled) {

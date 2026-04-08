@@ -47,7 +47,9 @@ public class ConnectionHelper {
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == 200) {
           try {
-            return responseHandler.onSuccess(EntityUtils.toString(response.getEntity()));
+            String responseStr = EntityUtils.toString(response.getEntity());
+            LOGGER.debug("Response str=" + responseStr);
+            return responseHandler.onSuccess(responseStr);
           } catch (Exception e) {
             LOGGER.error("Error trying to process response", e);
             return responseHandler.onException(e);

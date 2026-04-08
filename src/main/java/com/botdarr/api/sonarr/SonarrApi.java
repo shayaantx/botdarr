@@ -213,8 +213,10 @@ public class SonarrApi implements Api {
            SONARR_CACHE.addEpisode(showQueue.getSeriesId(), showQueue.getEpisodeId(), episodeInformation);
         }
         List<String> statusMessages = new ArrayList<>();
-        for (SonarrQueueStatusMessages sonarrQueueStatusMessages : showQueue.getStatusMessages()) {
-          statusMessages.add(sonarrQueueStatusMessages.getTitle());
+        if (showQueue.getStatusMessages() != null) {
+          for (SonarrQueueStatusMessages sonarrQueueStatusMessages : showQueue.getStatusMessages()) {
+            statusMessages.add(sonarrQueueStatusMessages.getTitle());
+          }
         }
         String overview = episodeInformation.getOverview();
         if (overview.length() > VALUE_MAX_LENGTH) {
@@ -244,8 +246,10 @@ public class SonarrApi implements Api {
           return null;
         }
         List<String> statusMessages = new ArrayList<>();
-        for (SonarrQueueStatusMessages sonarrQueueStatusMessages : showQueue.getStatusMessages()) {
-          statusMessages.add(sonarrQueueStatusMessages.getTitle());
+        if (showQueue.getStatusMessages() != null) {
+          for (SonarrQueueStatusMessages sonarrQueueStatusMessages : showQueue.getStatusMessages()) {
+            statusMessages.add(sonarrQueueStatusMessages.getTitle());
+          }
         }
         String overview = episode.getOverview();
         if (!Strings.isEmpty(overview) && overview.length() > VALUE_MAX_LENGTH) {
