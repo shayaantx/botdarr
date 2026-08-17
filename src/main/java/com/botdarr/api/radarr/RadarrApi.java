@@ -126,6 +126,8 @@ public class RadarrApi implements Api {
     return ConnectionHelper.makeGetRequest(
             new RadarrUrls.RadarrV3RequestBuilder().buildGet(RadarrUrls.DISCOVER_MOVIES, new HashMap<String, String>() {{
               put("includeRecommendations", "true");
+              put("includeTrending", "true");
+              put("includePopular", "true");
             }}),
             new ConnectionHelper.SimpleEntityResponseHandler<List<CommandResponse>>() {
       @Override
